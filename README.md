@@ -1,14 +1,6 @@
-# React + Vite + CRXJS
+# Crypto Tracker
 
-This template helps you quickly start developing Chrome extensions with React, TypeScript and Vite. It includes the CRXJS Vite plugin for seamless Chrome extension development.
-
-## Features
-
-- React with TypeScript
-- TypeScript support
-- Vite build tool
-- CRXJS Vite plugin integration
-- Chrome extension manifest configuration
+Real-time crypto price tracker with floating widgets.
 
 ## Quick Start
 
@@ -34,15 +26,10 @@ npm run build
 
 ## Project Structure
 
+- `src/background/` - background.js
 - `src/popup/` - Extension popup UI
 - `src/content/` - Content scripts
 - `manifest.config.ts` - Chrome extension manifest configuration
-
-## Documentation
-
-- [React Documentation](https://reactjs.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [CRXJS Documentation](https://crxjs.dev/vite-plugin)
 
 ## Chrome Extension Development Notes
 

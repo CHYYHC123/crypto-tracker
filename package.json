@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "framer-motion": "^12.23.24",
+    "lucide-react": "^0.553.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "react-use-measure": "^2.1.7"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",

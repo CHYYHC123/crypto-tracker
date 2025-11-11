@@ -1,13 +1,34 @@
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import toast, { Toaster } from 'react-hot-toast';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { formatNumberWithCommas } from '@/utils/index';
+import { Plus, Minus } from 'lucide-react';
+import { CustomToaster } from '@/components/CustomToaster/index';
+
+type TokenItem = {
+  symbol: string;
+  id?: string;
+  price?: number | string;
+  change?: number | string;
+  icon?: string;
+};
 
 export default function FloatingCryptoWidget() {
   const [collapsed, setCollapsed] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [tokens, setTokens] = useState<any>([]);
-  const widgetRef = useRef<any>(null);
+  const [tokens, setTokens] = useState<TokenItem[]>([]);
+  const widgetRef = useRef<HTMLDivElement | null>(null);
+
+  //
+  const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
+  const [contentHeight, setContentHeight] = useState<number>(0);
+
+  useLayoutEffect(() => {
+    if (!collapsed && contentRef.current) {
+      // 读取 auto 时真实高度
+      setContentHeight(contentRef.current.scrollHeight);
+    }
+  }, [collapsed, tokens?.length]);
 
   useEffect(() => {
     // 监听 background.js 发来的消息
@@ -21,6 +42,7 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
+  // mack 数据 -- 用于测试
   const mackData = () => {
     const fake: any = [
       { id: 'btc', symbol: 'BTC', price: '$64,200', change: '1.25', icon: 'B' },
@@ -29,11 +51,14 @@ export default function FloatingCryptoWidget() {
     setTokens(fake);
   };
 
+  // 设置拖拽位置
   const snapToEdge = (x: number, y: number) => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+    // console.log('bounds', bounds);
     const widgetWidth = widgetRef.current?.offsetWidth || 300;
     const widgetHeight = widgetRef.current?.offsetHeight || 200;
+
     const margin = 16;
 
     const newY = Math.min(Math.max(y, margin), vh - widgetHeight - margin);
@@ -48,7 +73,7 @@ export default function FloatingCryptoWidget() {
     }
   };
 
-  const handleDragEnd = (event: Event, info: any) => {
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     snapToEdge(info.point.x, info.point.y);
   };
 
@@ -58,27 +83,11 @@ export default function FloatingCryptoWidget() {
       console.log('手动刷新完成！', response);
       if (response.success) {
         toast.success(response?.msg, {
-          duration: 2000,
-          style: {
-            // background: '#1f1f1f', // 暗黑背景
-            //   color: '#ffffff', // 字体颜色
-            // fontSize: '12px' // 字体大小
-            //   padding: '6px', // 内边距
-            //   display: 'flex', // 保证图标和文字垂直居中
-            //   alignItems: 'center'
-          }
+          duration: 2000
         });
       } else {
         toast.error(response?.msg, {
           duration: 2000
-          // style: {
-          //   background: '#1f1f1f', // 暗黑背景
-          //   color: '#ffffff', // 字体颜色
-          //   fontSize: '12px', // 字体大小
-          //   padding: '6px', // 内边距
-          //   display: 'flex', // 保证图标和文字垂直居中
-          //   alignItems: 'center'
-          // }
         });
       }
     });
@@ -87,24 +96,39 @@ export default function FloatingCryptoWidget() {
   return (
     <>
       <motion.div ref={widgetRef} drag dragMomentum={false} onDragEnd={handleDragEnd} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="fixed bottom-4 right-4 z-99999999" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
+        <CustomToaster />
         <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
             <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
             <div className="flex gap-2 items-center">
-              <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-2 py-2 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                {collapsed ? '+' : '–'}
+              <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
+                {collapsed ? <Plus size={12} /> : <Minus size={12} />}
               </button>
             </div>
           </div>
-          <Toaster position="top-right"  />
 
           <AnimatePresence>
             {!collapsed && (
-              <motion.div key="content" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="p-3 space-y-2">
+              <motion.div
+                ref={contentRef}
+                key="content"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{
+                  height: contentHeight || 'auto',
+                  opacity: 1,
+                  transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
+                }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{
+                  height: { duration: 0.3, ease: 'easeInOut' },
+                  opacity: { duration: 0.2, ease: 'easeInOut' }
+                }}
+                className="p-3 space-y-2"
+              >
                 {tokens.map((coin: any) => (
                   <motion.div key={coin.symbol} whileHover={{ scale: 1.02 }} className="flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg cursor-pointer transition">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-lg font-semibold">{coin.icon}</div>
+                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
                       <div>
                         <div className="text-xs font-medium">{coin.symbol}</div>
                         <div className="text-[10px] opacity-60">{coin.id}</div>
@@ -116,9 +140,8 @@ export default function FloatingCryptoWidget() {
                     </div>
                   </motion.div>
                 ))}
-
-                <div className="p-2 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
-                  <div>Real-time prices</div>
+                <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
+                  <div >Real-time prices</div>
                   <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
                     Refresh
                   </button>
