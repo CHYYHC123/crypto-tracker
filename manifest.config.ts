@@ -3,7 +3,7 @@ import pkg from './package.json';
 
 export default defineManifest({
   manifest_version: 3,
-  name: 'Crypto Tracker',
+  name: pkg.name,
   version: pkg.version,
   description: 'Real-time crypto price tracker with floating widget.',
   icons: {
