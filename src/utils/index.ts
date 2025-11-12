@@ -68,8 +68,7 @@ export function throttle<T extends (...args: any[]) => void>(fn: T, limit: numbe
  * @returns 格式化后的字符串，例如 12345.678 -> "12,345.68"
  */
 export function formatNumberWithCommas(number: number, decimalPlaces = 2): string {
-  if (isNaN(number) || number === null) return '0';
-
+  if (isNaN(number) || number === null || !number) return '0';
   // 对非常小的数值做特殊处理
   if (Math.abs(number) > 1) {
     return number.toLocaleString(undefined, {

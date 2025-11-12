@@ -5,13 +5,8 @@ import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus } from 'lucide-react';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
-type TokenItem = {
-  symbol: string;
-  id?: string;
-  price?: number | string;
-  change?: number | string;
-  icon?: string;
-};
+import { TokenItem } from '@/types/index';
+
 
 export default function FloatingCryptoWidget() {
   const [collapsed, setCollapsed] = useState(false);
@@ -43,13 +38,13 @@ export default function FloatingCryptoWidget() {
   }, []);
 
   // mack 数据 -- 用于测试
-  const mackData = () => {
-    const fake: any = [
-      { id: 'btc', symbol: 'BTC', price: '$64,200', change: '1.25', icon: 'B' },
-      { id: 'eth', symbol: 'ETH', price: '$3,200', change: '-0.85', icon: 'E' }
-    ];
-    setTokens(fake);
-  };
+  // const mackData = () => {
+  //   const fake: any = [
+  //     { id: 'btc', symbol: 'BTC', price: '$64,200', change: '1.25', icon: 'B' },
+  //     { id: 'eth', symbol: 'ETH', price: '$3,200', change: '-0.85', icon: 'E' }
+  //   ];
+  //   setTokens(fake);
+  // };
 
   // 设置拖拽位置
   const snapToEdge = (x: number, y: number) => {
@@ -80,7 +75,7 @@ export default function FloatingCryptoWidget() {
   // 手动刷新
   const refreshData = () => {
     chrome.runtime.sendMessage({ type: 'REFRESH', payload: { falg: true } }, response => {
-      console.log('手动刷新完成！', response);
+      // console.log('手动刷新完成！', response);
       if (response.success) {
         toast.success(response?.msg, {
           duration: 2000

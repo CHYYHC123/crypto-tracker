@@ -1,8 +1,6 @@
 import { price_show, throttle } from '@/utils/index';
 
 const OKXWebSoceketUrl = 'wss://wspri.okx.com:8443/ws/v5/ipublic';
-
-let defaultToken: string[] = ['BTC', 'ETH', 'BNB', 'SOL'];
 interface TokenItem {
   id: string;
   symbol: string;
@@ -17,38 +15,49 @@ let showTokenList: TokenItem[] | null = null;
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(['coins'], items => {
     if (!items.coins) {
+      const defaultToken: string[] = ['BTC', 'ETH', 'BNB', 'SOL'];
       chrome.storage.local.set({
-        coins: ['BTC', 'ETH', 'BNB', 'SOL']
+        coins: defaultToken
       });
-      getTokenPrice();
+      initShowTokenList(defaultToken);
+      getTokenPrice(defaultToken);
     } else {
-      defaultToken = items.coins;
-      getTokenPrice();
+      initShowTokenList(items.coins);
+      getTokenPrice(items.coins);
     }
   });
 });
 
 // 监听 storage 变化
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.refreshSeconds) {
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area === 'local' && changes.coins) {
+    await initShowTokenList(changes.coins?.newValue);
+    await getTokenPrice(changes.coins?.newValue);
   }
 });
 
 /**
  * 监听消息
  * REFRESH 手动刷新
+ * GET_LATEST_PRICES Popup获取最新数据
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'REFRESH') {
     (async () => {
       try {
-        await getTokenPrice(); // 如果 getTokenPrice 返回 Promise
+        const result = await chrome.storage.local.get(['coins']);
+        const tokenList: string[] = result.coins ?? [];
+        await getTokenPrice(tokenList); // 如果 getTokenPrice 返回 Promise
         sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
       } catch (error) {
         sendResponse({ success: false, msg: 'Refresh failed ❌' });
       }
     })();
     return true; // ✅ 告诉 Chrome sendResponse 会异步调用
+  } else if (message.type === 'GET_LATEST_PRICES') {
+    const data = showTokenList?.length ? showTokenList : [];
+    const msg = showTokenList?.length ? 'success' : 'fail';
+    sendResponse({ success: true, data, msg });
   }
 });
 
@@ -70,7 +79,7 @@ function handleOKXSubscribe(tokenList: string[]) {
 // 发送数据
 function publishMessage(tokenList: TokenItem[]) {
   // 向当前标签页发送消息
-  console.log('tokenList', tokenList);
+  console.log('publishMessage', tokenList);
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs.length === 0 || chrome.runtime.lastError) return;
     tabs.forEach(tab => {
@@ -85,24 +94,26 @@ const throttledPublishMessage = throttle(publishMessage, 500);
 
 // 获取币种实时价格
 let eventSource: WebSocket | null = null;
-function getTokenPrice() {
+function getTokenPrice(tokenList: string[]) {
   disconnectWebSocket();
   eventSource = new WebSocket(OKXWebSoceketUrl);
   if (!eventSource) return;
   eventSource.onopen = () => {
-    if (!defaultToken?.length) return new Error('Token list cannot be null !!');
-    const subscribeMessage = handleOKXSubscribe(defaultToken);
+    if (!tokenList?.length) return new Error('Token list cannot be null !!');
+    console.log('tokenList', tokenList);
+    const subscribeMessage = handleOKXSubscribe(tokenList);
     eventSource!.send(JSON.stringify(subscribeMessage));
   };
+
   eventSource.onmessage = message => {
     try {
       const data = JSON.parse(message.data); // 解析消息
       if (!data?.data) return;
-
+      //
       const newTokenList = updateTokenList(data.data[0]);
-
       // console.log('newTokenList', newTokenList);
       if (!newTokenList || !Array.isArray(newTokenList)) return;
+
       throttledPublishMessage(newTokenList);
     } catch (err) {
       console.error('消息解析失败:', err);
@@ -124,10 +135,10 @@ function disconnectWebSocket() {
 }
 
 // 初始币种展示数据
-function initShowTokenList() {
-  if (!defaultToken.length) return new Error('Token list cannot be null!');
+function initShowTokenList(tokenList: string[]): TokenItem[] | Error {
+  if (!tokenList.length) return new Error('Token list cannot be null!');
   if (showTokenList) showTokenList = null;
-  return (showTokenList = defaultToken.map(token => ({
+  return (showTokenList = tokenList.map(token => ({
     id: token?.toLowerCase(),
     symbol: token?.toUpperCase(),
     price: 0,
@@ -143,18 +154,26 @@ interface TokenDataType {
   last: string;
   sodUtc8: string;
 }
-function updateTokenList(tokenData: TokenDataType) {
-  if (!tokenData?.instId || !tokenData?.last) return;
-  if (!showTokenList || !Array.isArray(showTokenList)) initShowTokenList();
+function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
+  if (!tokenData?.instId || !tokenData?.last) return null;
+  if (!showTokenList || !Array.isArray(showTokenList)) {
+    (async () => {
+      const result = await chrome.storage.local.get(['coins']);
+      const tokenList: string[] = result.coins ?? [];
+      initShowTokenList(tokenList);
+    })();
+
+    return null;
+  }
 
   // console.log('tokenData', tokenData);
   const coin = tokenData?.instId; // 币种 e.g. "BTC-USDT"
   const curPrice = Number(tokenData.last); // 当前价格
   const openToday = Number(tokenData.sodUtc8); // 北京时间开盘价
 
-  if (!showTokenList?.length) return;
+  if (!showTokenList?.length) return null;
   const cryptoToUpdate = showTokenList.find(item => coin === `${item.symbol}-USDT`);
-  if (!cryptoToUpdate) return;
+  if (!cryptoToUpdate) return null;
 
   // 保存上一次价格
   const lastPrice = cryptoToUpdate?.price || 0;
@@ -168,7 +187,7 @@ function updateTokenList(tokenData: TokenDataType) {
   // console.log('formattedLastPrice', formattedLastPrice);
 
   // 如果价格没有变化，直接返回，避免多次发送和渲染
-  if (formattedLastPrice !== null && formattedCurPrice === formattedLastPrice) return;
+  if (formattedLastPrice !== null && formattedCurPrice === formattedLastPrice) return null;
 
   // 更新当前价格
   cryptoToUpdate.price = curPrice;
