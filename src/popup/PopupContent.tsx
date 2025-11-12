@@ -9,7 +9,7 @@ import Button from '@/components/common/button';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
 import { TokenItem } from '@/types/index';
-import { formatNumberWithCommas } from '@/utils/index';
+import { formatNumberWithCommas, queryTokenLocal } from '@/utils/index';
 import { Loader } from 'lucide-react';
 
 // 异步 fetcher，封装 sendMessage
@@ -46,7 +46,7 @@ export default function PopupContent() {
     setErrorTip(null); // 清除错误样式
     const rawValue = event.target.value;
     // 1. 仅保留英文字母
-    const onlyLetters = rawValue.replace(/[^a-zA-Z]/g, '');
+    const onlyLetters = rawValue.replace(/[^a-zA-Z0-9]/g, '');
     // 2. 转为大写
     const uppercased = onlyLetters.toUpperCase();
     setSearchValue(uppercased);
@@ -67,12 +67,33 @@ export default function PopupContent() {
       setErrorTip(`${searchValue} already exists`);
       return;
     }
-    const effectiveToken = await queryToken(searchValue);
+    const isIpCN = await queryIpCN();
+    let effectiveToken = false;
+    if (isIpCN) {
+      effectiveToken = queryTokenLocal(searchValue);
+    } else {
+      effectiveToken = await queryToken(searchValue);
+    }
+
     if (!effectiveToken) {
       setErrorTip(`Invalid token`);
       return;
     }
     await saveToken(searchValue);
+  };
+
+  /**
+   * 查询当前连接的网络否是大陆
+   *
+   */
+  const queryIpCN = async (): Promise<boolean> => {
+    try {
+      const ipinfo = await fetch('https://ipapi.co/json/').then(r => r.json());
+      if (ipinfo.country === 'CN') return true; // 非中国网络，大概率VPN或在海外
+      return false;
+    } catch (err) {
+      return false;
+    }
   };
 
   /**

@@ -20,14 +20,15 @@ export default defineManifest({
     default_title: 'Crypto Tracker',
     default_popup: 'src/popup/index.html'
   },
-  permissions: ['storage', 'alarms', 'activeTab', 'scripting'],
+  permissions: ['storage', 'alarms', 'activeTab', 'scripting', 'idle'],
   content_scripts: [
     {
       js: ['src/content/main.tsx'],
       matches: ['https://*/*', 'http://*/*'],
       run_at: 'document_idle' // 脚本何时执行
     }
-  ]
+  ],
+  host_permissions: ['https://www.okx.com/*', 'https://ipapi.co/*']
   // side_panel: {
   //   // default_path: 'src/sidepanel/index.html'
   // }

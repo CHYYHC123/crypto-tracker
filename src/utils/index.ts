@@ -1,3 +1,4 @@
+import { SUPPORTEDTOKEN, TokenSymbol } from './tokens';
 /**
  * 保留小数点位数
  */
@@ -82,4 +83,13 @@ export function formatNumberWithCommas(number: number, decimalPlaces = 2): strin
   } else {
     return number.toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 8 });
   }
+}
+
+/**
+ * @description 查询本地token
+ * @param symbol 要查询的 token
+ */
+
+export function queryTokenLocal(symbol: string): boolean {
+  return SUPPORTEDTOKEN?.includes(symbol as TokenSymbol);
 }

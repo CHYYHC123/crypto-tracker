@@ -11,6 +11,8 @@ interface TokenItem {
 }
 let showTokenList: TokenItem[] | null = null;
 
+let eventSource: WebSocket | null = null;
+
 // 第一次安装或更新时 - 初始默认币种
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(['coins'], items => {
@@ -36,12 +38,28 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   }
 });
 
+// 监听页面页面打开
+chrome.idle.onStateChanged.addListener(newState => {
+  if (newState === 'locked') {
+    console.log('息屏/锁屏 -> 断开 WebSocket');
+    disconnectWebSocket();
+  } else if (newState === 'active') {
+    console.log('解锁 -> 重连 WebSocket');
+    (async () => {
+      const result = await chrome.storage.local.get(['coins']);
+      const tokenList: string[] = result.coins ?? [];
+      initShowTokenList(tokenList);
+      await getTokenPrice(tokenList); // 如果 getTokenPrice 返回 Promise
+    })();
+  }
+});
+
 /**
  * 监听消息
  * REFRESH 手动刷新
  * GET_LATEST_PRICES Popup获取最新数据
  */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'REFRESH') {
     (async () => {
       try {
@@ -79,12 +97,12 @@ function handleOKXSubscribe(tokenList: string[]) {
 // 发送数据
 function publishMessage(tokenList: TokenItem[]) {
   // 向当前标签页发送消息
-  console.log('publishMessage', tokenList);
+  // console.log('publishMessage', tokenList);
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs.length === 0 || chrome.runtime.lastError) return;
     tabs.forEach(tab => {
       if (!tab.id) return; // ✅ 防止 undefined
-      chrome.tabs.sendMessage(tab.id, { type: 'UPDATE_PRICE', data: tokenList }, response => {
+      chrome.tabs.sendMessage(tab.id, { type: 'UPDATE_PRICE', data: tokenList }, _response => {
         if (chrome.runtime.lastError) return; // 防止报错
       });
     });
@@ -93,7 +111,6 @@ function publishMessage(tokenList: TokenItem[]) {
 const throttledPublishMessage = throttle(publishMessage, 500);
 
 // 获取币种实时价格
-let eventSource: WebSocket | null = null;
 function getTokenPrice(tokenList: string[]) {
   disconnectWebSocket();
   eventSource = new WebSocket(OKXWebSoceketUrl);
@@ -123,15 +140,23 @@ function getTokenPrice(tokenList: string[]) {
     console.log('webWocket 关闭了');
   };
   eventSource.onerror = error => {
-    console.error('WebSocket 发生错误:', error);
+    console.log('WebSocket 发生错误:', error);
   };
 }
 
 // 断开websocket
 function disconnectWebSocket() {
   if (!eventSource) return;
-  eventSource.close();
-  eventSource = null;
+  try {
+    if (eventSource.readyState === WebSocket.OPEN || eventSource.readyState === WebSocket.CONNECTING) {
+      eventSource.close();
+    }
+  } catch (e) {
+    // 可以 log 一下错误，或者忽略
+    console.warn('WS close error:', e);
+  } finally {
+    eventSource = null;
+  }
 }
 
 // 初始币种展示数据

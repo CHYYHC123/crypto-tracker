@@ -68,7 +68,7 @@ export default function FloatingCryptoWidget() {
     }
   };
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     snapToEdge(info.point.x, info.point.y);
   };
 

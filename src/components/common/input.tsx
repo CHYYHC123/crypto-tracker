@@ -9,7 +9,7 @@ type InputProps = React.ComponentProps<'input'> & {
 
 const Input: React.FC<InputProps> = ({ type = 'text', className, onKeyDown, onCompositionStart, onCompositionEnd, errorTip, ...props }) => {
   // 判断 error, 只要 error 存在都认为是错误
-  const isError = !!errorTip;
+  // const isError = !!errorTip;
   // const dialogComposition = useDialogComposition();
   // Add composition event handlers to support input method editor (IME) for CJK languages.
   const {
