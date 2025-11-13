@@ -7,7 +7,6 @@ import { CustomToaster } from '@/components/CustomToaster/index';
 
 import { TokenItem } from '@/types/index';
 
-
 export default function FloatingCryptoWidget() {
   const [collapsed, setCollapsed] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -94,7 +93,25 @@ export default function FloatingCryptoWidget() {
         <CustomToaster />
         <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
-            <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
+            {collapsed && tokens ? (
+              <div className="flex justify-between items-center justify-between w-full">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
+                  <div className="ml-2">
+                    <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
+                    <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>
+                  </div>
+                </div>
+
+                <div style={{ marginRight: '12px' }}>
+                  <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
+                  <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
+                </div>
+              </div>
+            ) : (
+              <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
+            )}
+
             <div className="flex gap-2 items-center">
               <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
                 {collapsed ? <Plus size={12} /> : <Minus size={12} />}
@@ -136,7 +153,7 @@ export default function FloatingCryptoWidget() {
                   </motion.div>
                 ))}
                 <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
-                  <div >Real-time prices</div>
+                  <div>Real-time prices</div>
                   <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
                     Refresh
                   </button>
