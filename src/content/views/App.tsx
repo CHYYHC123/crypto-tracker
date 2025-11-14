@@ -92,7 +92,7 @@ export default function FloatingCryptoWidget() {
         <CustomToaster />
         <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
-            {collapsed && tokens.length > 0 ? (
+            {collapsed && tokens?.length > 0 ? (
               <div className="flex justify-between items-center justify-between w-full">
                 <div className="flex items-center">
                   <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
