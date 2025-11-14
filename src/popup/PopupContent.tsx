@@ -92,7 +92,7 @@ export default function PopupContent() {
       if (ipinfo.country === 'CN') return true; // 非中国网络，大概率VPN或在海外
       return false;
     } catch (err) {
-      return false;
+      return true;
     }
   };
 

@@ -1,7 +1,8 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/11/14 10:49:58
+  // 更新时间: 2025/11/14 18:49:11
   export const SUPPORTEDTOKEN = [
   "1INCH",
+  "2Z",
   "A",
   "AAVE",
   "ACA",
@@ -227,6 +228,7 @@
   "SATS",
   "SCR",
   "SD",
+  "SEI",
   "SHIB",
   "SKL",
   "SKY",
