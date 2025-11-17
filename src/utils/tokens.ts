@@ -1,5 +1,5 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/11/14 18:49:11
+  // 更新时间: 2025/11/17 10:54:58
   export const SUPPORTEDTOKEN = [
   "1INCH",
   "2Z",

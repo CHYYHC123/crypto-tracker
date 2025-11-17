@@ -5,6 +5,8 @@ import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus } from 'lucide-react';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
+import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
+
 import { TokenItem } from '@/types/index';
 
 export default function FloatingCryptoWidget() {
@@ -85,6 +87,9 @@ export default function FloatingCryptoWidget() {
       }
     });
   };
+
+  // 定时检测
+  useInactivityRefresh(tokens, refreshData, 5000);
 
   return (
     <>
