@@ -1,5 +1,5 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/11/17 14:04:04
+  // 更新时间: 2025/11/18 11:43:06
   export const SUPPORTEDTOKEN = [
   "1INCH",
   "2Z",
@@ -290,6 +290,7 @@
   "YFI",
   "YGG",
   "ZBCN",
+  "ZEN",
   "ZENT",
   "ZETA",
   "ZEUS",

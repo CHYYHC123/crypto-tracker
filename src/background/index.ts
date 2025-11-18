@@ -4,8 +4,8 @@ import { TokenItem } from '@/types/index';
 const OKXWebSoceketUrl = 'wss://wspri.okx.com:8443/ws/v5/ipublic';
 let showTokenList: TokenItem[] | null = null;
 let ws: WebSocket | null = null;
-let lastMessageTimestamp = Date.now();
-let reconnectAttempts = 0;
+// let lastMessageTimestamp = Date.now();
+// let reconnectAttempts = 0;
 
 // 节流 发送数据
 function publishMessage(tokenList: TokenItem[]) {
@@ -82,22 +82,17 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
   // 保留两位小数
   cryptoToUpdate.change = change !== null ? Number(change.toFixed(2)) : null;
 
-  lastMessageTimestamp = Date.now(); // 更新最后接收数据时间戳
+  // lastMessageTimestamp = Date.now(); // 更新最后接收数据时间戳
   return showTokenList;
 }
 
 // 建立 WebSocket
 function connectWebSocket(tokenList: string[]) {
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
+  disconnectWs();
   ws = new WebSocket(OKXWebSoceketUrl);
   ws.onopen = () => {
     if (!tokenList?.length) return new Error('Token list cannot be null !!');
-    // console.log('tokenList', tokenList);
-    reconnectAttempts = 0;
-    // const subscribeMessage = handleOKXSubscribe(tokenList);
+    // reconnectAttempts = 0;
     const subscribeMessage = {
       op: 'subscribe',
       args: tokenList.map(symbol => ({ channel: 'tickers', instId: `${symbol}-USDT` }))
@@ -118,7 +113,7 @@ function connectWebSocket(tokenList: string[]) {
   };
   ws.onclose = () => {
     ws = null;
-    scheduleReconnect(tokenList);
+    // scheduleReconnect(tokenList);
   };
   ws.onerror = error => {
     console.log('WS error occurred:', error);
@@ -126,23 +121,40 @@ function connectWebSocket(tokenList: string[]) {
 }
 
 // 自动重连
-function scheduleReconnect(tokenList: string[]) {
-  reconnectAttempts++;
-  const backoff = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
-  setTimeout(() => connectWebSocket(tokenList), backoff);
-}
+// function scheduleReconnect(tokenList: string[]) {
+//   reconnectAttempts++;
+//   const backoff = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
+//   setTimeout(() => connectWebSocket(tokenList), backoff);
+// }
 
-// 5 秒无消息自动刷新
-chrome.alarms.create('check_ws', { periodInMinutes: 0.1 }); // ~6秒
-chrome.alarms.onAlarm.addListener(async alarm => {
-  if (alarm.name !== 'check_ws') return;
-  const now = Date.now();
-  if (now - lastMessageTimestamp >= 5000) {
-    const result = await chrome.storage.local.get(['coins']);
-    const tokenList: string[] = result.coins ?? [];
-    await connectWebSocket(tokenList);
+// 断开连接
+function disconnectWs() {
+  try {
+    if (!ws) return; // 如果没有 ws，直接退出
+
+    const state = ws.readyState;
+
+    // 只有 CONNECTING(0) 或 OPEN(1) 的 WebSocket 才能关闭
+    if (state === WebSocket.CONNECTING || state === WebSocket.OPEN) {
+      const oldWS = ws;
+      ws = null; // 优先置空，避免并发重复 close
+
+      // 等 close 完成后再 log
+      oldWS.onclose = () => console.log('WebSocket closed safely');
+
+      oldWS.close();
+      return;
+    }
+
+    // 如果已在 CLOSING(2) 或 CLOSED(3)，直接置空即可
+    if (state === WebSocket.CLOSING || state === WebSocket.CLOSED) {
+      ws = null;
+    }
+  } catch (err) {
+    console.log('WS disconnect error:', err);
+    ws = null;
   }
-});
+}
 
 // 第一次安装或更新时 - 初始默认币种
 chrome.runtime.onInstalled.addListener(() => {
@@ -164,8 +176,19 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
 
 // 监听页面页面打开
 chrome.idle.onStateChanged.addListener(newState => {
-  if (newState === 'locked') ws?.close();
-  else if (newState === 'active') {
+  if (newState === 'locked') {
+    disconnectWs();
+    return;
+  }
+
+  if (newState === 'active') {
+    // 如果 ws 已存在并且是 CONNECTING(0) 或 OPEN(1)，说明正在工作，不重连
+    if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+      console.log('WS already alive, skip reconnect (idle → active)');
+      return;
+    }
+
+    // 已关闭状态(CLOSING / CLOSED) 或 ws = null，才需要重连
     chrome.storage.local.get(['coins'], ({ coins }) => {
       connectWebSocket(coins ?? []);
     });

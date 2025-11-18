@@ -5,7 +5,7 @@ import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus } from 'lucide-react';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
-// import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
+import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
 
 import { TokenItem } from '@/types/index';
 
@@ -37,14 +37,13 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
-  // mack 数据 -- 用于测试
-  // const mackData = () => {
-  //   const fake: any = [
-  //     { id: 'btc', symbol: 'BTC', price: '$64,200', change: '1.25', icon: 'B' },
-  //     { id: 'eth', symbol: 'ETH', price: '$3,200', change: '-0.85', icon: 'E' }
-  //   ];
-  //   setTokens(fake);
-  // };
+  useEffect(() => {
+    const Handler = () => {};
+    window.addEventListener('mousemove', Handler);
+    return () => {
+      window.removeEventListener('mousemove', Handler);
+    };
+  }, []);
 
   // 设置拖拽位置
   const snapToEdge = (x: number, y: number) => {
@@ -89,7 +88,12 @@ export default function FloatingCryptoWidget() {
   };
 
   // 定时检测
-  // useInactivityRefresh(tokens, refreshData, 5000);
+  useInactivityRefresh({
+    getData: () => tokens,
+    onRefresh: () => chrome.runtime.sendMessage({ type: 'REFRESH' }),
+    throttleDelay: 1500, // 鼠标移动 1.5 秒检查一次
+    timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
+  });
 
   return (
     <>
