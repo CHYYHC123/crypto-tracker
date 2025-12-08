@@ -1,7 +1,7 @@
 {
   "name": "Crypto Tracker",
   "type": "module",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -22,7 +22,8 @@
     "react-hot-toast": "^2.6.0",
     "react-use-measure": "^2.1.7",
     "swr": "^2.3.6",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "tailwind-scrollbar-hide": "^4.0.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",

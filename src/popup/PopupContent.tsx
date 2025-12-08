@@ -210,7 +210,7 @@ export default function PopupContent() {
           </Button>
         </div>
 
-        <div className="mt-5 overflow-auto max-h-[300px]">
+        <div className="mt-5 overflow-auto max-h-[300px] scrollbar-hide">
           {Array.isArray(tokens)
             ? tokens?.map((item: TokenItem) => {
                 const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';

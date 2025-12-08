@@ -1,5 +1,5 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/12/6 10:57:18
+  // 更新时间: 2025/12/8 11:14:34
   export const SUPPORTEDTOKEN = [
   "1INCH",
   "2Z",
@@ -172,6 +172,7 @@
   "NEIRO",
   "NEO",
   "NFT",
+  "NIGHT",
   "NMR",
   "NOT",
   "OKB",

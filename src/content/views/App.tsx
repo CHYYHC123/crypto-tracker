@@ -105,7 +105,7 @@ export default function FloatingCryptoWidget() {
       {!isMobile && (
         <motion.div ref={widgetRef} drag dragMomentum={false} onDragEnd={handleDragEnd} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="fixed bottom-4 right-4 z-99999999" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
           <CustomToaster />
-          <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide">
             <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
               {collapsed && tokens?.length > 0 ? (
                 <div className="flex justify-between items-center justify-between w-full">

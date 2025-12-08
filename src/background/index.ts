@@ -88,11 +88,11 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
 
 // 建立 WebSocket
 function connectWebSocket(tokenList: string[]) {
+
   disconnectWs();
   ws = new WebSocket(OKXWebSoceketUrl);
   ws.onopen = () => {
     if (!tokenList?.length) return new Error('Token list cannot be null !!');
-    // reconnectAttempts = 0;
     const subscribeMessage = {
       op: 'subscribe',
       args: tokenList.map(symbol => ({ channel: 'tickers', instId: `${symbol}-USDT` }))
