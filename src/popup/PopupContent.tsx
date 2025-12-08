@@ -193,59 +193,61 @@ export default function PopupContent() {
   };
 
   return (
-    <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
-      <CustomToaster />
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
-          <p className="text-xs text-white/50">Real-time prices</p>
+    <>
+      <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
+        <CustomToaster />
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
+            <p className="text-xs text-white/50">Real-time prices</p>
+          </div>
+          <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
         </div>
-        <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
-      </div>
-      <div className="search_token mt-4 flex items-center">
-        <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
-        <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
-          Add
-        </Button>
-      </div>
+        <div className="search_token mt-4 flex items-center">
+          <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
+          <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
+            Add
+          </Button>
+        </div>
 
-      <div className="mt-5 overflow-auto max-h-[300px]">
-        {Array.isArray(tokens)
-          ? tokens?.map((item: TokenItem) => {
-              const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
-              return (
-                <motion.div whileHover={{ scale: 1 }} key={item.id} className="flex justify-between items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
-                    <div className="ml-2">
-                      <div className="text-[13px] font-bold">{item?.symbol}</div>
-                      <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
+        <div className="mt-5 overflow-auto max-h-[300px]">
+          {Array.isArray(tokens)
+            ? tokens?.map((item: TokenItem) => {
+                const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
+                return (
+                  <motion.div whileHover={{ scale: 1 }} key={item.id} className="flex justify-between items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
+                    <div className="flex items-center">
+                      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
+                      <div className="ml-2">
+                        <div className="text-[13px] font-bold">{item?.symbol}</div>
+                        <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
-                    <div className="text-[11px]" style={{ color: chColor }}>
-                      {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
+                    <div className="text-right">
+                      <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
+                      <div className="text-[11px]" style={{ color: chColor }}>
+                        {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
+                      </div>
                     </div>
-                  </div>
-                  {tokens.length > 1 ? (
-                    <div>
-                      <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={() => removeToken(item.symbol)}>
-                        Remove
-                      </button>
-                    </div>
-                  ) : null}
-                </motion.div>
-              );
-            })
-          : null}
-      </div>
+                    {tokens.length > 1 ? (
+                      <div>
+                        <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={() => removeToken(item.symbol)}>
+                          Remove
+                        </button>
+                      </div>
+                    ) : null}
+                  </motion.div>
+                );
+              })
+            : null}
+        </div>
 
-      <div className="mt-2 flex justify-end">
-        <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
-          Refresh
-        </button>
+        <div className="mt-2 flex justify-end">
+          <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
+            Refresh
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

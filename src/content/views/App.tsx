@@ -37,14 +37,6 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
-  useEffect(() => {
-    const Handler = () => {};
-    window.addEventListener('mousemove', Handler);
-    return () => {
-      window.removeEventListener('mousemove', Handler);
-    };
-  }, []);
-
   // 设置拖拽位置
   const snapToEdge = (x: number, y: number) => {
     const vw = window.innerWidth;
@@ -95,82 +87,97 @@ export default function FloatingCryptoWidget() {
     timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      // console.log('是否触发', window.innerWidth);
+      setIsMobile(window.innerWidth < 500);
+    };
+
+    handleResize(); // 初始化执行一次
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <>
-      <motion.div ref={widgetRef} drag dragMomentum={false} onDragEnd={handleDragEnd} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="fixed bottom-4 right-4 z-99999999" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
-        <CustomToaster />
-        <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
-            {collapsed && tokens?.length > 0 ? (
-              <div className="flex justify-between items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
-                  <div className="ml-2">
-                    <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
-                    <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>
+      {!isMobile && (
+        <motion.div ref={widgetRef} drag dragMomentum={false} onDragEnd={handleDragEnd} initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="fixed bottom-4 right-4 z-99999999" style={{ transform: `translate(${position.x}px, ${position.y}px)` }}>
+          <CustomToaster />
+          <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
+              {collapsed && tokens?.length > 0 ? (
+                <div className="flex justify-between items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
+                    <div className="ml-2">
+                      <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
+                      <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginRight: '12px' }}>
+                    <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
+                    <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
                   </div>
                 </div>
+              ) : (
+                <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
+              )}
 
-                <div style={{ marginRight: '12px' }}>
-                  <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
-                  <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
-                </div>
+              <div className="flex gap-2 items-center">
+                <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
+                  {collapsed ? <Plus size={12} /> : <Minus size={12} />}
+                </button>
               </div>
-            ) : (
-              <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
-            )}
-
-            <div className="flex gap-2 items-center">
-              <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                {collapsed ? <Plus size={12} /> : <Minus size={12} />}
-              </button>
             </div>
-          </div>
 
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                ref={contentRef}
-                key="content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{
-                  height: contentHeight || 'auto',
-                  opacity: 1,
-                  transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
-                }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{
-                  height: { duration: 0.3, ease: 'easeInOut' },
-                  opacity: { duration: 0.2, ease: 'easeInOut' }
-                }}
-                className="p-3 space-y-2"
-              >
-                {tokens?.map((coin: any) => (
-                  <motion.div key={coin.symbol} whileHover={{ scale: 1.02 }} className="flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg cursor-pointer transition">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
-                      <div>
-                        <div className="text-xs font-medium">{coin.symbol}</div>
-                        <div className="text-[10px] opacity-60">{coin.id}</div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  ref={contentRef}
+                  key="content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{
+                    height: contentHeight || 'auto',
+                    opacity: 1,
+                    transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
+                  }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{
+                    height: { duration: 0.3, ease: 'easeInOut' },
+                    opacity: { duration: 0.2, ease: 'easeInOut' }
+                  }}
+                  className="p-3 space-y-2"
+                >
+                  {tokens?.map((coin: any) => (
+                    <motion.div key={coin.symbol} whileHover={{ scale: 1.02 }} className="flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg cursor-pointer transition">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
+                        <div>
+                          <div className="text-xs font-medium">{coin.symbol}</div>
+                          <div className="text-[10px] opacity-60">{coin.id}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs font-semibold">{formatNumberWithCommas(coin.price)}</div>
-                      <div className={`text-[10px] ${coin.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{coin.change >= 0 ? '+' + coin.change + '%' : coin.change + '%'}</div>
-                    </div>
-                  </motion.div>
-                ))}
-                <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
-                  <div>Real-time prices</div>
-                  <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                    Refresh
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      <div className="text-right">
+                        <div className="text-xs font-semibold">{formatNumberWithCommas(coin.price)}</div>
+                        <div className={`text-[10px] ${coin.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{coin.change >= 0 ? '+' + coin.change + '%' : coin.change + '%'}</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                  <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
+                    <div>Real-time prices</div>
+                    <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
+                      Refresh
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </>
   );
 }
