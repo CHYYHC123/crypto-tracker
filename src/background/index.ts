@@ -1,11 +1,13 @@
 import { price_show, throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
+import { defaultCoinList, ExchangeConfigMap, ExchangeType } from '@/config/exchangeConfig';
 
-const OKXWebSoceketUrl = 'wss://wspri.okx.com:8443/ws/v5/ipublic';
+import { parseWSMessage } from '@/utils/ws/parseTicker';
+import type { Ticker } from '@/utils/ws/parseTicker';
+import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
+
 let showTokenList: TokenItem[] | null = null;
 let ws: WebSocket | null = null;
-// let lastMessageTimestamp = Date.now();
-// let reconnectAttempts = 0;
 
 // 节流 发送数据
 function publishMessage(tokenList: TokenItem[]) {
@@ -35,13 +37,8 @@ function initShowTokenList(tokenList: string[]) {
 }
 
 //  更新 token 列表价格
-interface TokenDataType {
-  instId: string;
-  last: string;
-  sodUtc8: string;
-}
-function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
-  if (!tokenData?.instId || !tokenData?.last) return null;
+function updateTokenList(tokenData: Ticker): TokenItem[] | null {
+  if (!tokenData?.symbol || !tokenData?.last) return null;
   if (!showTokenList || !Array.isArray(showTokenList)) {
     (async () => {
       const result = await chrome.storage.local.get(['coins']);
@@ -52,7 +49,7 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
     return null;
   }
 
-  const coin = tokenData?.instId; // 币种 e.g. "BTC-USDT"
+  const coin = tokenData?.symbol; // 币种 e.g. "BTC-USDT"
   const curPrice = Number(tokenData.last); // 当前价格
   const openToday = Number(tokenData.sodUtc8); // 北京时间开盘价
 
@@ -87,25 +84,33 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
 }
 
 // 建立 WebSocket
-function connectWebSocket(tokenList: string[]) {
-
+async function connectWebSocket(tokenList: string[]) {
   disconnectWs();
-  ws = new WebSocket(OKXWebSoceketUrl);
+  const { data_source } = await chrome.storage.local.get('data_source');
+  if (!data_source) return;
+
+  const config = ExchangeConfigMap[data_source as ExchangeType];
+  if (!config) return;
+
+  ws = new WebSocket(config.wsUrl);
   ws.onopen = () => {
     if (!tokenList?.length) return new Error('Token list cannot be null !!');
-    const subscribeMessage = {
-      op: 'subscribe',
-      args: tokenList.map(symbol => ({ channel: 'tickers', instId: `${symbol}-USDT` }))
-    };
-    ws?.send(JSON.stringify(subscribeMessage));
+    const msg = config.buildSubscribeMessage(tokenList);
+    ws?.send(JSON.stringify(msg));
   };
 
   ws.onmessage = message => {
     try {
       const data = JSON.parse(message.data); // 解析消息
-      if (!data?.data) return;
-      const newTokenList = updateTokenList(data.data[0]);
-      if (!newTokenList || !Array.isArray(newTokenList)) return;
+
+      let ticker = parseWSMessage(data);
+      console.log('ticker', ticker);
+      if (!ticker) return;
+      ticker = fillSodUtc8(ticker);
+
+      const newTokenList = updateTokenList(ticker);
+      if (!Array.isArray(newTokenList)) return;
+
       throttledPublishMessage(newTokenList);
     } catch (err) {
       console.error('WS message parse error', err);
@@ -119,13 +124,6 @@ function connectWebSocket(tokenList: string[]) {
     console.log('WS error occurred:', error);
   };
 }
-
-// 自动重连
-// function scheduleReconnect(tokenList: string[]) {
-//   reconnectAttempts++;
-//   const backoff = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
-//   setTimeout(() => connectWebSocket(tokenList), backoff);
-// }
 
 // 断开连接
 function disconnectWs() {
@@ -159,7 +157,7 @@ function disconnectWs() {
 // 第一次安装或更新时 - 初始默认币种
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(['coins'], ({ coins }) => {
-    const tokenList = coins ?? ['BTC', 'ETH', 'BNB', 'SOL'];
+    const tokenList = coins ?? defaultCoinList;
     if (!coins) chrome.storage.local.set({ coins: tokenList });
     initShowTokenList(tokenList);
     connectWebSocket(tokenList);
@@ -168,9 +166,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // 监听 storage 变化
 chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area === 'local' && changes.coins) {
-    await initShowTokenList(changes.coins?.newValue);
-    await connectWebSocket(changes.coins?.newValue);
+  if (area !== 'local') return;
+
+  const { coins, data_source } = changes;
+  console.log('data_source', data_source);
+
+  if (coins || data_source) {
+    const { coins: latestCoins = [] } = await chrome.storage.local.get({ coins: [] });
+    await connectWebSocket(latestCoins);
   }
 });
 
