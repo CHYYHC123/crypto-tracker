@@ -61,6 +61,7 @@ export default function PopupContent() {
     return alreadyExist;
   }, [searchValue]);
 
+  // 添加 token 按下回车键触发
   const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') await addToken();
   };
@@ -87,7 +88,6 @@ export default function PopupContent() {
 
   /**
    * 查询当前连接的网络否是大陆
-   *
    */
   const queryIpCN = async (): Promise<boolean> => {
     try {

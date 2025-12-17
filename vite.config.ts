@@ -11,7 +11,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': `${path.resolve(__dirname, 'src')}`
-    }
+    },
+    // 防止多个 React 副本导致 hooks 报错
+    dedupe: ['react', 'react-dom']
   },
   plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` })],
   server: {

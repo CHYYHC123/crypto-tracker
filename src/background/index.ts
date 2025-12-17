@@ -170,6 +170,7 @@ chrome.idle.onStateChanged.addListener(newState => {
  * 监听消息
  * REFRESH 手动刷新
  * GET_LATEST_PRICES Popup获取最新数据
+ * REORDER_TOKENS 重新排序币种（不触发 WebSocket 重连）
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'REFRESH') {
@@ -189,5 +190,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const data = showTokenList?.length ? showTokenList : [];
     const msg = showTokenList?.length ? 'success' : 'fail';
     sendResponse({ success: true, data, msg });
+  } else if (message.type === 'REORDER_TOKENS') {
+    // 重新排序 showTokenList（不触发 WebSocket 重连）
+    const newOrder: string[] = message.payload?.order ?? [];
+    if (newOrder.length > 0 && showTokenList?.length) {
+      // 根据新顺序重新排列 showTokenList
+      const reorderedList = newOrder.map(symbol => showTokenList!.find(item => item.symbol === symbol)).filter((item): item is TokenItem => item !== undefined);
+
+      // 只有当所有币种都找到时才更新
+      if (reorderedList.length === showTokenList.length) {
+        showTokenList = reorderedList;
+        // 立即推送更新后的顺序到前端
+        publishMessage(showTokenList);
+        sendResponse({ success: true, msg: 'Reorder complete' });
+      } else {
+        sendResponse({ success: false, msg: 'Reorder failed: token mismatch' });
+      }
+    } else {
+      sendResponse({ success: false, msg: 'Invalid order' });
+    }
   }
 });
