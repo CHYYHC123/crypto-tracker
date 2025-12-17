@@ -104,7 +104,7 @@ async function connectWebSocket(tokenList: string[]) {
       const data = JSON.parse(message.data); // 解析消息
 
       let ticker = parseWSMessage(data);
-      console.log('ticker', ticker);
+      // console.log('ticker', ticker);
       if (!ticker) return;
       ticker = fillSodUtc8(ticker);
 
@@ -173,6 +173,8 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
 
   if (coins || data_source) {
     const { coins: latestCoins = [] } = await chrome.storage.local.get({ coins: [] });
+    console.log('latestCoins', latestCoins);
+    await initShowTokenList(latestCoins);
     await connectWebSocket(latestCoins);
   }
 });

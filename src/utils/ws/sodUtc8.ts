@@ -9,6 +9,9 @@ function getUtc8Date() {
   return utc8.toISOString().slice(0, 10);
 }
 
+/**
+ * 记录当天（UTC+8）的开盘价，Gate 和 BN 没有 8点时价格数据
+ */
 export function fillSodUtc8(ticker: Ticker): Ticker {
   const today = getUtc8Date();
 

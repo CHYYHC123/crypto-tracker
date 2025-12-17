@@ -35,7 +35,7 @@ export default function FloatingCryptoWidget() {
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
-  }, []);
+  }, [tokens?.length]);
 
   // 设置拖拽位置
   const snapToEdge = (x: number, y: number) => {
@@ -79,7 +79,9 @@ export default function FloatingCryptoWidget() {
     });
   };
 
-  // 定时检测
+  /**
+   * 定时检测 -- 当 7 秒内数据没有改变就当做 webSocket 已经断开，触发手动刷新
+   */
   useInactivityRefresh({
     getData: () => tokens,
     onRefresh: () => chrome.runtime.sendMessage({ type: 'REFRESH' }),
@@ -87,6 +89,9 @@ export default function FloatingCryptoWidget() {
     timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
   });
 
+  /**
+   * 移动端隐藏token表
+   */
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {

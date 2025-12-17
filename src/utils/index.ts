@@ -81,10 +81,33 @@ export function formatNumberWithCommas(number: number, decimalPlaces = 2): strin
   } else if (number < 0.000000001) {
     return number.toExponential(8); // 非常小的数使用科学计数法
   } else {
-    return number.toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+    // return number.toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+    // 小于 1 且大于 1e-9，不四舍五入，截断 8 位小数
+    return formatNumberNoRound(number, 8);
   }
 }
 
+/**
+ * @description 千分位格式化数字（不四舍五入，直接截断小数）
+ */
+export function formatNumberNoRound(number: number, decimalPlaces = 8): string {
+  if (isNaN(number) || number === null || number === 0) return '0';
+
+  const factor = Math.pow(10, decimalPlaces);
+  const truncated = Math.floor(number * factor) / factor;
+
+  const parts = truncated.toString().split('.');
+
+  // 千分位
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // 补全小数位
+  if (decimalPlaces > 0) {
+    parts[1] = (parts[1] || '').padEnd(decimalPlaces, '0');
+  }
+
+  return parts.join('.');
+}
 /**
  * @description 查询本地token
  * @param symbol 要查询的 token
