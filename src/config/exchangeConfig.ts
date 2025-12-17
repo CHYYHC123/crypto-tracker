@@ -1,4 +1,4 @@
-export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'SOL'];
+export const defaultCoinList = ['SAAS','BTC', 'ETH', 'BNB', 'SOL'];
 
 /** 用于 UI 的下拉列表 */
 export const ExchangeList: ExchangeType[] = ['OKX', 'Gate', 'BN'];

@@ -4,7 +4,7 @@ import { defaultCoinList, ExchangeConfigMap, ExchangeType } from '@/config/excha
 
 import { parseWSMessage } from '@/utils/ws/parseTicker';
 import type { Ticker } from '@/utils/ws/parseTicker';
-import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
+import { fillSodUtc8, prefetchOpenPrices } from '@/utils/ws/sodUtc8';
 
 let showTokenList: TokenItem[] | null = null;
 let ws: WebSocket | null = null;
@@ -92,6 +92,13 @@ async function connectWebSocket(tokenList: string[]) {
   const config = ExchangeConfigMap[data_source as ExchangeType];
   if (!config) return;
 
+  // 预取开盘价（Gate 和 BN 需要从 REST API 获取）
+  try {
+    await prefetchOpenPrices(data_source as ExchangeType, tokenList);
+  } catch (err) {
+    console.log('[connectWebSocket] 预取开盘价失败:', err);
+  }
+
   ws = new WebSocket(config.wsUrl);
   ws.onopen = () => {
     if (!tokenList?.length) return new Error('Token list cannot be null !!');
@@ -115,7 +122,7 @@ async function connectWebSocket(tokenList: string[]) {
       console.error('WS message parse error', err);
     }
   };
-  ws.onclose = (error) => {
+  ws.onclose = error => {
     ws = null;
     // scheduleReconnect(tokenList);
     console.log('WS onclose occurred:', error);
