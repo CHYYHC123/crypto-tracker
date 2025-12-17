@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
 import Select from '@/components/common/select';
+import ConfirmDialog from '@/components/common/confirm-dialog';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
 import { TokenItem } from '@/types/index';
@@ -45,6 +46,10 @@ export default function PopupContent() {
   // 搜索输入框
   const [searchValue, setSearchValue] = useState<string>('');
   const [errorTip, setErrorTip] = useState<string | null>(null);
+
+  // 强制添加弹窗
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingToken, setPendingToken] = useState<string>('');
   const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
     setErrorTip(null); // 清除错误样式
     const rawValue = event.target.value;
@@ -80,10 +85,22 @@ export default function PopupContent() {
     }
 
     if (!effectiveToken) {
+      // 验证失败，显示确认弹窗让用户选择是否强制添加
+      setPendingToken(searchValue);
+      setShowConfirm(true);
       setErrorTip(`Invalid token`);
       return;
     }
     await saveToken(searchValue);
+  };
+
+  // 强制添加 token
+  const handleForceAdd = async () => {
+    if (pendingToken) {
+      await saveToken(pendingToken);
+      setPendingToken('');
+      setErrorTip(null);
+    }
   };
 
   /**
@@ -299,6 +316,24 @@ export default function PopupContent() {
           </button>
         </div>
       </div>
+
+      {/* 强制添加确认弹窗 */}
+      <ConfirmDialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleForceAdd}
+        type="danger"
+        title="Invalid Token"
+        description={
+          <>
+            The token '{pendingToken}' was not found.
+            <br />
+            It may not display price data. Please remove '{pendingToken}' if no data appears.
+          </>
+        }
+        confirmText="Force Add"
+        cancelText="Cancel"
+      />
     </>
   );
 }
