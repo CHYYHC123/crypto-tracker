@@ -104,7 +104,6 @@ async function connectWebSocket(tokenList: string[]) {
       const data = JSON.parse(message.data); // 解析消息
 
       let ticker = parseWSMessage(data);
-      // console.log('ticker', ticker);
       if (!ticker) return;
       ticker = fillSodUtc8(ticker);
 
@@ -116,9 +115,10 @@ async function connectWebSocket(tokenList: string[]) {
       console.error('WS message parse error', err);
     }
   };
-  ws.onclose = () => {
+  ws.onclose = (error) => {
     ws = null;
     // scheduleReconnect(tokenList);
+    console.log('WS onclose occurred:', error);
   };
   ws.onerror = error => {
     console.log('WS error occurred:', error);
