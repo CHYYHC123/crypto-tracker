@@ -200,22 +200,27 @@ export default function PopupContent() {
   };
 
   // 移除按钮
+  const [removing, setRemoving] = useState(false);
   const removeToken = async (symbol: string) => {
-    if (!symbol) return;
-    const result = await chrome.storage.local.get(['coins']);
-    const oldTokenList: string[] = result.coins ?? [];
-    if (!oldTokenList?.includes(symbol)) return;
-    // 👉 关键一步：过滤掉要删除的 symbol
-    const newTokenList = oldTokenList.filter(item => item !== symbol);
-    // 保存更新后的数组
-    await chrome.storage.local.set({ coins: newTokenList });
-    setCountdown(10);
-    // await mutate();
-    setTimeout(() => {
-      mutate();
-    }, 1500);
-    // 可选：提示成功
-    toast.success(`${symbol} has been removed`, { duration: 2000 });
+    if (!symbol || removing) return;
+    setRemoving(true);
+    try {
+      const result = await chrome.storage.local.get(['coins']);
+      const oldTokenList: string[] = result.coins ?? [];
+      if (!oldTokenList?.includes(symbol)) return;
+      // 👉 关键一步：过滤掉要删除的 symbol
+      const newTokenList = oldTokenList.filter(item => item !== symbol);
+      // 保存更新后的数组
+      await chrome.storage.local.set({ coins: newTokenList });
+      setCountdown(10);
+      setTimeout(() => {
+        mutate();
+      }, 1500);
+      // 可选：提示成功
+      toast.success(`${symbol} has been removed`, { duration: 2000 });
+    } finally {
+      setRemoving(false);
+    }
   };
 
   const [value, setValue] = useState<string>(ExchangeList[0]);
@@ -298,7 +303,7 @@ export default function PopupContent() {
                     </div>
                     {tokens.length > 1 ? (
                       <div className="justify-self-end">
-                        <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={() => removeToken(item.symbol)}>
+                        <button className={`px-2 py-1 bg-white/10 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20 cursor-pointer'}`} onClick={() => removeToken(item.symbol)} disabled={removing}>
                           Remove
                         </button>
                       </div>
