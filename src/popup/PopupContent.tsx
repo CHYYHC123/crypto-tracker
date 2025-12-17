@@ -136,7 +136,10 @@ export default function PopupContent() {
       await chrome.storage.local.set({ coins: newCoins });
       setSearchValue('');
       setCountdown(10);
-      await mutate();
+
+      setTimeout(() => {
+        mutate();
+      }, 1500);
       toast.success('Token added successfully', {
         duration: 2000
       });
@@ -190,7 +193,10 @@ export default function PopupContent() {
     // 保存更新后的数组
     await chrome.storage.local.set({ coins: newTokenList });
     setCountdown(10);
-    await mutate();
+    // await mutate();
+    setTimeout(() => {
+      mutate();
+    }, 1500);
     // 可选：提示成功
     toast.success(`${symbol} has been removed`, { duration: 2000 });
   };
