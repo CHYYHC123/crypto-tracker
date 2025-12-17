@@ -63,7 +63,7 @@ class WsManager {
 
     const config = ExchangeConfigMap[exchange];
     if (!config) {
-      console.error(`[WsManager] 未知的交易所: ${exchange}`);
+      console.warn(`[WsManager] 未知的交易所: ${exchange}`);
       return;
     }
 
@@ -100,7 +100,7 @@ class WsManager {
         const data = JSON.parse(event.data);
         this.messageHandler?.(data);
       } catch (err) {
-        console.error('[WsManager] 消息解析失败:', err);
+        console.warn('[WsManager] 消息解析失败:', err);
       }
     };
 
@@ -116,7 +116,7 @@ class WsManager {
     };
 
     this.ws.onerror = () => {
-      console.error('[WsManager] 连接错误');
+      console.warn('[WsManager] 连接错误');
       this.errorHandler?.();
       // onerror 后通常会触发 onclose，重连逻辑在 onclose 中处理
     };

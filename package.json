@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && node scripts/getToken.js && vite build ",
+    "build_no_getToken": "tsc -b && vite build ",
     "build_sh": "bash scripts/build.sh",
     "preview": "vite preview"
   },

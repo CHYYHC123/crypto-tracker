@@ -20,5 +20,9 @@ export default defineConfig({
     cors: {
       origin: [/chrome-extension:\/\//]
     }
+  },
+  esbuild: {
+    // 生产环境移除 console 和 debugger
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
   }
 });
