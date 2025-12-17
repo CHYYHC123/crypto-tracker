@@ -1,13 +1,13 @@
 import { price_show, throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
-import { defaultCoinList, ExchangeConfigMap, ExchangeType } from '@/config/exchangeConfig';
+import { defaultCoinList, defaultDataSource, ExchangeType } from '@/config/exchangeConfig';
 
 import { parseWSMessage } from '@/utils/ws/parseTicker';
 import type { Ticker } from '@/utils/ws/parseTicker';
-import { fillSodUtc8, prefetchOpenPrices } from '@/utils/ws/sodUtc8';
+import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
+import { wsManager } from '@/utils/ws/wsManager';
 
 let showTokenList: TokenItem[] | null = null;
-let ws: WebSocket | null = null;
 
 // 节流 发送数据
 function publishMessage(tokenList: TokenItem[]) {
@@ -83,82 +83,41 @@ function updateTokenList(tokenData: Ticker): TokenItem[] | null {
   return showTokenList;
 }
 
-// 建立 WebSocket
-async function connectWebSocket(tokenList: string[]) {
-  disconnectWs();
-  const { data_source } = await chrome.storage.local.get('data_source');
-  if (!data_source) return;
-
-  const config = ExchangeConfigMap[data_source as ExchangeType];
-  if (!config) return;
-
-  // 预取开盘价（Gate 和 BN 需要从 REST API 获取）
+// 处理 WebSocket 消息
+function handleWsMessage(data: any) {
   try {
-    await prefetchOpenPrices(data_source as ExchangeType, tokenList);
+    let ticker = parseWSMessage(data);
+    if (!ticker) return;
+    ticker = fillSodUtc8(ticker);
+
+    const newTokenList = updateTokenList(ticker);
+    if (!Array.isArray(newTokenList)) return;
+
+    throttledPublishMessage(newTokenList);
   } catch (err) {
-    console.log('[connectWebSocket] 预取开盘价失败:', err);
+    console.error('WS message parse error', err);
+  }
+}
+
+// 设置消息处理回调
+wsManager.onMessage(handleWsMessage);
+
+// 建立 WebSocket 连接
+async function connectWebSocket(tokenList: string[]) {
+  const { data_source } = await chrome.storage.local.get('data_source');
+  const exchange = (data_source as ExchangeType) || defaultDataSource;
+
+  // 如果没有存储数据源，保存默认值
+  if (!data_source) {
+    await chrome.storage.local.set({ data_source: defaultDataSource });
   }
 
-  ws = new WebSocket(config.wsUrl);
-  ws.onopen = () => {
-    if (!tokenList?.length) return new Error('Token list cannot be null !!');
-    const msg = config.buildSubscribeMessage(tokenList);
-    ws?.send(JSON.stringify(msg));
-  };
-
-  ws.onmessage = message => {
-    try {
-      const data = JSON.parse(message.data); // 解析消息
-
-      let ticker = parseWSMessage(data);
-      if (!ticker) return;
-      ticker = fillSodUtc8(ticker);
-
-      const newTokenList = updateTokenList(ticker);
-      if (!Array.isArray(newTokenList)) return;
-
-      throttledPublishMessage(newTokenList);
-    } catch (err) {
-      console.error('WS message parse error', err);
-    }
-  };
-  ws.onclose = error => {
-    ws = null;
-    // scheduleReconnect(tokenList);
-    console.log('WS onclose occurred:', error);
-  };
-  ws.onerror = error => {
-    console.log('WS error occurred:', error);
-  };
+  await wsManager.connect(exchange, tokenList);
 }
 
 // 断开连接
 function disconnectWs() {
-  try {
-    if (!ws) return; // 如果没有 ws，直接退出
-
-    const state = ws.readyState;
-
-    // 只有 CONNECTING(0) 或 OPEN(1) 的 WebSocket 才能关闭
-    if (state === WebSocket.CONNECTING || state === WebSocket.OPEN) {
-      const oldWS = ws;
-      ws = null; // 优先置空，避免并发重复 close
-
-      // 等 close 完成后再 log
-      oldWS.onclose = () => console.log('WebSocket closed safely');
-
-      oldWS.close();
-      return;
-    }
-
-    // 如果已在 CLOSING(2) 或 CLOSED(3)，直接置空即可
-    if (state === WebSocket.CLOSING || state === WebSocket.CLOSED) {
-      ws = null;
-    }
-  } catch (err) {
-    console.log('WS disconnect error:', err);
-    ws = null;
-  }
+  wsManager.disconnect();
 }
 
 // 第一次安装或更新时 - 初始默认币种
@@ -181,7 +140,7 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   if (coins || data_source) {
     const { coins: latestCoins = [] } = await chrome.storage.local.get({ coins: [] });
     console.log('latestCoins', latestCoins);
-    await initShowTokenList(latestCoins);
+    initShowTokenList(latestCoins);
     await connectWebSocket(latestCoins);
   }
 });
@@ -194,13 +153,13 @@ chrome.idle.onStateChanged.addListener(newState => {
   }
 
   if (newState === 'active') {
-    // 如果 ws 已存在并且是 CONNECTING(0) 或 OPEN(1)，说明正在工作，不重连
-    if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+    // 如果 ws 已存在并且是 CONNECTING 或 OPEN，说明正在工作，不重连
+    if (wsManager.isConnected() || wsManager.isConnecting()) {
       console.log('WS already alive, skip reconnect (idle → active)');
       return;
     }
 
-    // 已关闭状态(CLOSING / CLOSED) 或 ws = null，才需要重连
+    // 已关闭状态，需要重连
     chrome.storage.local.get(['coins'], ({ coins }) => {
       connectWebSocket(coins ?? []);
     });
@@ -218,7 +177,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       try {
         const result = await chrome.storage.local.get(['coins']);
         const tokenList: string[] = result.coins ?? [];
-        await connectWebSocket(tokenList); // 如果 connectWebSocket 返回 Promise
+        await connectWebSocket(tokenList);
         sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
       } catch (error) {
         sendResponse({ success: false, msg: 'Refresh failed ❌' });
