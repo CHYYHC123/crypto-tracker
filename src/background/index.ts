@@ -1,11 +1,13 @@
 import { price_show, throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
+import { defaultCoinList, defaultDataSource, ExchangeType } from '@/config/exchangeConfig';
 
-const OKXWebSoceketUrl = 'wss://wspri.okx.com:8443/ws/v5/ipublic';
+import { parseWSMessage } from '@/utils/ws/parseTicker';
+import type { Ticker } from '@/utils/ws/parseTicker';
+import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
+import { wsManager } from '@/utils/ws/wsManager';
+
 let showTokenList: TokenItem[] | null = null;
-let ws: WebSocket | null = null;
-let lastMessageTimestamp = Date.now();
-let reconnectAttempts = 0;
 
 // 节流 发送数据
 function publishMessage(tokenList: TokenItem[]) {
@@ -35,13 +37,8 @@ function initShowTokenList(tokenList: string[]) {
 }
 
 //  更新 token 列表价格
-interface TokenDataType {
-  instId: string;
-  last: string;
-  sodUtc8: string;
-}
-function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
-  if (!tokenData?.instId || !tokenData?.last) return null;
+function updateTokenList(tokenData: Ticker): TokenItem[] | null {
+  if (!tokenData?.symbol || !tokenData?.last) return null;
   if (!showTokenList || !Array.isArray(showTokenList)) {
     (async () => {
       const result = await chrome.storage.local.get(['coins']);
@@ -52,7 +49,7 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
     return null;
   }
 
-  const coin = tokenData?.instId; // 币种 e.g. "BTC-USDT"
+  const coin = tokenData?.symbol; // 币种 e.g. "BTC-USDT"
   const curPrice = Number(tokenData.last); // 当前价格
   const openToday = Number(tokenData.sodUtc8); // 北京时间开盘价
 
@@ -82,90 +79,108 @@ function updateTokenList(tokenData: TokenDataType): TokenItem[] | null {
   // 保留两位小数
   cryptoToUpdate.change = change !== null ? Number(change.toFixed(2)) : null;
 
-  lastMessageTimestamp = Date.now(); // 更新最后接收数据时间戳
+  // lastMessageTimestamp = Date.now(); // 更新最后接收数据时间戳
   return showTokenList;
 }
 
-// 建立 WebSocket
-function connectWebSocket(tokenList: string[]) {
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-  ws = new WebSocket(OKXWebSoceketUrl);
-  ws.onopen = () => {
-    if (!tokenList?.length) return new Error('Token list cannot be null !!');
-    // console.log('tokenList', tokenList);
-    reconnectAttempts = 0;
-    // const subscribeMessage = handleOKXSubscribe(tokenList);
-    const subscribeMessage = {
-      op: 'subscribe',
-      args: tokenList.map(symbol => ({ channel: 'tickers', instId: `${symbol}-USDT` }))
-    };
-    ws?.send(JSON.stringify(subscribeMessage));
-  };
+// 处理 WebSocket 消息
+function handleWsMessage(data: any) {
+  try {
+    let ticker = parseWSMessage(data);
+    if (!ticker) return;
+    ticker = fillSodUtc8(ticker);
 
-  ws.onmessage = message => {
-    try {
-      const data = JSON.parse(message.data); // 解析消息
-      if (!data?.data) return;
-      const newTokenList = updateTokenList(data.data[0]);
-      if (!newTokenList || !Array.isArray(newTokenList)) return;
-      throttledPublishMessage(newTokenList);
-    } catch (err) {
-      console.error('WS message parse error', err);
-    }
-  };
-  ws.onclose = () => {
-    ws = null;
-    scheduleReconnect(tokenList);
-  };
-  ws.onerror = error => {
-    console.log('WS error occurred:', error);
-  };
+    const newTokenList = updateTokenList(ticker);
+    if (!Array.isArray(newTokenList)) return;
+
+    throttledPublishMessage(newTokenList);
+  } catch (err) {
+    console.error('WS message parse error', err);
+  }
 }
 
-// 自动重连
-function scheduleReconnect(tokenList: string[]) {
-  reconnectAttempts++;
-  const backoff = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
-  setTimeout(() => connectWebSocket(tokenList), backoff);
+// 设置消息处理回调
+wsManager.onMessage(handleWsMessage);
+
+// 建立 WebSocket 连接
+async function connectWebSocket(tokenList: string[]) {
+  const { data_source } = await chrome.storage.local.get('data_source');
+  const exchange = (data_source as ExchangeType) || defaultDataSource;
+
+  // 如果没有存储数据源，保存默认值
+  if (!data_source) {
+    await chrome.storage.local.set({ data_source: defaultDataSource });
+  }
+
+  await wsManager.connect(exchange, tokenList);
 }
 
-// 5 秒无消息自动刷新
-chrome.alarms.create('check_ws', { periodInMinutes: 0.1 }); // ~6秒
-chrome.alarms.onAlarm.addListener(async alarm => {
-  if (alarm.name !== 'check_ws') return;
-  const now = Date.now();
-  if (now - lastMessageTimestamp >= 5000) {
-    const result = await chrome.storage.local.get(['coins']);
-    const tokenList: string[] = result.coins ?? [];
-    await connectWebSocket(tokenList);
-  }
-});
+// 断开连接
+function disconnectWs() {
+  wsManager.disconnect();
+}
 
 // 第一次安装或更新时 - 初始默认币种
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(['coins'], ({ coins }) => {
-    const tokenList = coins ?? ['BTC', 'ETH', 'BNB', 'SOL'];
+    const tokenList = coins ?? defaultCoinList;
     if (!coins) chrome.storage.local.set({ coins: tokenList });
     initShowTokenList(tokenList);
     connectWebSocket(tokenList);
   });
 });
 
+// 判断 storage 变化是否为有效变化（值真正改变）
+function isValueChanged(change: chrome.storage.StorageChange | undefined, deep = false): boolean {
+  if (!change) return false;
+  if (deep) {
+    return JSON.stringify(change.oldValue) !== JSON.stringify(change.newValue);
+  }
+  return change.oldValue !== change.newValue;
+}
+
+// 获取有效的币种列表，为空时回退到默认值
+async function getValidCoinList(): Promise<string[]> {
+  const { coins } = await chrome.storage.local.get('coins');
+
+  if (coins?.length) return coins;
+
+  // coins 为空，恢复默认值
+  await chrome.storage.local.set({ coins: defaultCoinList });
+  return defaultCoinList;
+}
+
 // 监听 storage 变化
 chrome.storage.onChanged.addListener(async (changes, area) => {
-  if (area === 'local' && changes.coins) {
-    await initShowTokenList(changes.coins?.newValue);
-    await connectWebSocket(changes.coins?.newValue);
-  }
+  if (area !== 'local') return;
+
+  const coinsChanged = isValueChanged(changes.coins, true);
+  const dataSourceChanged = isValueChanged(changes.data_source);
+
+  if (!coinsChanged && !dataSourceChanged) return;
+
+  console.log('Storage changed:', { coinsChanged, dataSourceChanged });
+
+  const latestCoins = await getValidCoinList();
+  initShowTokenList(latestCoins);
+  await connectWebSocket(latestCoins);
 });
 
 // 监听页面页面打开
 chrome.idle.onStateChanged.addListener(newState => {
-  if (newState === 'locked') ws?.close();
-  else if (newState === 'active') {
+  if (newState === 'locked') {
+    disconnectWs();
+    return;
+  }
+
+  if (newState === 'active') {
+    // 如果 ws 已存在并且是 CONNECTING 或 OPEN，说明正在工作，不重连
+    if (wsManager.isConnected() || wsManager.isConnecting()) {
+      console.log('WS already alive, skip reconnect (idle → active)');
+      return;
+    }
+
+    // 已关闭状态，需要重连
     chrome.storage.local.get(['coins'], ({ coins }) => {
       connectWebSocket(coins ?? []);
     });
@@ -176,6 +191,7 @@ chrome.idle.onStateChanged.addListener(newState => {
  * 监听消息
  * REFRESH 手动刷新
  * GET_LATEST_PRICES Popup获取最新数据
+ * REORDER_TOKENS 重新排序币种（不触发 WebSocket 重连）
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'REFRESH') {
@@ -183,7 +199,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       try {
         const result = await chrome.storage.local.get(['coins']);
         const tokenList: string[] = result.coins ?? [];
-        await connectWebSocket(tokenList); // 如果 connectWebSocket 返回 Promise
+        await connectWebSocket(tokenList);
         sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
       } catch (error) {
         sendResponse({ success: false, msg: 'Refresh failed ❌' });
@@ -195,5 +211,24 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const data = showTokenList?.length ? showTokenList : [];
     const msg = showTokenList?.length ? 'success' : 'fail';
     sendResponse({ success: true, data, msg });
+  } else if (message.type === 'REORDER_TOKENS') {
+    // 重新排序 showTokenList（不触发 WebSocket 重连）
+    const newOrder: string[] = message.payload?.order ?? [];
+    if (newOrder.length > 0 && showTokenList?.length) {
+      // 根据新顺序重新排列 showTokenList
+      const reorderedList = newOrder.map(symbol => showTokenList!.find(item => item.symbol === symbol)).filter((item): item is TokenItem => item !== undefined);
+
+      // 只有当所有币种都找到时才更新
+      if (reorderedList.length === showTokenList.length) {
+        showTokenList = reorderedList;
+        // 立即推送更新后的顺序到前端
+        publishMessage(showTokenList);
+        sendResponse({ success: true, msg: 'Reorder complete' });
+      } else {
+        sendResponse({ success: false, msg: 'Reorder failed: token mismatch' });
+      }
+    } else {
+      sendResponse({ success: false, msg: 'Invalid order' });
+    }
   }
 });

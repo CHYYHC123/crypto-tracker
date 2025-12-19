@@ -11,12 +11,18 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': `${path.resolve(__dirname, 'src')}`
-    }
+    },
+    // 防止多个 React 副本导致 hooks 报错
+    dedupe: ['react', 'react-dom']
   },
   plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` })],
   server: {
     cors: {
       origin: [/chrome-extension:\/\//]
     }
+  },
+  esbuild: {
+    // 生产环境移除 console 和 debugger
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : []
   }
 });

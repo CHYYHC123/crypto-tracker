@@ -6,11 +6,15 @@ import toast from 'react-hot-toast';
 
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
+import Select from '@/components/common/select';
+import ConfirmDialog from '@/components/common/confirm-dialog';
 import { CustomToaster } from '@/components/CustomToaster/index';
 
 import { TokenItem } from '@/types/index';
 import { formatNumberWithCommas, queryTokenLocal } from '@/utils/index';
 import { Loader } from 'lucide-react';
+
+import { ExchangeList } from '@/config/exchangeConfig';
 
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
@@ -42,6 +46,10 @@ export default function PopupContent() {
   // 搜索输入框
   const [searchValue, setSearchValue] = useState<string>('');
   const [errorTip, setErrorTip] = useState<string | null>(null);
+
+  // 强制添加弹窗
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingToken, setPendingToken] = useState<string>('');
   const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
     setErrorTip(null); // 清除错误样式
     const rawValue = event.target.value;
@@ -58,6 +66,7 @@ export default function PopupContent() {
     return alreadyExist;
   }, [searchValue]);
 
+  // 添加 token 按下回车键触发
   const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') await addToken();
   };
@@ -76,15 +85,26 @@ export default function PopupContent() {
     }
 
     if (!effectiveToken) {
+      // 验证失败，显示确认弹窗让用户选择是否强制添加
+      setPendingToken(searchValue);
+      setShowConfirm(true);
       setErrorTip(`Invalid token`);
       return;
     }
     await saveToken(searchValue);
   };
 
+  // 强制添加 token
+  const handleForceAdd = async () => {
+    if (pendingToken) {
+      await saveToken(pendingToken);
+      setPendingToken('');
+      setErrorTip(null);
+    }
+  };
+
   /**
    * 查询当前连接的网络否是大陆
-   *
    */
   const queryIpCN = async (): Promise<boolean> => {
     try {
@@ -133,7 +153,10 @@ export default function PopupContent() {
       await chrome.storage.local.set({ coins: newCoins });
       setSearchValue('');
       setCountdown(10);
-      await mutate();
+
+      setTimeout(() => {
+        mutate();
+      }, 1500);
       toast.success('Token added successfully', {
         duration: 2000
       });
@@ -176,76 +199,146 @@ export default function PopupContent() {
     });
   };
 
-  //
+  // 移除按钮
+  const [removing, setRemoving] = useState(false);
   const removeToken = async (symbol: string) => {
-    if (!symbol) return;
-    const result = await chrome.storage.local.get(['coins']);
-    const oldTokenList: string[] = result.coins ?? [];
-    if (!oldTokenList?.includes(symbol)) return;
-    // 👉 关键一步：过滤掉要删除的 symbol
-    const newTokenList = oldTokenList.filter(item => item !== symbol);
-    // 保存更新后的数组
-    await chrome.storage.local.set({ coins: newTokenList });
-    setCountdown(10);
-    await mutate();
-    // 可选：提示成功
-    toast.success(`${symbol} has been removed`, { duration: 2000 });
+    if (!symbol || removing) return;
+    setRemoving(true);
+    try {
+      const result = await chrome.storage.local.get(['coins']);
+      const oldTokenList: string[] = result.coins ?? [];
+      if (!oldTokenList?.includes(symbol)) return;
+      // 👉 关键一步：过滤掉要删除的 symbol
+      const newTokenList = oldTokenList.filter(item => item !== symbol);
+      // 保存更新后的数组
+      await chrome.storage.local.set({ coins: newTokenList });
+      setCountdown(10);
+      setTimeout(() => {
+        mutate();
+      }, 1500);
+      // 可选：提示成功
+      toast.success(`${symbol} has been removed`, { duration: 2000 });
+    } finally {
+      setRemoving(false);
+    }
   };
 
+  const [value, setValue] = useState<string>(ExchangeList[0]);
+
+  const dataSource = useMemo(() => {
+    return ExchangeList.map(item => ({
+      label: item,
+      value: item,
+      desc: item === 'Gate' ? 'No VPN' : 'Need VPN'
+    }));
+  }, [ExchangeList]);
+
+  const initDataSource = async () => {
+    const { data_source } = await chrome.storage.local.get('data_source');
+    if (data_source) {
+      setValue(data_source);
+    } else {
+      const defaultSource = ExchangeList[0];
+      if (defaultSource) {
+        setValue(defaultSource);
+        await chrome.storage.local.set({ data_source: defaultSource });
+      }
+    }
+  };
+
+  const changeSelect = async (val: string) => {
+    await chrome.storage.local.set({ data_source: val });
+    setValue(val);
+  };
+
+  useEffect(() => {
+    initDataSource();
+  }, []);
+
   return (
-    <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
-      <CustomToaster />
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
-          <p className="text-xs text-white/50">Real-time prices</p>
+    <>
+      <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
+        <CustomToaster />
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
+            <p className="text-xs text-white/50">Real-time prices</p>
+          </div>
+          <div>
+            <Select
+              value={value}
+              onChange={(val: string) => {
+                changeSelect(val);
+              }}
+              placeholder="Data source"
+              options={dataSource}
+            />
+          </div>
         </div>
-        <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
-      </div>
-      <div className="search_token mt-4 flex items-center">
-        <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
-        <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
-          Add
-        </Button>
+        <div className="search_token mt-4 flex items-center">
+          <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
+          <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
+            Add
+          </Button>
+        </div>
+
+        <div className="mt-5 overflow-auto max-h-[300px] scrollbar-hide">
+          {Array.isArray(tokens)
+            ? tokens?.map((item: TokenItem) => {
+                const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
+                return (
+                  <motion.div whileHover={{ scale: 1 }} key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
+                    <div className="flex items-center">
+                      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
+                      <div className="ml-2 min-w-15">
+                        <div className="text-[13px] font-bold">{item?.symbol}</div>
+                        <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
+                      </div>
+                    </div>
+                    <div className="text-left ml-5">
+                      <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
+                      <div className="text-[11px]" style={{ color: chColor }}>
+                        {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
+                      </div>
+                    </div>
+                    {tokens.length > 1 ? (
+                      <div className="justify-self-end">
+                        <button className={`px-2 py-1 bg-white/10 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20 cursor-pointer'}`} onClick={() => removeToken(item.symbol)} disabled={removing}>
+                          Remove
+                        </button>
+                      </div>
+                    ) : null}
+                  </motion.div>
+                );
+              })
+            : null}
+        </div>
+
+        <div className="mt-2 flex items-center justify-between">
+          <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
+          <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
+            Refresh
+          </button>
+        </div>
       </div>
 
-      <div className="mt-5 overflow-auto max-h-[300px]">
-        {Array.isArray(tokens)
-          ? tokens?.map((item: TokenItem) => {
-              const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
-              return (
-                <motion.div whileHover={{ scale: 1 }} key={item.id} className="flex justify-between items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
-                    <div className="ml-2">
-                      <div className="text-[13px] font-bold">{item?.symbol}</div>
-                      <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
-                    <div className="text-[11px]" style={{ color: chColor }}>
-                      {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
-                    </div>
-                  </div>
-                  {tokens.length > 1 ? (
-                    <div>
-                      <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={() => removeToken(item.symbol)}>
-                        Remove
-                      </button>
-                    </div>
-                  ) : null}
-                </motion.div>
-              );
-            })
-          : null}
-      </div>
-
-      <div className="mt-2 flex justify-end">
-        <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
-          Refresh
-        </button>
-      </div>
-    </div>
+      {/* 强制添加确认弹窗 */}
+      <ConfirmDialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleForceAdd}
+        type="danger"
+        title="Invalid Token"
+        description={
+          <>
+            The token '{pendingToken}' was not found.
+            <br />
+            It may not display price data. Please remove '{pendingToken}' if no data appears.
+          </>
+        }
+        confirmText="Force Add"
+        cancelText="Cancel"
+      />
+    </>
   );
 }
