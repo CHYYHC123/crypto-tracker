@@ -130,19 +130,40 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// 判断 storage 变化是否为有效变化（值真正改变）
+function isValueChanged(change: chrome.storage.StorageChange | undefined, deep = false): boolean {
+  if (!change) return false;
+  if (deep) {
+    return JSON.stringify(change.oldValue) !== JSON.stringify(change.newValue);
+  }
+  return change.oldValue !== change.newValue;
+}
+
+// 获取有效的币种列表，为空时回退到默认值
+async function getValidCoinList(): Promise<string[]> {
+  const { coins } = await chrome.storage.local.get('coins');
+
+  if (coins?.length) return coins;
+
+  // coins 为空，恢复默认值
+  await chrome.storage.local.set({ coins: defaultCoinList });
+  return defaultCoinList;
+}
+
 // 监听 storage 变化
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== 'local') return;
 
-  const { coins, data_source } = changes;
-  console.log('data_source', data_source);
+  const coinsChanged = isValueChanged(changes.coins, true);
+  const dataSourceChanged = isValueChanged(changes.data_source);
 
-  if (coins || data_source) {
-    const { coins: latestCoins = [] } = await chrome.storage.local.get({ coins: [] });
-    console.log('latestCoins', latestCoins);
-    initShowTokenList(latestCoins);
-    await connectWebSocket(latestCoins);
-  }
+  if (!coinsChanged && !dataSourceChanged) return;
+
+  console.log('Storage changed:', { coinsChanged, dataSourceChanged });
+
+  const latestCoins = await getValidCoinList();
+  initShowTokenList(latestCoins);
+  await connectWebSocket(latestCoins);
 });
 
 // 监听页面页面打开
