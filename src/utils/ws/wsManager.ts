@@ -31,11 +31,15 @@ class WsManager {
   // 重试相关状态
   private retryCount = 0;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  // 是否手动断开连接
   private isManualDisconnect = false;
 
   // 当前连接信息（用于重连）
   private currentExchange: ExchangeType | null = null;
   private currentTokenList: string[] = [];
+
+  private lastMessageAt = Date.now();
+  private watchdogTimer: ReturnType<typeof setInterval> | null = null;
 
   // 回调函数
   private messageHandler: MessageHandler | null = null;
@@ -84,6 +88,9 @@ class WsManager {
       // 连接成功，重置重试计数
       this.resetRetryState();
 
+      this.lastMessageAt = Date.now();
+      this.startWatchdog();
+
       // 发送订阅消息
       if (tokenList.length > 0) {
         const msg = config.buildSubscribeMessage(tokenList);
@@ -98,6 +105,7 @@ class WsManager {
     this.ws.onmessage = event => {
       try {
         const data = JSON.parse(event.data);
+        this.lastMessageAt = Date.now(); // ⭐关键
         this.messageHandler?.(data);
       } catch (err) {
         console.warn('[WsManager] 消息解析失败:', err);
@@ -106,6 +114,7 @@ class WsManager {
 
     this.ws.onclose = event => {
       console.log(`[WsManager] 连接关闭: code=${event.code}, reason=${event.reason}`);
+      this.stopWatchdog();
       this.ws = null;
 
       // 触发回调
@@ -259,6 +268,41 @@ class WsManager {
       this.isManualDisconnect = false; // 确保重连时允许后续重试
       this.connect(this.currentExchange!, this.currentTokenList);
     }, delay);
+  }
+
+  /**
+   * 启动心跳检测
+   */
+  private startWatchdog() {
+    this.stopWatchdog();
+    this.watchdogTimer = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+      const now = Date.now();
+      if (now - this.lastMessageAt > 8000) {
+        console.warn('[WsManager] 心跳超时，触发重连');
+        this.forceReconnect('watchdog-timeout');
+      }
+    }, 3000);
+  }
+  
+  /**
+   * 停止心跳检测
+   */
+  private stopWatchdog() {
+    if (this.watchdogTimer) {
+      clearInterval(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
+  }
+
+  /**
+   * 强制重连 
+   */
+  private forceReconnect(reason: string) {
+    if (this.isConnecting()) return;
+    console.log('[WsManager] forceReconnect:', reason);
+    this.isManualDisconnect = false;
+    this.ws?.close();
   }
 }
 

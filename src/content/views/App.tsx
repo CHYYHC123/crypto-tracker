@@ -3,9 +3,9 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus, GripVertical } from 'lucide-react';
-import { CustomToaster, showPriceUp, showPriceDown } from '@/components/CustomToaster/index';
+import { CustomToaster } from '@/components/CustomToaster/index';
 
-import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
+// import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 
 import { TokenItem } from '@/types/index';
@@ -187,16 +187,6 @@ export default function FloatingCryptoWidget() {
       }
     });
   };
-
-  /**
-   * 定时检测 -- 当 7 秒内数据没有改变就当做 webSocket 已经断开，触发手动刷新
-   */
-  // useInactivityRefresh({
-  //   getData: () => tokens,
-  //   onRefresh: () => chrome.runtime.sendMessage({ type: 'REFRESH' }),
-  //   throttleDelay: 1500, // 鼠标移动 1.5 秒检查一次
-  //   timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
-  // });
 
   /**
    * 移动端隐藏token表
