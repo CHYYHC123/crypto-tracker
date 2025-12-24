@@ -3,9 +3,10 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus, GripVertical } from 'lucide-react';
-import { CustomToaster } from '@/components/CustomToaster/index';
+import { CustomToaster, showPriceUp, showPriceDown } from '@/components/CustomToaster/index';
 
 import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
+import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 
 import { TokenItem } from '@/types/index';
 
@@ -118,6 +119,9 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
+  // 管理预警消息
+  usePriceAlertManager(tokens);
+
   // 排序开始
   const handleSortStart = () => {
     setIsSorting(true);
@@ -187,12 +191,12 @@ export default function FloatingCryptoWidget() {
   /**
    * 定时检测 -- 当 7 秒内数据没有改变就当做 webSocket 已经断开，触发手动刷新
    */
-  useInactivityRefresh({
-    getData: () => tokens,
-    onRefresh: () => chrome.runtime.sendMessage({ type: 'REFRESH' }),
-    throttleDelay: 1500, // 鼠标移动 1.5 秒检查一次
-    timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
-  });
+  // useInactivityRefresh({
+  //   getData: () => tokens,
+  //   onRefresh: () => chrome.runtime.sendMessage({ type: 'REFRESH' }),
+  //   throttleDelay: 1500, // 鼠标移动 1.5 秒检查一次
+  //   timeout: 7000 // 数据 7 秒没更新 → 触发 refresh
+  // });
 
   /**
    * 移动端隐藏token表
@@ -286,7 +290,7 @@ export default function FloatingCryptoWidget() {
 
             {/* 底部操作栏 - 固定在底部，收起时隐藏 */}
             {!collapsed && (
-              <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] opacity-70">
+              <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] ">
                 <div>Real-time prices</div>
                 <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
                   Refresh

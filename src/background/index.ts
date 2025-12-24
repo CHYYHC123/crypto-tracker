@@ -42,7 +42,7 @@ function updateTokenList(tokenData: Ticker): TokenItem[] | null {
   if (!showTokenList || !Array.isArray(showTokenList)) {
     (async () => {
       const result = await chrome.storage.local.get(['coins']);
-      const tokenList: string[] = result.coins ?? [];
+      const tokenList: string[] = (result.coins as string[]) ?? [];
       initShowTokenList(tokenList);
     })();
 
@@ -123,7 +123,7 @@ function disconnectWs() {
 // 第一次安装或更新时 - 初始默认币种
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(['coins'], ({ coins }) => {
-    const tokenList = coins ?? defaultCoinList;
+    const tokenList = (coins ?? defaultCoinList) as string[];
     if (!coins) chrome.storage.local.set({ coins: tokenList });
     initShowTokenList(tokenList);
     connectWebSocket(tokenList);
@@ -141,7 +141,7 @@ function isValueChanged(change: chrome.storage.StorageChange | undefined, deep =
 
 // 获取有效的币种列表，为空时回退到默认值
 async function getValidCoinList(): Promise<string[]> {
-  const { coins } = await chrome.storage.local.get('coins');
+  const { coins }: { coins: string[] } = await chrome.storage.local.get('coins');
 
   if (coins?.length) return coins;
 
@@ -153,6 +153,18 @@ async function getValidCoinList(): Promise<string[]> {
 // 监听 storage 变化
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== 'local') return;
+
+  // 如果 price_alerts 变化了，通知 content script
+  if (changes.price_alerts) {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      tabs.forEach(tab => {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, { type: 'PRICE_ALERTS_UPDATED' });
+        }
+      });
+    });
+    return;
+  }
 
   const coinsChanged = isValueChanged(changes.coins, true);
   const dataSourceChanged = isValueChanged(changes.data_source);
@@ -182,7 +194,7 @@ chrome.idle.onStateChanged.addListener(newState => {
 
     // 已关闭状态，需要重连
     chrome.storage.local.get(['coins'], ({ coins }) => {
-      connectWebSocket(coins ?? []);
+      connectWebSocket((coins as string[]) ?? []);
     });
   }
 });
@@ -198,7 +210,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     (async () => {
       try {
         const result = await chrome.storage.local.get(['coins']);
-        const tokenList: string[] = result.coins ?? [];
+        const tokenList = (result.coins as string[]) ?? [];
         await connectWebSocket(tokenList);
         sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
       } catch (error) {

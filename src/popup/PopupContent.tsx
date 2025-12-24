@@ -9,10 +9,18 @@ import Button from '@/components/common/button';
 import Select from '@/components/common/select';
 import ConfirmDialog from '@/components/common/confirm-dialog';
 import { CustomToaster } from '@/components/CustomToaster/index';
+// @ts-ignore
+import ActionMenu from '@/components/common/ActionMenu';
+import ActionMenuItem from '@/components/common/ActionMenuItem';
+import Tooltip from '@/components/common/tooltip';
 
-import { TokenItem } from '@/types/index';
+import PriceAlertInput from './components/PriceAlter';
+import { Direction } from './components/PriceAlter';
+
+import type { TokenItem, PriceAlert } from '@/types/index';
+
 import { formatNumberWithCommas, queryTokenLocal } from '@/utils/index';
-import { Loader } from 'lucide-react';
+import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
 
 import { ExchangeList } from '@/config/exchangeConfig';
 
@@ -143,7 +151,7 @@ export default function PopupContent() {
   const saveToken = async (symbol: string): Promise<void> => {
     try {
       const result = await chrome.storage.local.get(['coins']);
-      const oldCoins: string[] = result.coins ?? [];
+      const oldCoins: string[] = (result.coins as string[]) ?? [];
       if (oldCoins?.includes(symbol)) {
         toast('Token already exists ⚠️', { duration: 2000 });
         setSearchValue('');
@@ -156,10 +164,10 @@ export default function PopupContent() {
 
       setTimeout(() => {
         mutate();
+        toast.success('Token added successfully', {
+          duration: 2000
+        });
       }, 1500);
-      toast.success('Token added successfully', {
-        duration: 2000
-      });
     } catch (error) {
       toast.error('Token addition failed', {
         duration: 2000
@@ -206,7 +214,7 @@ export default function PopupContent() {
     setRemoving(true);
     try {
       const result = await chrome.storage.local.get(['coins']);
-      const oldTokenList: string[] = result.coins ?? [];
+      const oldTokenList: string[] = (result.coins as string[]) ?? [];
       if (!oldTokenList?.includes(symbol)) return;
       // 👉 关键一步：过滤掉要删除的 symbol
       const newTokenList = oldTokenList.filter(item => item !== symbol);
@@ -215,16 +223,99 @@ export default function PopupContent() {
       setCountdown(10);
       setTimeout(() => {
         mutate();
+        // 可选：提示成功
+        toast.success(`${symbol} has been removed`, { duration: 2000 });
       }, 1500);
-      // 可选：提示成功
-      toast.success(`${symbol} has been removed`, { duration: 2000 });
     } finally {
       setRemoving(false);
     }
   };
 
-  const [value, setValue] = useState<string>(ExchangeList[0]);
+  // ActionMenu 状态
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [menuToken, setMenuToken] = useState<TokenItem | null>(null);
+  const open = Boolean(anchorEl);
 
+  const handleOpen = (e: React.MouseEvent<HTMLElement>, tokenItme: TokenItem) => {
+    if (removing) return;
+    setAnchorEl(e.currentTarget);
+    setMenuToken(tokenItme);
+  };
+  // 关闭时重置样式，确保下次打开时重新计算
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMenuToken(null);
+  };
+  // 设置预警价格
+  const [showPriceAlert, setShowPriceAlert] = useState(false);
+  const [price, setPrice] = useState(0);
+  const [alertToken, setAlertToken] = useState<TokenItem | null>(null);
+  const [direction, setDirection] = useState<Direction>('above'); // 'above' 或 'below'
+  const [enabledAlert, setEnabledAlert] = useState(true); // 是否禁用预警
+  const setPriceAlert = () => {
+    if (!menuToken) return;
+    setPrice(menuToken.price || 0);
+    setAlertToken(menuToken);
+    setShowPriceAlert(true);
+    handleClose();
+  };
+  // 点击 Save 按钮
+  const handlePriceAlert = async () => {
+    if (!alertToken || !alertToken?.price) return;
+
+    // ✅ 合理性校验（方向 + 当前价格）
+    if (direction === 'above' && price < alertToken.price) {
+      toast.error('Alert price must be higher than current price');
+      return;
+    }
+    if (direction === 'below' && price > alertToken.price) {
+      toast.error('Alert price must be lower than current price');
+      return;
+    }
+
+    const newAlert: PriceAlert = {
+      symbol: alertToken.symbol,
+      targetPrice: price,
+      direction,
+      enabled: enabledAlert,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    try {
+      const result = await chrome.storage.local.get(['price_alerts']);
+      const oldAlerts = (result.price_alerts as PriceAlert[]) ?? [];
+      const existingIndex = oldAlerts.findIndex(alert => alert.symbol === alertToken.symbol);
+
+      let updatedAlerts;
+      // 已存在 → 更新
+      if (existingIndex > -1) {
+        updatedAlerts = [...oldAlerts];
+        updatedAlerts[existingIndex] = {
+          ...oldAlerts[existingIndex],
+          targetPrice: price,
+          direction,
+          enabled: true,
+          updatedAt: Date.now()
+        };
+      }
+      // 不存在 → 新增
+      else {
+        updatedAlerts = [...oldAlerts, newAlert];
+      }
+      await chrome.storage.local.set({
+        price_alerts: updatedAlerts
+      });
+      toast.success(`Price alert set for ${alertToken.symbol}`, { duration: 2000 });
+
+      // 关闭弹窗 & 清理状态
+      setShowPriceAlert(false);
+      setAlertToken(null);
+    } catch (error) {
+      toast.error('Failed to save price alert', { duration: 2000 });
+    }
+  };
+
+  const [value, setValue] = useState<string>(ExchangeList[0]);
   const dataSource = useMemo(() => {
     return ExchangeList.map(item => ({
       label: item,
@@ -235,7 +326,7 @@ export default function PopupContent() {
 
   const initDataSource = async () => {
     const { data_source } = await chrome.storage.local.get('data_source');
-    if (data_source) {
+    if (typeof data_source === 'string') {
       setValue(data_source);
     } else {
       const defaultSource = ExchangeList[0];
@@ -301,13 +392,12 @@ export default function PopupContent() {
                         {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
                       </div>
                     </div>
-                    {tokens.length > 1 ? (
-                      <div className="justify-self-end">
-                        <button className={`px-2 py-1 bg-white/10 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/20 cursor-pointer'}`} onClick={() => removeToken(item.symbol)} disabled={removing}>
-                          Remove
-                        </button>
+
+                    <div className="justify-self-end">
+                      <div onClick={e => handleOpen(e, item)} aria-haspopup="true" aria-expanded={open && menuToken?.symbol === item.symbol} className={`px-2 py-1 bg-white/0 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>
+                        <Ellipsis size={16} />
                       </div>
-                    ) : null}
+                    </div>
                   </motion.div>
                 );
               })
@@ -322,6 +412,20 @@ export default function PopupContent() {
         </div>
       </div>
 
+      {/* ActionMenu - 移到最外层 div 外面，避免影响父容器布局 */}
+      <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <ActionMenuItem onClick={setPriceAlert}>Price Alert</ActionMenuItem>
+        <ActionMenuItem
+          danger
+          onClick={() => {
+            if (menuToken?.symbol) removeToken(menuToken?.symbol);
+            handleClose();
+          }}
+        >
+          Remove
+        </ActionMenuItem>
+      </ActionMenu>
+
       {/* 强制添加确认弹窗 */}
       <ConfirmDialog
         open={showConfirm}
@@ -331,12 +435,44 @@ export default function PopupContent() {
         title="Invalid Token"
         description={
           <>
-            The token '{pendingToken}' was not found.
-            <br />
-            It may not display price data. Please remove '{pendingToken}' if no data appears.
+            <div className="px-4 py-2 text-gray-300 text-sm leading-relaxed">
+              The token '{pendingToken}' was not found.
+              <br />
+              It may not display price data. Please remove '{pendingToken}' if no data appears.
+            </div>
           </>
         }
         confirmText="Force Add"
+        cancelText="Cancel"
+      />
+
+      {/* 设计币种价格预警弹窗 */}
+      <ConfirmDialog
+        open={showPriceAlert}
+        onClose={() => setShowPriceAlert(false)}
+        onConfirm={handlePriceAlert}
+        type="custom"
+        header={
+          <>
+            <div className="p-3 border-b-1 border-gray-600">
+              <div className="flex justify-between gap-2">
+                <h3 className="text-white/90 font-semibold text-base flex items-center">
+                  <span>Set alert for {alertToken?.symbol}</span>
+
+                  <Tooltip content={enabledAlert ? 'Price alert enabled' : 'Price alert disabled'} side="bottom">
+                    {enabledAlert ? <Power size={16} onClick={() => setEnabledAlert(false)} className="ml-4 cursor-pointer text-green-500" /> : <PowerOff size={16} onClick={() => setEnabledAlert(true)} className="ml-4 cursor-pointer text-red-500" />}
+                  </Tooltip>
+                </h3>
+                <button onClick={() => setShowPriceAlert(false)} className="text-gray-400 hover:text-white transition cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-white/70 font-normal text-xs">Current: {alertToken?.price}</p>
+            </div>
+          </>
+        }
+        description={<PriceAlertInput price={price} direction={direction} onPriceChange={setPrice} onDirectionChange={setDirection} />}
+        confirmText="Save"
         cancelText="Cancel"
       />
     </>

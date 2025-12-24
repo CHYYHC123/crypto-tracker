@@ -1,5 +1,6 @@
 import React from 'react';
-import { Toaster, resolveValue } from 'react-hot-toast';
+import { Toaster, resolveValue, toast } from 'react-hot-toast';
+import { BellRing, ArrowUp } from 'lucide-react';
 type CustomToasterProps = {
   targetDivRef?: HTMLDivElement;
 };
@@ -40,3 +41,58 @@ export const CustomToaster: React.FC<CustomToasterProps> = () => {
     </Toaster>
   );
 };
+
+// ====== 封装价格预警调用方法 ======
+export function showPriceUp(message: string, duration = 2000) {
+  toast.custom(
+    t => (
+      <div
+        style={{
+          opacity: t.visible ? 1 : 0,
+          background: '#052e16',
+          padding: '4px 8px',
+          fontSize: 14,
+          borderRadius: 6,
+          color: '#ffffff',
+          border: '1px solid #334155',
+          display: 'flex',
+          alignItems: 'center'
+        }}
+      >
+        <BellRing size={12} style={{ marginRight: '8px', fontSize: '12px', color: 'gold' }} />
+        <span style={{ fontSize: 12 }}>{message}</span>
+        <svg width="16" height="16" fill="none" stroke="#22c55e" viewBox="0 0 24 24" style={{ marginRight: 4 }}>
+          <path d="M12 19V5M12 5l-4 4M12 5l4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    ),
+    { duration }
+  );
+}
+
+export function showPriceDown(message: string, duration = 2000) {
+  toast.custom(
+    t => (
+      <div
+        style={{
+          opacity: t.visible ? 1 : 0,
+          background: '#3b0a0a',
+          padding: '4px 8px',
+          fontSize: 14,
+          borderRadius: 6,
+          color: '#ffffff',
+          border: '1px solid #334155',
+          display: 'flex',
+          alignItems: 'center'
+        }}
+      >
+        <BellRing size={12} style={{ marginRight: '8px', fontSize: '12px', color: 'gold' }} />
+        <span style={{ fontSize: 12 }}>{message}</span>
+        <svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24" style={{ marginRight: 4 }}>
+          <path d="M12 5v14M12 19l-4-4M12 19l4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    ),
+    { duration }
+  );
+}
