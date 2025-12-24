@@ -1,5 +1,5 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/12/17 18:24:07
+  // 更新时间: 2025/12/24 15:18:48
   export const SUPPORTEDTOKEN = [
   "1INCH",
   "2Z",
@@ -49,6 +49,7 @@
   "BNT",
   "BOME",
   "BONK",
+  "BRL1",
   "BTC",
   "CAT",
   "CATI",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Toaster, resolveValue, toast } from 'react-hot-toast';
-import { BellRing, ArrowUp } from 'lucide-react';
+import { BellRing } from 'lucide-react';
 type CustomToasterProps = {
   targetDivRef?: HTMLDivElement;
 };

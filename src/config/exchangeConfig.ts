@@ -1,4 +1,4 @@
-export const defaultCoinList = ['ASTER', 'PEPE', 'BTC', 'ETH', 'BNB', 'SOL'];
+export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'SOL'];
 
 /** 默认数据源 */
 export const defaultDataSource: ExchangeType = 'OKX';
