@@ -21,12 +21,10 @@ export type TokenItemWithAlert = BaseTokenItem & {
 export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
   const [alertQueue, setAlertQueue] = useState<AlertMessage[]>([]);
   const [alertsMap, setAlertsMap] = useState<Record<string, PriceAlert[]>>({});
-  // 使用 alertKey (symbol-targetPrice-direction) 作为 key，支持同一币种多个预警独立防抖
-  const lastPushTimeRef = useRef<Record<string, number>>({});
-  // 记录已触发的预警，避免重复触发
-  const triggeredAlertsRef = useRef<Set<string>>(new Set());
   // 记录正在处理的消息 ID，防止并发处理同一条消息（解决 StrictMode 双重执行问题）
   const processingMsgIdsRef = useRef<Set<string>>(new Set());
+
+  const lastPushTimeBySymbolRef = useRef<Record<string, number>>({});
 
   // 初始化读取 popup 本地预警配置
   const loadAlerts = useCallback(() => {
@@ -35,12 +33,12 @@ export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
       console.log('priceAlerts', priceAlerts);
       const map: Record<string, PriceAlert[]> = {};
       priceAlerts?.forEach(alert => {
-        if (!map[alert.symbol]) map[alert.symbol] = [];
-        map[alert.symbol].push(alert);
+        // 统一使用大写作为 key，确保大小写一致
+        const symbolKey = alert.symbol.toUpperCase();
+        if (!map[symbolKey]) map[symbolKey] = [];
+        map[symbolKey].push(alert);
       });
       setAlertsMap(map);
-      // 重置已触发记录，因为配置可能已改变
-      triggeredAlertsRef.current.clear();
     });
   }, []);
 
@@ -59,53 +57,53 @@ export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
     // 修复：检查对象是否为空，空对象 {} 是 truthy，需要检查 keys 长度
     if (!latestTokens.length || Object.keys(alertsMap).length === 0) return;
 
+    const now = Date.now();
+
     // 遍历 token
     latestTokens?.forEach((token: BaseTokenItem) => {
-      // 获取预警币种
-      const alerts = alertsMap[token.symbol];
-      console.log('alerts', alerts);
+      if (!token?.price) return;
 
-      if (!alerts || !token.price) return;
+      const symbol = token.symbol.toUpperCase();
+      const alerts = alertsMap[symbol];
+      if (!alerts) return;
 
-      const now = Date.now();
+      // 👉 核心：symbol 级 20s throttle
+      const lastPushTime = lastPushTimeBySymbolRef.current[symbol] || 0;
+      if (now - lastPushTime < 20_000) {
+        return;
+      }
 
-      alerts?.forEach(alert => {
-        if (!alert.enabled || !token?.price) return;
+      // 过滤出触发的预警
+      const triggeredAlerts = alerts.filter(alert => {
+        if (!alert.enabled || !token.price) return false;
 
-        const crossedAbove = alert.direction === 'above' && token?.price >= alert.targetPrice;
-        const crossedBelow = alert.direction === 'below' && token?.price <= alert.targetPrice;
+        if (alert.direction === 'above') return token.price >= alert.targetPrice;
 
-        if (crossedAbove || crossedBelow) {
-          // 使用 alertKey 来唯一标识每个预警（symbol-targetPrice-direction）
-          const alertKey = `${token.symbol}-${alert.targetPrice}-${alert.direction}`;
+        if (alert.direction === 'below') return token.price <= alert.targetPrice;
 
-          // 检查是否已经触发过（避免重复触发）
-          if (triggeredAlertsRef.current.has(alertKey)) return;
-
-          // 检查防抖：同一预警 60 秒内只触发一次
-          const lastPush = lastPushTimeRef.current[alertKey] || 0;
-          const diff = now - lastPush;
-
-          if (diff > 60_000) {
-            setAlertQueue(prev => [
-              ...prev,
-              {
-                id: `${token.symbol}-${alert.targetPrice}-${alert.direction}-${now}`,
-                symbol: token.symbol,
-                text: crossedAbove ? `${token.symbol} crossed $${alert.targetPrice}` : `${token.symbol} below $${alert.targetPrice}`,
-                timestamp: now
-              }
-            ]);
-            lastPushTimeRef.current[alertKey] = now;
-            // 标记为已触发，避免重复添加
-            triggeredAlertsRef.current.add(alertKey);
-          }
-        } else {
-          // 价格不再满足条件时，重置触发状态，允许下次触发
-          const alertKey = `${token.symbol}-${alert.targetPrice}-${alert.direction}`;
-          triggeredAlertsRef.current.delete(alertKey);
-        }
+        return false;
       });
+      if (!triggeredAlerts.length) return;
+
+      // 选择最早创建的预警作为代表
+      const representativeAlert = triggeredAlerts.sort((a, b) => a.createdAt - b.createdAt)[0];
+
+      const text = representativeAlert.direction === 'above' ? `${symbol} crossed $${representativeAlert.targetPrice}` : `${symbol} below $${representativeAlert.targetPrice}`;
+
+      // 生成唯一 ID：使用 symbol + timestamp + 随机数，避免同一毫秒内重复
+      const uniqueId = `${symbol}-${now}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // 👉 允许同一币种重复推送，但 20 秒内只推送一次（由上面的 throttle 控制）
+      setAlertQueue(prev => [
+        ...prev,
+        {
+          id: uniqueId,
+          symbol,
+          text,
+          timestamp: now
+        }
+      ]);
+      lastPushTimeBySymbolRef.current[symbol] = now;
     });
   }, [latestTokens, alertsMap]);
 

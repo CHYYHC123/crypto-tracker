@@ -43,7 +43,7 @@ export const CustomToaster: React.FC<CustomToasterProps> = () => {
 };
 
 // ====== 封装价格预警调用方法 ======
-export function showPriceUp(message: string, duration = 2000) {
+export function showPriceUp(message: string, duration = 5000) {
   toast.custom(
     t => (
       <div
@@ -70,7 +70,7 @@ export function showPriceUp(message: string, duration = 2000) {
   );
 }
 
-export function showPriceDown(message: string, duration = 2000) {
+export function showPriceDown(message: string, duration = 5000) {
   toast.custom(
     t => (
       <div
