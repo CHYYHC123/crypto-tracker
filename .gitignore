@@ -9,9 +9,10 @@ lerna-debug.log*
 
 node_modules
 dist
-release
+# release
 dist-ssr
 *.local
+blog
 
 # Editor directories and files
 .vscode/*
@@ -26,3 +27,4 @@ dist-ssr
 
 *.crx
 *.pem
+
