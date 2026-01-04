@@ -1,5 +1,5 @@
 // 此文件由 getToken.js 自动生成
-  // 更新时间: 2025/12/24 15:18:48
+  // 更新时间: 2026/1/4 12:01:19
   export const SUPPORTEDTOKEN = [
   "1INCH",
   "2Z",
@@ -98,7 +98,6 @@
   "FLOW",
   "FLR",
   "FLUID",
-  "FXS",
   "G",
   "GALA",
   "GALFT",
