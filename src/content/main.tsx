@@ -49,30 +49,55 @@ function cleanup() {
   }
 }
 
-// 监听扩展连接状态，当扩展被移除/禁用时清理页面
-function setupExtensionConnectionListener() {
+// 检查扩展是否可用
+function checkExtensionAvailable(): boolean {
   try {
-    // 尝试与 background 建立持久连接
-    const port = chrome.runtime.connect({ name: 'content-script' });
-
-    // 当连接断开时（扩展被移除/禁用/更新），执行清理
-    port.onDisconnect.addListener(() => {
-      // 检查是否是因为扩展被移除
-      // chrome.runtime.lastError 会在扩展不可用时设置
-      if (chrome.runtime.lastError || !chrome.runtime.id) cleanup();
-    });
+    // 检查 chrome.runtime.id 是否存在
+    console.log('chrome.runtime?.id', chrome.runtime?.id);
+    if (!chrome.runtime?.id) {
+      return false;
+    }
+    return true;
   } catch (e) {
-    // 如果连接失败，说明扩展已不可用，执行清理
-    cleanup();
+    return false;
   }
 }
 
-// 初始化连接监听
-setupExtensionConnectionListener();
+// 定期检查扩展状态，当扩展被移除/禁用时清理页面
+function setupExtensionStatusChecker() {
+  // 延迟执行，确保 service worker 已启动
+  setTimeout(() => {
+    // 首次检查
+    if (!checkExtensionAvailable()) {
+      cleanup();
+      return;
+    }
 
+    // 定期检查扩展是否可用（每 2 秒检查一次）
+    const checkInterval = setInterval(() => {
+      if (!checkExtensionAvailable()) {
+        clearInterval(checkInterval);
+        cleanup();
+      }
+    }, 2000);
+
+    // 也监听页面可见性变化，当页面重新可见时立即检查
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !checkExtensionAvailable()) {
+        clearInterval(checkInterval);
+        cleanup();
+      }
+    });
+  }, 1000);
+}
+
+// 先渲染 React 组件
 root = createRoot(mountNode);
 root.render(
   <StrictMode>
     <App />
   </StrictMode>
 );
+
+// 渲染完成后再初始化扩展状态检查
+setupExtensionStatusChecker();
