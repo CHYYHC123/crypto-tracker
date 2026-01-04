@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus, GripVertical } from 'lucide-react';
 import { CustomToaster } from '@/components/CustomToaster/index';
+import NetworkState from '@/content/views/networkState';
+import { DataStatus } from '@/types/index';
 
 // import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
@@ -88,6 +90,7 @@ export default function FloatingCryptoWidget() {
     })
   );
 
+  //
   useLayoutEffect(() => {
     if (!collapsed && contentRef.current) {
       // 读取 auto 时真实高度
@@ -118,6 +121,26 @@ export default function FloatingCryptoWidget() {
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
   }, []);
+
+  const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
+  useEffect(() => {
+    const handler = (msg: any) => {
+      if (msg?.type === 'DATA_STATUS_CHANGE') {
+        const nextStatus = msg.data as DataStatus;
+
+        // 防御式校验（很重要）
+        if (Object.values(DataStatus).includes(nextStatus)) {
+          setStatus(nextStatus);
+        }
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handler);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handler);
+    };
+  });
 
   // 管理预警消息
   usePriceAlertManager(tokens);
@@ -230,10 +253,16 @@ export default function FloatingCryptoWidget() {
                     </div>
                   </div>
 
-                  <div style={{ marginRight: '12px' }}>
-                    <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
-                    <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
-                  </div>
+                  {status !== DataStatus.LIVE ? (
+                    <div style={{ marginRight: '12px' }} onClick={refreshData}>
+                      <NetworkState status={status} className="cursor-pointer" />
+                    </div>
+                  ) : (
+                    <div style={{ marginRight: '12px' }}>
+                      <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
+                      <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
@@ -281,7 +310,9 @@ export default function FloatingCryptoWidget() {
             {/* 底部操作栏 - 固定在底部，收起时隐藏 */}
             {!collapsed && (
               <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] ">
-                <div>Real-time prices</div>
+                <div>
+                  <NetworkState status={status} />
+                </div>
                 <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
                   Refresh
                 </button>

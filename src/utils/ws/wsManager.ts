@@ -1,21 +1,29 @@
 import { ExchangeConfigMap, ExchangeType } from '@/config/exchangeConfig';
 import { prefetchOpenPrices } from './sodUtc8';
+import { DataStatus } from '@/types/index';
+
+// Re-export DataStatus for convenience
+export { DataStatus };
 
 // ============ 类型定义 ============
+
 export interface WsManagerConfig {
   maxRetries?: number; // 最大重试次数，默认 5
   baseDelay?: number; // 基础延迟（毫秒），默认 1000
   maxDelay?: number; // 最大延迟（毫秒），默认 30000
+  cooldownInterval?: number; // 冷却模式重试间隔（毫秒），默认 60000 (1分钟)
 }
 
 export type MessageHandler = (data: any) => void;
 export type ConnectionHandler = () => void;
+export type StatusChangeHandler = (status: DataStatus) => void;
 
 // ============ 默认配置 ============
 const DEFAULT_CONFIG: Required<WsManagerConfig> = {
   maxRetries: 5,
   baseDelay: 1000,
-  maxDelay: 30000
+  maxDelay: 30000,
+  cooldownInterval: 60000 // 1分钟
 };
 
 /**
@@ -41,11 +49,20 @@ class WsManager {
   private lastMessageAt = Date.now();
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
 
+  // 数据状态
+  private _dataStatus: DataStatus = DataStatus.OFFLINE;
+
+  // 冷却模式定时器
+  private cooldownTimer: ReturnType<typeof setInterval> | null = null;
+  // 是否处于冷却模式
+  private inCooldownMode = false;
+
   // 回调函数
   private messageHandler: MessageHandler | null = null;
   private openHandler: ConnectionHandler | null = null;
   private closeHandler: ConnectionHandler | null = null;
   private errorHandler: ConnectionHandler | null = null;
+  private statusChangeHandler: StatusChangeHandler | null = null;
 
   constructor(config: WsManagerConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -85,8 +102,12 @@ class WsManager {
     this.ws.onopen = () => {
       console.log(`[WsManager] 连接成功: ${exchange}`);
 
-      // 连接成功，重置重试计数
+      // 连接成功，重置重试计数和冷却模式
       this.resetRetryState();
+      this.exitCooldownMode();
+
+      // 更新状态为 LIVE
+      this.setDataStatus(DataStatus.LIVE);
 
       this.lastMessageAt = Date.now();
       this.startWatchdog();
@@ -121,6 +142,11 @@ class WsManager {
       console.log(`[WsManager] 连接关闭: code=${event.code}, reason=${event.reason}`);
       this.stopWatchdog();
       this.ws = null;
+
+      // 更新状态为 DEGRADED（正在重试中）
+      if (!this.isManualDisconnect) {
+        this.setDataStatus(DataStatus.DEGRADED);
+      }
 
       // 触发回调
       this.closeHandler?.();
@@ -191,6 +217,21 @@ class WsManager {
   }
 
   /**
+   * 设置状态变化回调
+   */
+  onStatusChange(handler: StatusChangeHandler): this {
+    this.statusChangeHandler = handler;
+    return this;
+  }
+
+  /**
+   * 获取当前数据状态
+   */
+  getDataStatus(): DataStatus {
+    return this._dataStatus;
+  }
+
+  /**
    * 检查是否已连接
    */
   isConnected(): boolean {
@@ -250,21 +291,29 @@ class WsManager {
       return;
     }
 
-    // 超过最大重试次数
-    if (this.retryCount >= this.config.maxRetries) {
-      console.log(`[WsManager] 已达到最大重试次数 (${this.config.maxRetries})，停止重试`);
-      return;
-    }
-
     // 没有连接信息，无法重试
     if (!this.currentExchange || !this.currentTokenList.length) {
       console.log('[WsManager] 没有连接信息，无法重试');
       return;
     }
 
-    const delay = this.getRetryDelay();
+    // 先检查是否已经在冷却模式
+    if (this.inCooldownMode) {
+      console.log('[WsManager] 已在冷却模式，跳过重试');
+      return;
+    }
+
+    // 增加重试计数
     this.retryCount++;
 
+    // 检查是否超过最大重试次数，进入冷却模式
+    if (this.retryCount > this.config.maxRetries) {
+      console.log(`[WsManager] 已达到最大重试次数 (${this.config.maxRetries})，进入冷却模式`);
+      this.enterCooldownMode();
+      return;
+    }
+
+    const delay = this.getRetryDelay();
     console.log(`[WsManager] 第 ${this.retryCount}/${this.config.maxRetries} 次重试，${delay / 1000}秒后执行...`);
 
     this.clearRetryTimer();
@@ -308,6 +357,108 @@ class WsManager {
     console.log('[WsManager] forceReconnect:', reason);
     this.isManualDisconnect = false;
     this.ws?.close();
+  }
+
+  /**
+   * 更新数据状态并通知回调
+   */
+  private setDataStatus(status: DataStatus): void {
+    console.log('status', status);
+    console.log('this._dataStatus', this._dataStatus);
+    if (this._dataStatus === status) return;
+
+    const oldStatus = this._dataStatus;
+    this._dataStatus = status;
+    console.log(`[WsManager] 数据状态变化: ${oldStatus} → ${status}`);
+
+    // 通知回调
+    this.statusChangeHandler?.(status);
+  }
+
+  /**
+   * 进入冷却模式
+   * - 状态变为 OFFLINE
+   * - 每隔 cooldownInterval 尝试重连一次
+   */
+  private enterCooldownMode(): void {
+    console.log('this.inCooldownMode', this.inCooldownMode);
+    if (this.inCooldownMode) return;
+
+    this.inCooldownMode = true;
+    this.setDataStatus(DataStatus.OFFLINE);
+
+    console.log(`[WsManager] 进入冷却模式，每 ${this.config.cooldownInterval / 1000}s 尝试重连一次`);
+
+    // 启动冷却定时器
+    this.cooldownTimer = setInterval(() => {
+      console.log('[WsManager] 冷却模式：尝试重连...');
+      this.attemptCooldownReconnect();
+    }, this.config.cooldownInterval);
+  }
+
+  /**
+   * 退出冷却模式
+   */
+  private exitCooldownMode(): void {
+    if (!this.inCooldownMode) return;
+
+    this.inCooldownMode = false;
+
+    if (this.cooldownTimer) {
+      clearInterval(this.cooldownTimer);
+      this.cooldownTimer = null;
+    }
+
+    console.log('[WsManager] 退出冷却模式');
+  }
+
+  /**
+   * 冷却模式下的重连尝试
+   */
+  private attemptCooldownReconnect(): void {
+    if (!this.currentExchange || !this.currentTokenList.length) {
+      console.log('[WsManager] 冷却重连：没有连接信息');
+      return;
+    }
+
+    // 重置重试计数，允许新一轮的重试
+    this.retryCount = 0;
+    this.isManualDisconnect = false;
+
+    // 尝试连接（如果成功，会自动退出冷却模式）
+    this.connect(this.currentExchange, this.currentTokenList);
+  }
+
+  /**
+   * 网络恢复时调用，触发立即重连
+   * 适用于监听到系统网络恢复事件时
+   */
+  onNetworkRestore(): void {
+    console.log('[WsManager] 网络恢复，尝试重连...');
+
+    // 如果已经连接，不需要重连
+    if (this.isConnected() || this.isConnecting()) {
+      console.log('[WsManager] 已连接或正在连接，跳过');
+      return;
+    }
+
+    // 退出冷却模式（如果在冷却模式中）
+    this.exitCooldownMode();
+
+    // 重置状态并尝试重连
+    this.retryCount = 0;
+    this.isManualDisconnect = false;
+
+    if (this.currentExchange && this.currentTokenList.length) {
+      this.connect(this.currentExchange, this.currentTokenList);
+    }
+  }
+
+  /**
+   * 检查是否处于冷却模式
+   */
+  isInCooldownMode(): boolean {
+    return this.inCooldownMode;
   }
 }
 

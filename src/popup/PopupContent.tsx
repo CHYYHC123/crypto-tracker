@@ -24,6 +24,9 @@ import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
 
 import { ExchangeList } from '@/config/exchangeConfig';
 
+import NetworkState from '@/content/views/networkState';
+import { DataStatus } from '@/types/index';
+
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
   return new Promise(resolve => {
@@ -346,6 +349,26 @@ export default function PopupContent() {
     initDataSource();
   }, []);
 
+  const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
+  useEffect(() => {
+    const handler = (msg: any) => {
+      if (msg?.type === 'DATA_STATUS_CHANGE') {
+        const nextStatus = msg.data as DataStatus;
+
+        // 防御式校验（很重要）
+        if (Object.values(DataStatus).includes(nextStatus)) {
+          setStatus(nextStatus);
+        }
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handler);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(handler);
+    };
+  });
+
   return (
     <>
       <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
@@ -353,7 +376,9 @@ export default function PopupContent() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
-            <p className="text-xs text-white/50">Real-time prices</p>
+            <div className="mt-1">
+              <NetworkState status={status} />
+            </div>
           </div>
           <div>
             <Select

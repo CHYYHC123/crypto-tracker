@@ -5,7 +5,7 @@ import { defaultCoinList, defaultDataSource, ExchangeType } from '@/config/excha
 import { parseWSMessage } from '@/utils/ws/parseTicker';
 import type { Ticker } from '@/utils/ws/parseTicker';
 import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
-import { wsManager } from '@/utils/ws/wsManager';
+import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 
 let showTokenList: TokenItem[] | null = null;
 
@@ -99,8 +99,26 @@ function handleWsMessage(data: any) {
   }
 }
 
+// 广播网络状态到所有标签页
+function broadcastDataStatus(status: DataStatus) {
+  chrome.tabs.query({}, tabs => {
+    tabs.forEach(tab => {
+      if (!tab.id) return;
+      chrome.tabs.sendMessage(tab.id, { type: 'DATA_STATUS_CHANGE', data: status }, () => {
+        if (chrome.runtime.lastError) return; // 静默处理错误
+      });
+    });
+  });
+}
+
 // 设置消息处理回调
 wsManager.onMessage(handleWsMessage);
+
+// 设置状态变化回调
+wsManager.onStatusChange(status => {
+  console.log('[Background] 数据状态变化:', status);
+  broadcastDataStatus(status);
+});
 
 // 建立 WebSocket 连接
 async function connectWebSocket(tokenList: string[]) {
@@ -192,10 +210,8 @@ chrome.idle.onStateChanged.addListener(newState => {
       return;
     }
 
-    // 已关闭状态，需要重连
-    chrome.storage.local.get(['coins'], ({ coins }) => {
-      connectWebSocket((coins as string[]) ?? []);
-    });
+    // 触发网络恢复重连（会自动退出冷却模式）
+    wsManager.onNetworkRestore();
   }
 });
 
@@ -204,8 +220,19 @@ chrome.idle.onStateChanged.addListener(newState => {
  * REFRESH 手动刷新
  * GET_LATEST_PRICES Popup获取最新数据
  * REORDER_TOKENS 重新排序币种（不触发 WebSocket 重连）
+ * GET_DATA_STATUS 获取当前数据状态
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  // 获取当前数据状态
+  if (message.type === 'GET_DATA_STATUS') {
+    sendResponse({
+      success: true,
+      data: wsManager.getDataStatus(),
+      isInCooldownMode: wsManager.isInCooldownMode()
+    });
+    return;
+  }
+
   if (message.type === 'REFRESH') {
     (async () => {
       try {
