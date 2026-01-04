@@ -101,3 +101,10 @@ root.render(
 
 // 渲染完成后再初始化扩展状态检查
 setupExtensionStatusChecker();
+
+// 监听页面可见性变化，当页面从隐藏变为可见时，通知 background 主动推送数据
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
+  }
+});

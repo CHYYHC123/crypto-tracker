@@ -255,6 +255,7 @@ chrome.idle.onStateChanged.addListener(newState => {
  * GET_LATEST_PRICES Popup获取最新数据
  * REORDER_TOKENS 重新排序币种（不触发 WebSocket 重连）
  * GET_DATA_STATUS 获取当前数据状态
+ * CONTENT_RESYNC Content 页面可见时请求同步数据
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // 获取当前数据状态
@@ -264,6 +265,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       data: wsManager.getDataStatus(),
       isInCooldownMode: wsManager.isInCooldownMode()
     });
+    return;
+  }
+
+  // Content 页面可见时，主动推送当前数据
+  if (message.type === 'CONTENT_RESYNC') {
+    if (showTokenList && showTokenList.length > 0) {
+      publishMessage(showTokenList);
+    }
     return;
   }
 
