@@ -70,7 +70,31 @@ function parseBN(msg: any): Ticker | null {
   };
 }
 
-export function parseWSMessage(msg: any): Ticker | null {
-  return parseGate(msg) || parseOKX(msg) || parseBN(msg);
+/** Hyperliquid */
+function parseHL(msg: any): Ticker | null {
+  if (msg?.channel !== 'candle' || !msg?.data) return null;
+
+  const d = msg.data;
+
+  const close = Number(d.c);
+  const open = Number(d.o);
+
+  if (!Number.isFinite(close) || !Number.isFinite(open)) return null;
+
+  return {
+    symbol: `${d.s}-USDT`, // BTC → BTC-USDT（与你系统统一）
+    last: close,
+    bid: close, // ⚠️ 降级处理
+    ask: close, // ⚠️ 降级处理
+    high24h: Number(d.h), // ⚠️ 实际是当前 interval high
+    low24h: Number(d.l), // ⚠️ 实际是当前 interval low
+    volume24h: Number(d.v), // ⚠️ 实际是当前 interval volume
+    changePercent: open > 0 ? ((close - open) / open) * 100 : 0,
+    exchange: 'HL',
+    sodUtc8: open > 0 ? open : undefined // 使用 candle 的开盘价作为 sodUtc8
+  };
 }
 
+export function parseWSMessage(msg: any): Ticker | null {
+  return parseGate(msg) || parseOKX(msg) || parseBN(msg) || parseHL(msg);
+}

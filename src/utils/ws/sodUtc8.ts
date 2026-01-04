@@ -52,9 +52,9 @@ export function setCachedOpenPrice(exchange: ExchangeType, symbol: string, price
 export async function prefetchOpenPrices(exchange: ExchangeType, tokenList: string[]): Promise<void> {
   checkAndClearExpiredCache();
 
-  // OKX 不需要预取，WebSocket 会返回 sodUtc8
-  if (exchange === 'OKX') {
-    console.log('[sodUtc8] OKX 不需要预取开盘价');
+  // OKX 和 HL 不需要预取，WebSocket 会返回开盘价
+  if (exchange === 'OKX' || exchange === 'HL') {
+    console.log(`[sodUtc8] ${exchange} 不需要预取开盘价（WebSocket 数据已包含）`);
     return;
   }
 

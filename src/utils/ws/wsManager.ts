@@ -94,7 +94,12 @@ class WsManager {
       // 发送订阅消息
       if (tokenList.length > 0) {
         const msg = config.buildSubscribeMessage(tokenList);
-        this.ws?.send(JSON.stringify(msg));
+        // this.ws?.send(JSON.stringify(msg));
+        if (Array.isArray(msg)) {
+          msg.forEach(m => this.ws?.send(JSON.stringify(m)));
+        } else {
+          this.ws?.send(JSON.stringify(msg));
+        }
         console.log(`[WsManager] 已订阅 ${tokenList.length} 个币种`);
       }
 
@@ -284,7 +289,7 @@ class WsManager {
       }
     }, 3000);
   }
-  
+
   /**
    * 停止心跳检测
    */
@@ -296,7 +301,7 @@ class WsManager {
   }
 
   /**
-   * 强制重连 
+   * 强制重连
    */
   private forceReconnect(reason: string) {
     if (this.isConnecting()) return;
