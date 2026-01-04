@@ -318,6 +318,7 @@ export default function PopupContent() {
     }
   };
 
+  // 数据源
   const [value, setValue] = useState<string>(ExchangeList[0]);
   const dataSource = useMemo(() => {
     return ExchangeList.map(item => ({
@@ -349,6 +350,7 @@ export default function PopupContent() {
     initDataSource();
   }, []);
 
+  // 网络状态
   const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
   useEffect(() => {
     const handler = (msg: any) => {

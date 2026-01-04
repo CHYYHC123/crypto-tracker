@@ -168,6 +168,26 @@ async function getValidCoinList(): Promise<string[]> {
   return defaultCoinList;
 }
 
+// 判断两个币种数组是否只是顺序不同（包含相同的币种）
+function isOnlyOrderChanged(oldCoins: string[] | undefined, newCoins: string[] | undefined): boolean {
+  if (!oldCoins || !newCoins) return false;
+  if (oldCoins.length !== newCoins.length) return false;
+
+  // 检查是否包含相同的币种（忽略顺序）
+  const oldSet = new Set(oldCoins);
+  const newSet = new Set(newCoins);
+
+  if (oldSet.size !== newSet.size) return false;
+
+  // 检查所有币种是否都相同
+  for (const coin of oldSet) {
+    if (!newSet.has(coin)) return false;
+  }
+
+  // 如果币种相同但顺序不同，返回 true
+  return JSON.stringify(oldCoins) !== JSON.stringify(newCoins);
+}
+
 // 监听 storage 变化
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== 'local') return;
@@ -188,6 +208,20 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
   const dataSourceChanged = isValueChanged(changes.data_source);
 
   if (!coinsChanged && !dataSourceChanged) return;
+
+  // 如果只是币种顺序变化（币种相同但顺序不同），只更新顺序，不触发 WebSocket 重连
+  if (coinsChanged && !dataSourceChanged) {
+    const oldCoins = changes.coins?.oldValue as string[] | undefined;
+    const newCoins = changes.coins?.newValue as string[] | undefined;
+
+    if (isOnlyOrderChanged(oldCoins, newCoins)) {
+      console.log('Storage changed: only order changed, skip WebSocket reconnect');
+      const latestCoins = await getValidCoinList();
+      initShowTokenList(latestCoins);
+      // 不调用 connectWebSocket，只更新内存中的顺序
+      return;
+    }
+  }
 
   console.log('Storage changed:', { coinsChanged, dataSourceChanged });
 
@@ -262,6 +296,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         showTokenList = reorderedList;
         // 立即推送更新后的顺序到前端
         publishMessage(showTokenList);
+
+        // 持久化保存顺序到 storage（保持大写格式，因为 storage 中存储的是大写）
+        const newCoinsOrder = newOrder.map(symbol => symbol.toUpperCase());
+        chrome.storage.local.set({ coins: newCoinsOrder });
+
         sendResponse({ success: true, msg: 'Reorder complete' });
       } else {
         sendResponse({ success: false, msg: 'Reorder failed: token mismatch' });

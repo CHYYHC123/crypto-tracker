@@ -4,7 +4,7 @@ export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'SOL'];
 export const defaultDataSource: ExchangeType = 'OKX';
 
 /** 用于 UI 的下拉列表 */
-export const ExchangeList: ExchangeType[] = ['OKX', 'Gate', 'BN', 'HL'];
+export const ExchangeList: ExchangeType[] = ['OKX', 'Gate', 'BN'];
 
 // 交易所类型
 export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL';
@@ -23,7 +23,7 @@ const OKXConfig: ExchangeConfig = {
       op: 'subscribe',
       args: tokenList.map(token => ({
         channel: 'tickers',
-        instId: `${token}-USDT`
+        instId: `${token.toUpperCase()}-USDT`
       }))
     };
   }

@@ -90,7 +90,7 @@ export default function FloatingCryptoWidget() {
     })
   );
 
-  //
+  // 内容高度
   useLayoutEffect(() => {
     if (!collapsed && contentRef.current) {
       // 读取 auto 时真实高度
