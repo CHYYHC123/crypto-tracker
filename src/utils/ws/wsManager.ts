@@ -252,6 +252,34 @@ class WsManager {
     return this.retryCount;
   }
 
+  /**
+   * 获取最后接收消息的时间戳
+   */
+  getLastMessageAt(): number {
+    return this.lastMessageAt;
+  }
+
+  /**
+   * 检测并处理 WebSocket 假死状态
+   * 如果连接存在但长时间没有收到消息，则更新状态为 OFFLINE 并强制重连
+   * @param staleThreshold 假死阈值（毫秒），默认 60000 (1分钟)
+   */
+  detectAndHandleStaleConnection(staleThreshold: number = 60000): boolean {
+    const now = Date.now();
+    const timeSinceLastMessage = now - this.lastMessageAt;
+
+    // 如果 WebSocket 显示连接，但超过阈值时间没有收到消息，判定为假死
+    if (this.isConnected() && timeSinceLastMessage > staleThreshold) {
+      console.warn(`[WsManager] 检测到 WebSocket 假死: ${Math.floor(timeSinceLastMessage / 1000)}秒内无消息`);
+
+      // 更新状态为 OFFLINE
+      this.setDataStatus(DataStatus.OFFLINE);
+      return true; // 返回 true 表示检测到假死
+    }
+
+    return false; // 返回 false 表示连接正常
+  }
+
   // ============ 私有方法 ============
 
   /**

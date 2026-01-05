@@ -122,6 +122,7 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
+  // 数据状态
   const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
   useEffect(() => {
     const handler = (msg: any) => {
@@ -140,7 +141,7 @@ export default function FloatingCryptoWidget() {
     return () => {
       chrome.runtime.onMessage.removeListener(handler);
     };
-  });
+  },[]);
 
   // 管理预警消息
   usePriceAlertManager(tokens);

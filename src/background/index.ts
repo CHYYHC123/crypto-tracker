@@ -8,6 +8,9 @@ import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 
 let showTokenList: TokenItem[] | null = null;
+// 记录 showTokenList 最后更新的时间戳（用于检测 WebSocket 假死）
+// let lastTokenListUpdateTime: number = Date.now();
+let lastTokenListUpdateTime: number | null = null;
 
 // 节流 发送数据
 function publishMessage(tokenList: TokenItem[]) {
@@ -79,7 +82,8 @@ function updateTokenList(tokenData: Ticker): TokenItem[] | null {
   // 保留两位小数
   cryptoToUpdate.change = change !== null ? Number(change.toFixed(2)) : null;
 
-  // lastMessageTimestamp = Date.now(); // 更新最后接收数据时间戳
+  // 更新最后接收数据时间戳（用于检测 WebSocket 假死）
+  lastTokenListUpdateTime = Date.now();
   return showTokenList;
 }
 
@@ -129,6 +133,9 @@ async function connectWebSocket(tokenList: string[]) {
   if (!data_source) {
     await chrome.storage.local.set({ data_source: defaultDataSource });
   }
+
+  // 连接前重置时间戳，避免误判（连接成功后如果正常，会很快收到数据并更新时间戳）
+  lastTokenListUpdateTime = Date.now();
 
   await wsManager.connect(exchange, tokenList);
 }
@@ -186,6 +193,60 @@ function isOnlyOrderChanged(oldCoins: string[] | undefined, newCoins: string[] |
 
   // 如果币种相同但顺序不同，返回 true
   return JSON.stringify(oldCoins) !== JSON.stringify(newCoins);
+}
+
+/**
+ * 处理 REFRESH 类型消息
+ */
+async function handleRefresh(sendResponse: (param: any) => void) {
+  try {
+    const result = await chrome.storage.local.get(['coins']);
+    const tokenList = (result.coins as string[]) ?? [];
+    await connectWebSocket(tokenList);
+    sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
+  } catch (error) {
+    sendResponse({ success: false, msg: 'Refresh failed ❌' });
+  }
+  return true; // ✅ 告诉 Chrome sendResponse 会异步调用
+}
+
+/**
+ * 处理 CONTENT_RESYNC 类型消息, 防止 WebSocket 处于假死状态
+ */
+async function handleContentResync(sendResponse: (param: any) => void) {
+  const status = wsManager.getDataStatus();
+  const now = Date.now();
+  // const timeSinceLastUpdate = now - lastTokenListUpdateTime;
+  const STALE_THRESHOLD = 60000; // 1 分钟阈值
+
+  // 检测 WebSocket 假死：如果 1 分钟内 showTokenList 没有变化，且 WebSocket 显示连接
+  const isTokenListStale = lastTokenListUpdateTime !== null && now - lastTokenListUpdateTime > STALE_THRESHOLD;
+  if (isTokenListStale) {
+    // 使用 wsManager 的假死检测方法（会自动更新状态为 OFFLINE 并强制重连）
+    const isStale = wsManager.detectAndHandleStaleConnection(STALE_THRESHOLD);
+
+    if (isStale) {
+      // 等待一小段时间确保断开完成
+      // await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 触发重连
+      await handleRefresh(sendResponse);
+      return;
+    }
+  }
+
+  // WS 正常 or 勉强可用 → 直接推送当前快照
+  if ([DataStatus.LIVE, DataStatus.DEGRADED].includes(status) && showTokenList && showTokenList.length > 0) {
+    publishMessage(showTokenList);
+    return;
+  }
+
+  // 已经处于断线状态
+  if ([DataStatus.OFFLINE].includes(status)) {
+    console.log('[Background] CONTENT_RESYNC detected OFFLINE, trigger REFRESH');
+    await handleRefresh(sendResponse);
+    return;
+  }
 }
 
 // 监听 storage 变化
@@ -270,25 +331,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // Content 页面可见时，主动推送当前数据
   if (message.type === 'CONTENT_RESYNC') {
-    if (showTokenList && showTokenList.length > 0) {
-      publishMessage(showTokenList);
-    }
-    return;
+    handleContentResync(sendResponse);
+    return true; // ✅ 告诉 Chrome sendResponse 会异步调用
   }
 
+  // 触发手动刷新
   if (message.type === 'REFRESH') {
-    (async () => {
-      try {
-        const result = await chrome.storage.local.get(['coins']);
-        const tokenList = (result.coins as string[]) ?? [];
-        await connectWebSocket(tokenList);
-        sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
-      } catch (error) {
-        sendResponse({ success: false, msg: 'Refresh failed ❌' });
-      }
-    })();
-
-    return true; // ✅ 告诉 Chrome sendResponse 会异步调用
+    handleRefresh(sendResponse);
   } else if (message.type === 'GET_LATEST_PRICES') {
     const data = showTokenList?.length ? showTokenList : [];
     const msg = showTokenList?.length ? 'success' : 'fail';
