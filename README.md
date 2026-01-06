@@ -1,3 +1,9 @@
+<div align="right">
+
+[English](README.md) | [中文](README.zh-CN.md)
+
+</div>
+
 # Crypto Tracker
 
 <p align="center">
@@ -5,208 +11,166 @@
 </p>
 
 <p align="center">
-  <strong>一款实时加密货币价格追踪 Chrome 扩展</strong>
+  <strong>A Real-time Cryptocurrency Price Tracking Chrome Extension</strong>
 </p>
 
 <p align="center">
-  实时价格 · 悬浮组件 · 自定义追踪
+  Real-time Prices · Floating Widget · Custom Tracking
 </p>
 
 ---
 
-## 📖 项目简介
+## 📖 Project Overview
 
-**Crypto Tracker** 是一款基于 Chrome Extension Manifest V3 开发的浏览器扩展，提供实时加密货币价格追踪功能。支持多个交易所数据源（OKX、Gate、BN），通过 WebSocket 获取实时行情数据，支持在任意网页上显示悬浮价格组件，并提供价格预警功能，让你随时掌握市场动态。
+**Crypto Tracker** is a browser extension developed based on Chrome Extension Manifest V3, providing real-time cryptocurrency price tracking functionality. It supports multiple exchange data sources (OKX, BN, Gate), obtains real-time market data through WebSocket connections, displays floating price widgets on any webpage, and provides price alert features, keeping you informed of market dynamics at all times.
 
-## ✨ 核心功能
+## ✨ Core Features
 
-### 🎯 实时价格追踪
+### 🎯 Real-time Price Tracking
 
-- 支持多数据源切换（OKX、Gate、BN等交易所）
-- 通过 WebSocket 连接获取实时价格数据
-- 支持 300+ 种加密货币（BTC、ETH、SOL、BNB 等）
-- 显示当日涨跌幅（基于 UTC+8 开盘价计算）
-- 价格自动更新，无需手动刷新
-- 实时显示数据连接状态（LIVE/DEGRADED/OFFLINE）
+- Support for multiple data source switching (OKX, Gate, BN and other exchanges)
+- Obtain real-time price data through WebSocket connections
+- Support for 300+ cryptocurrencies (BTC, ETH, SOL, BNB, etc.)
+- Display daily price changes (calculated based on UTC+8 opening price)
+- Automatic price updates, no manual refresh required
+- Real-time display of data connection status (LIVE/DEGRADED/OFFLINE)
 
-### 🔲 悬浮组件 (Floating Widget)
+### 🔲 Floating Widget
 
-- 在任意网页上显示可拖拽的悬浮窗口
-- 支持展开/收起模式
-- 收起时显示第一个币种的实时价格
-- 展开时显示完整的追踪列表
-- 支持拖拽排序调整币种显示顺序
-- 自动吸附到屏幕边缘
-- 移动端自动隐藏，优化移动端体验
+- Display draggable floating window on any webpage
+- Support expand/collapse modes
+- Display real-time price of the first coin when collapsed
+- Display complete tracking list when expanded
+- Support drag-and-drop sorting to adjust coin display order
+- Automatic edge snapping to screen edges
+- Auto-hide on mobile devices for optimized mobile experience
 
-### 📌 Popup 弹窗
+### 📌 Popup Window
 
-- 点击扩展图标打开管理面板
-- 搜索并添加新的追踪币种
-- 移除不需要的币种
-- 手动刷新数据
-- 10 秒自动刷新倒计时
-- 切换数据源（支持多个交易所）
-- 设置价格预警（上限/下限）
+- Click extension icon to open management panel
+- Search and add new tracking coins
+- Remove unwanted coins
+- Manual data refresh
+- 10-second auto-refresh countdown
+- Switch data sources (supports multiple exchanges)
+- Set price alerts (upper/lower limits)
 
-### 🛡️ 智能网络检测
+### 🛡️ Smart Network Detection
 
-- 自动检测用户网络环境（中国大陆/海外）
-- 大陆网络使用本地缓存验证币种
-- 海外网络直接调用 OKX API 验证
+- Automatically detect user network environment (Mainland China/Overseas)
+- Use local cache for coin validation on mainland networks
+- Directly call OKX API for validation on overseas networks
 
-### 🔔 价格预警功能
+### 🔔 Price Alert Feature
 
-- 支持为每个币种设置价格上限/下限预警
-- 价格触发时自动显示 Toast 通知
-- 支持启用/禁用预警功能
-- 智能节流，避免频繁通知
+- Support setting upper/lower price alerts for each coin
+- Automatically display Toast notifications when price triggers
+- Support enable/disable alert functionality
+- Smart throttling to avoid frequent notifications
 
-### 🔄 稳定连接机制
+### 🔄 Stable Connection Mechanism
 
-- WebSocket 断线自动重连
-- WebSocket 假死检测与自动恢复
-- 用户闲置状态检测（锁屏自动断开，解锁自动重连）
-- 数据停滞检测与自动刷新
-- 页面可见时自动同步最新数据
+- WebSocket automatic reconnection on disconnection
+- WebSocket dead connection detection and automatic recovery
+- User idle state detection (auto-disconnect on lock screen, auto-reconnect on unlock)
+- Data stagnation detection and automatic refresh
+- Automatic synchronization of latest data when page is visible
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-| 技术                  | 用途            |
-| --------------------- | --------------- |
-| **React 19**          | UI 框架         |
-| **TypeScript**        | 类型安全        |
-| **Vite 7**            | 构建工具        |
-| **Tailwind CSS 4**    | 样式框架        |
-| **Framer Motion**     | 动画效果        |
-| **SWR**               | 数据请求与缓存  |
-| **@dnd-kit**          | 拖拽排序功能    |
-| **Big.js**            | 精确数值计算    |
-| **CRXJS Vite Plugin** | Chrome 扩展开发 |
-| **WebSocket API**     | 实时行情数据    |
+| Technology            | Purpose                      |
+| --------------------- | ---------------------------- |
+| **React 19**          | UI Framework                 |
+| **TypeScript**        | Type Safety                  |
+| **Vite 7**            | Build Tool                   |
+| **Tailwind CSS 4**    | Styling Framework            |
+| **Framer Motion**     | Animation Effects            |
+| **SWR**               | Data Fetching & Caching      |
+| **@dnd-kit**          | Drag-and-Drop Sorting        |
+| **Big.js**            | Precise Numeric Calculation  |
+| **CRXJS Vite Plugin** | Chrome Extension Development |
+| **WebSocket API**     | Real-time Market Data        |
 
-## 📁 项目结构
+## 🚀 Quick Start
 
-```
-crypto-tracker/
-├── src/
-│   ├── background/          # Service Worker (后台脚本)
-│   │   └── index.ts         # WebSocket 连接、消息处理
-│   ├── popup/               # 扩展弹窗 UI
-│   │   ├── index.html       # 弹窗入口
-│   │   ├── main.tsx         # React 入口
-│   │   ├── PopupContent.tsx # 弹窗主组件
-│   │   └── components/
-│   │       └── PriceAlter.tsx # 价格预警设置组件
-│   ├── content/             # 内容脚本
-│   │   ├── main.tsx         # 内容脚本入口
-│   │   └── views/
-│   │       ├── App.tsx      # 悬浮组件
-│   │       └── networkState.tsx # 网络状态显示组件
-│   ├── components/          # 公共组件
-│   │   ├── common/          # 通用 UI 组件
-│   │   └── CustomToaster/   # Toast 通知组件
-│   ├── hooks/               # 自定义 Hooks
-│   │   ├── useInactivityRefresh.ts  # 数据停滞检测
-│   │   ├── useComposition.ts        # 输入法组合
-│   │   ├── usePersistFn.ts          # 持久化函数
-│   │   └── usePriceAlertManager.ts  # 价格预警管理
-│   ├── utils/               # 工具函数
-│   │   ├── index.ts         # 通用工具
-│   │   └── tokens.ts        # 支持的币种列表（自动生成）
-│   ├── types/               # TypeScript 类型定义
-│   └── assets/              # 静态资源
-├── scripts/
-│   ├── build.sh             # 构建脚本
-│   └── getToken.js          # 获取 OKX 支持的币种
-├── public/                  # 公共资源
-├── dist/                    # 构建输出
-├── release/                 # 发布包
-├── manifest.config.ts       # Chrome 扩展配置
-├── vite.config.ts           # Vite 配置
-└── package.json
-```
-
-## 🚀 快速开始
-
-### 环境要求
+### Requirements
 
 - Node.js >= 18
 - npm >= 9
-- Chrome 浏览器
+- Chrome Browser
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 开发模式
+### Development Mode
 
 ```bash
 npm run dev
 ```
 
-### 加载扩展
+### Load Extension
 
-1. 打开 Chrome 浏览器，访问 `chrome://extensions/`
-2. 开启右上角「开发者模式」
-3. 点击「加载已解压的扩展程序」
-4. 选择项目的 `dist` 目录
+1. Open Chrome browser and visit `chrome://extensions/`
+2. Enable "Developer mode" in the top right corner
+3. Click "Load unpacked"
+4. Select the `dist` directory of the project
 
-### 生产构建
+### Production Build
 
 ```bash
 npm run build
 ```
 
-构建完成后，`dist` 目录包含可发布的扩展文件。
+After building, the `dist` directory contains the publishable extension files.
 
-### 打包发布
+### Package for Release
 
 ```bash
 npm run build_sh
 ```
 
-将在 `release` 目录生成 `.zip` 发布包。
+This will generate a `.zip` release package in the `release` directory.
 
-## 📝 使用说明
+## 📝 Usage Guide
 
-### 添加追踪币种
+### Add Tracking Coins
 
-1. 点击浏览器工具栏的扩展图标
-2. 在搜索框输入币种符号（如 `BTC`、`ETH`）
-3. 点击「Add」按钮或按回车键
-4. 币种验证成功后自动添加到列表
+1. Click the extension icon in the browser toolbar
+2. Enter coin symbol in the search box (e.g., `BTC`, `ETH`)
+3. Click the "Add" button or press Enter
+4. Coin will be automatically added to the list after successful validation
 
-### 移除追踪币种
+### Remove Tracking Coins
 
-- 在 Popup 列表中，点击币种右侧的「Remove」按钮
-- 注意：至少需要保留一个追踪币种
+- In the Popup list, click the "Remove" button on the right side of the coin
+- Note: At least one tracking coin must be retained
 
-### 悬浮组件操作
+### Floating Widget Operations
 
-- **拖拽**：按住组件头部可自由拖动
-- **展开/收起**：点击右上角的 +/- 按钮
-- **排序**：展开后按住币种左侧的拖拽手柄，上下拖动调整顺序
-- **刷新**：展开后点击底部「Refresh」按钮
+- **Drag**: Hold the widget header to freely drag
+- **Expand/Collapse**: Click the +/- button in the top right corner
+- **Sort**: After expanding, hold the drag handle on the left side of the coin and drag up/down to adjust order
+- **Refresh**: After expanding, click the "Refresh" button at the bottom
 
-### 设置价格预警
+### Set Price Alerts
 
-1. 在 Popup 弹窗中，点击币种右侧的「···」菜单
-2. 选择「Price Alert」
-3. 设置目标价格和方向（Above/Below）
-4. 点击「Save」保存
-5. 当价格触发预警时，会自动显示 Toast 通知
+1. In the Popup window, click the "···" menu on the right side of the coin
+2. Select "Price Alert"
+3. Set target price and direction (Above/Below)
+4. Click "Save" to save
+5. When the price triggers the alert, a Toast notification will be automatically displayed
 
-### 切换数据源
+### Switch Data Source
 
-1. 在 Popup 弹窗右上角，点击数据源下拉菜单
-2. 选择不同的交易所（OKX、Gate、BN）
-3. 系统会自动切换 WebSocket 连接
-4. 注意：部分数据源需要 VPN 才能访问
+1. In the top right corner of the Popup window, click the data source dropdown
+2. Select different exchanges (OKX, Gate, BN)
+3. The system will automatically switch WebSocket connections
+4. Note: Some data sources require VPN to access
 
-## ⚙️ 配置说明
+## ⚙️ Configuration
 
 ### manifest.config.ts
 
@@ -219,29 +183,17 @@ npm run build_sh
 }
 ```
 
-### 权限说明
+### Permission Description
 
-| 权限        | 用途                   |
-| ----------- | ---------------------- |
-| `storage`   | 存储用户追踪的币种列表 |
-| `alarms`    | 定时任务（预留）       |
-| `activeTab` | 向当前标签页发送消息   |
-| `scripting` | 注入内容脚本           |
-| `idle`      | 检测用户闲置状态       |
+| Permission  | Purpose                        |
+| ----------- | ------------------------------ |
+| `storage`   | Store user's tracked coin list |
+| `alarms`    | Scheduled tasks (reserved)     |
+| `activeTab` | Send messages to current tab   |
+| `scripting` | Inject content scripts         |
+| `idle`      | Detect user idle state         |
 
-## 🔧 开发脚本
-
-### 更新支持的币种列表
-
-```bash
-node scripts/getToken.js
-```
-
-该脚本会从 OKX API 获取所有支持 USDT 交易对的币种，并更新 `src/utils/tokens.ts` 文件。
-
-> ⚠️ 注意：脚本需要配置代理才能访问 OKX API（如果在中国大陆网络环境下）
-
-## 📊 数据流程
+## 📊 Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -255,9 +207,9 @@ node scripts/getToken.js
 │  └─────────────┘                                  │             │
 │                                                    │             │
 │  ┌────────────────────────────────────────────────┘             │
-│  │  - 支持多数据源切换 (OKX/Gate/BN)                         │
-│  │  - WebSocket 假死检测与自动重连                              │
-│  │  - 价格预警触发检测                                           │
+│  │  - Support multi-data source switching (OKX/Gate/BN)        │
+│  │  - WebSocket dead connection detection & auto-reconnect      │
+│  │  - Price alert trigger detection                             │
 │  └──────────────────────────────────────────────────────────────┘
 └───────────────────────────────────────────────────┼─────────────┘
                                                     │
@@ -267,12 +219,12 @@ node scripts/getToken.js
 │                        Content Script                            │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │              FloatingCryptoWidget (App.tsx)              │    │
-│  │  - 监听 UPDATE_PRICE 消息                                │    │
-│  │  - 监听 DATA_STATUS_CHANGE 消息                          │    │
-│  │  - 渲染实时价格                                          │    │
-│  │  - 可拖拽悬浮组件                                        │    │
-│  │  - 支持拖拽排序                                          │    │
-│  │  - 价格预警 Toast 通知                                   │    │
+│  │  - Listen to UPDATE_PRICE messages                       │    │
+│  │  - Listen to DATA_STATUS_CHANGE messages                │    │
+│  │  - Render real-time prices                              │    │
+│  │  - Draggable floating widget                            │    │
+│  │  - Support drag-and-drop sorting                        │    │
+│  │  - Price alert Toast notifications                       │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -280,54 +232,43 @@ node scripts/getToken.js
 │                          Popup Script                            │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │                PopupContent.tsx                          │    │
-│  │  - 发送 GET_LATEST_PRICES 获取数据                       │    │
-│  │  - 添加/移除币种                                         │    │
-│  │  - 切换数据源                                            │    │
-│  │  - 设置价格预警                                          │    │
-│  │  - 手动刷新                                              │    │
+│  │  - Send GET_LATEST_PRICES to fetch data                 │    │
+│  │  - Add/remove coins                                     │    │
+│  │  - Switch data sources                                  │    │
+│  │  - Set price alerts                                     │    │
+│  │  - Manual refresh                                       │    │
 │  └─────────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 🎨 界面预览
+## 🎨 UI Preview
 
-### Popup 弹窗
+### Popup Window
 
-- 深色主题设计
-- 显示币种图标、符号、价格、涨跌幅
-- 支持搜索添加和移除币种
+- Dark theme design
+- Display coin icon, symbol, price, price change
+- Support search, add and remove coins
 
-### 悬浮组件
+<p align="center">
+  <img src="public/demo.png" alt="Crypto Tracker Popup Window" width="600" />
+</p>
 
-- 圆角卡片设计
-- 毛玻璃效果背景
-- 流畅的展开/收起动画
-- 支持拖拽排序币种
-- 自动吸附屏幕边缘
-- 实时显示网络连接状态
+### Floating Widget
 
-## 📋 更新日志
+- Rounded card design
+- Glassmorphism background effect
+- Smooth expand/collapse animations
+- Support drag-and-drop coin sorting
+- Automatic edge snapping to screen
+- Real-time network connection status display
 
-查看 [CHANGELOG.md](./CHANGELOG.md) 了解版本更新历史。
+<p align="center">
+  <img src="public/demo1.png" alt="Crypto Tracker Floating Widget" width="600" />
+</p>
 
-## 🤝 贡献指南
+## 📄 License
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
-
-## 📄 许可证
-
-本项目仅供学习交流使用。
-
-## 🙏 致谢
-
-- [OKX](https://www.okx.com/) - 提供实时行情 WebSocket API
-- [CRXJS](https://crxjs.dev/) - Chrome 扩展 Vite 插件
-- [Tailwind CSS](https://tailwindcss.com/) - 原子化 CSS 框架
-- [Framer Motion](https://www.framer.com/motion/) - React 动画库
+This project is for learning and communication purposes only.
 
 ---
 
