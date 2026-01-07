@@ -364,9 +364,9 @@ export default function PopupContent() {
 
   return (
     <>
-      <div className="w-[360px] max-h-[600px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
+      <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <CustomToaster />
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-shrink-0">
           <div>
             <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
             <div className="mt-1">
@@ -384,14 +384,14 @@ export default function PopupContent() {
             />
           </div>
         </div>
-        <div className="search_token mt-4 flex items-center">
+        <div className="search_token mt-4 flex items-center flex-shrink-0">
           <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
           <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
             Add
           </Button>
         </div>
 
-        <div className="mt-5 overflow-auto min-h-[150px] max-h-[300px] scrollbar-hide">
+        <div className="mt-5 overflow-auto flex-1 scrollbar-hide">
           {Array.isArray(tokens) && tokens.length > 0 ? (
             tokens.map((item: TokenItem) => {
               const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
@@ -427,7 +427,7 @@ export default function PopupContent() {
           )}
         </div>
 
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 flex-shrink-0">
           <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
           <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
             Refresh
