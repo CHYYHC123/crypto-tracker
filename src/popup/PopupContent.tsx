@@ -54,7 +54,7 @@ export default function PopupContent() {
   });
 
   useEffect(() => {
-    // setTokens(tokenList ?? []);
+    setTokens(tokenList ?? []);
   }, [tokenList]);
 
   // 搜索输入框
