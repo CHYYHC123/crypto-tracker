@@ -5,6 +5,9 @@ import tailwindStyles from '@/assets/css/tailwindcss.css?inline';
 
 const container = document.createElement('div');
 container.id = 'shadow-content-container';
+// 禁止翻译：在容器元素上添加 translate="no" 属性
+container.setAttribute('translate', 'no');
+container.setAttribute('data-notranslate', 'true');
 document.body.appendChild(container);
 
 const shadowRoot = container.attachShadow({ mode: 'open' });
@@ -13,6 +16,10 @@ const resetStyles = `
   :host {
     font-size: 16px !important;
     all: initial;
+    translate: no !important;
+  }
+  * {
+    translate: no !important;
   }
 `;
 // 注入重置样式
@@ -29,6 +36,9 @@ shadowRoot.appendChild(styleEl);
 const mountNode = document.createElement('div');
 mountNode.style.fontSize = '16px';
 mountNode.style.all = 'initial';
+// 禁止翻译：在挂载节点上也添加 translate="no" 属性
+mountNode.setAttribute('translate', 'no');
+mountNode.setAttribute('data-notranslate', 'true');
 shadowRoot.appendChild(mountNode);
 
 let root: Root | null = null;
@@ -101,10 +111,3 @@ root.render(
 
 // 渲染完成后再初始化扩展状态检查
 setupExtensionStatusChecker();
-
-// 监听页面可见性变化，当页面从隐藏变为可见时，通知 background 主动推送数据
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) {
-    chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
-  }
-});

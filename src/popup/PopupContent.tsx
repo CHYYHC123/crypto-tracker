@@ -25,7 +25,7 @@ import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
 import { ExchangeList } from '@/config/exchangeConfig';
 
 import NetworkState from '@/content/views/networkState';
-import { DataStatus } from '@/types/index';
+import { useDataStatus } from '@/hooks/useDataStatus';
 
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
@@ -40,6 +40,9 @@ export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
 
+  // 网络状态
+  const status = useDataStatus();
+
   // 轮询，每15秒自动刷新一次
   const {
     data: tokenList,
@@ -51,7 +54,7 @@ export default function PopupContent() {
   });
 
   useEffect(() => {
-    if (tokenList?.length) setTokens(tokenList);
+    // setTokens(tokenList ?? []);
   }, [tokenList]);
 
   // 搜索输入框
@@ -81,6 +84,7 @@ export default function PopupContent() {
   const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') await addToken();
   };
+
   const addToken = async () => {
     if (!searchValue) return;
     if (alreadyExistToken) {
@@ -219,6 +223,14 @@ export default function PopupContent() {
       const result = await chrome.storage.local.get(['coins']);
       const oldTokenList: string[] = (result.coins as string[]) ?? [];
       if (!oldTokenList?.includes(symbol)) return;
+
+      // 检查：如果只剩一个币种，不允许删除
+      if (oldTokenList.length <= 1) {
+        toast.loading('At least one token must be kept', { duration: 2000 });
+        setRemoving(false);
+        return;
+      }
+
       // 👉 关键一步：过滤掉要删除的 symbol
       const newTokenList = oldTokenList.filter(item => item !== symbol);
       // 保存更新后的数组
@@ -350,30 +362,9 @@ export default function PopupContent() {
     initDataSource();
   }, []);
 
-  // 网络状态
-  const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
-  useEffect(() => {
-    const handler = (msg: any) => {
-      if (msg?.type === 'DATA_STATUS_CHANGE') {
-        const nextStatus = msg.data as DataStatus;
-
-        // 防御式校验（很重要）
-        if (Object.values(DataStatus).includes(nextStatus)) {
-          setStatus(nextStatus);
-        }
-      }
-    };
-
-    chrome.runtime.onMessage.addListener(handler);
-
-    return () => {
-      chrome.runtime.onMessage.removeListener(handler);
-    };
-  });
-
   return (
     <>
-      <div className="w-[360px] max-h-[1228px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
+      <div className="w-[360px] max-h-[600px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 ">
         <CustomToaster />
         <div className="flex justify-between items-center">
           <div>
@@ -400,35 +391,40 @@ export default function PopupContent() {
           </Button>
         </div>
 
-        <div className="mt-5 overflow-auto max-h-[300px] scrollbar-hide">
-          {Array.isArray(tokens)
-            ? tokens?.map((item: TokenItem) => {
-                const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
-                return (
-                  <motion.div whileHover={{ scale: 1 }} key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
-                    <div className="flex items-center">
-                      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
-                      <div className="ml-2 min-w-15">
-                        <div className="text-[13px] font-bold">{item?.symbol}</div>
-                        <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
-                      </div>
+        <div className="mt-5 overflow-auto min-h-[150px] max-h-[300px] scrollbar-hide">
+          {Array.isArray(tokens) && tokens.length > 0 ? (
+            tokens.map((item: TokenItem) => {
+              const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
+              return (
+                <motion.div whileHover={{ scale: 1 }} key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
+                  <div className="flex items-center">
+                    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
+                    <div className="ml-2 min-w-15">
+                      <div className="text-[13px] font-bold">{item?.symbol}</div>
+                      <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
                     </div>
-                    <div className="text-left ml-5">
-                      <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
-                      <div className="text-[11px]" style={{ color: chColor }}>
-                        {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
-                      </div>
+                  </div>
+                  <div className="text-left ml-5">
+                    <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
+                    <div className="text-[11px]" style={{ color: chColor }}>
+                      {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
                     </div>
+                  </div>
 
-                    <div className="justify-self-end">
-                      <div onClick={e => handleOpen(e, item)} aria-haspopup="true" aria-expanded={open && menuToken?.symbol === item.symbol} className={`px-2 py-1 bg-white/0 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>
-                        <Ellipsis size={16} />
-                      </div>
+                  <div className="justify-self-end">
+                    <div onClick={e => handleOpen(e, item)} aria-haspopup="true" aria-expanded={open && menuToken?.symbol === item.symbol} className={`px-2 py-1 bg-white/0 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>
+                      <Ellipsis size={16} />
                     </div>
-                  </motion.div>
-                );
-              })
-            : null}
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[150px] text-white/40">
+              <div className="text-sm">No tokens yet</div>
+              <div className="text-xs mt-1 opacity-60">Add a token to get started</div>
+            </div>
+          )}
         </div>
 
         <div className="mt-2 flex items-center justify-between">

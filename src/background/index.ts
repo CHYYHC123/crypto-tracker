@@ -207,7 +207,6 @@ async function handleRefresh(sendResponse: (param: any) => void) {
   } catch (error) {
     sendResponse({ success: false, msg: 'Refresh failed ❌' });
   }
-  return true; // ✅ 告诉 Chrome sendResponse 会异步调用
 }
 
 /**
@@ -216,8 +215,7 @@ async function handleRefresh(sendResponse: (param: any) => void) {
 async function handleContentResync(sendResponse: (param: any) => void) {
   const status = wsManager.getDataStatus();
   const now = Date.now();
-  // const timeSinceLastUpdate = now - lastTokenListUpdateTime;
-  const STALE_THRESHOLD = 60000; // 1 分钟阈值
+  const STALE_THRESHOLD = 10_000; // 10s 阈值
 
   // 检测 WebSocket 假死：如果 1 分钟内 showTokenList 没有变化，且 WebSocket 显示连接
   const isTokenListStale = lastTokenListUpdateTime !== null && now - lastTokenListUpdateTime > STALE_THRESHOLD;
@@ -226,9 +224,6 @@ async function handleContentResync(sendResponse: (param: any) => void) {
     const isStale = wsManager.detectAndHandleStaleConnection(STALE_THRESHOLD);
 
     if (isStale) {
-      // 等待一小段时间确保断开完成
-      // await new Promise(resolve => setTimeout(resolve, 200));
-
       // 触发重连
       await handleRefresh(sendResponse);
       return;
@@ -241,12 +236,10 @@ async function handleContentResync(sendResponse: (param: any) => void) {
     return;
   }
 
-  // 已经处于断线状态
-  if ([DataStatus.OFFLINE].includes(status)) {
-    console.log('[Background] CONTENT_RESYNC detected OFFLINE, trigger REFRESH');
-    await handleRefresh(sendResponse);
-    return;
-  }
+  // 已经处于断线状态 → 其他情况当做断线处理
+  console.log('[Background] CONTENT_RESYNC detected OFFLINE, trigger REFRESH');
+  await handleRefresh(sendResponse);
+  return;
 }
 
 // 监听 storage 变化
@@ -338,10 +331,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // 触发手动刷新
   if (message.type === 'REFRESH') {
     handleRefresh(sendResponse);
+    return true; // ✅ 告诉 Chrome sendResponse 会异步调用
   } else if (message.type === 'GET_LATEST_PRICES') {
     const data = showTokenList?.length ? showTokenList : [];
     const msg = showTokenList?.length ? 'success' : 'fail';
     sendResponse({ success: true, data, msg });
+    return true;
   } else if (message.type === 'REORDER_TOKENS') {
     // 重新排序 showTokenList（不触发 WebSocket 重连）
     const newOrder: string[] = message.payload?.order ?? [];

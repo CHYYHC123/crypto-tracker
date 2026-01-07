@@ -133,6 +133,7 @@ class WsManager {
         const data = JSON.parse(event.data);
         this.lastMessageAt = Date.now(); // ⭐关键
         this.messageHandler?.(data);
+        this.setDataStatus(DataStatus.LIVE);
       } catch (err) {
         console.warn('[WsManager] 消息解析失败:', err);
       }
@@ -144,7 +145,9 @@ class WsManager {
       this.ws = null;
 
       // 更新状态为 DEGRADED（正在重试中）
-      if (!this.isManualDisconnect) {
+      // 但如果已经在冷却模式，不应该改成 DEGRADED
+      // 因为冷却模式下状态应该是 OFFLINE（完全离线），应该保持
+      if (!this.isManualDisconnect && !this.inCooldownMode) {
         this.setDataStatus(DataStatus.DEGRADED);
       }
 
@@ -391,8 +394,6 @@ class WsManager {
    * 更新数据状态并通知回调
    */
   private setDataStatus(status: DataStatus): void {
-    console.log('status', status);
-    console.log('this._dataStatus', this._dataStatus);
     if (this._dataStatus === status) return;
 
     const oldStatus = this._dataStatus;
@@ -409,7 +410,7 @@ class WsManager {
    * - 每隔 cooldownInterval 尝试重连一次
    */
   private enterCooldownMode(): void {
-    console.log('this.inCooldownMode', this.inCooldownMode);
+    // console.log('this.inCooldownMode', this.inCooldownMode);
     if (this.inCooldownMode) return;
 
     this.inCooldownMode = true;

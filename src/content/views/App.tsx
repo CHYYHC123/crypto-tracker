@@ -9,6 +9,7 @@ import { DataStatus } from '@/types/index';
 
 // import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
+import { useDataStatus } from '@/hooks/useDataStatus';
 
 import { TokenItem } from '@/types/index';
 
@@ -76,6 +77,9 @@ export default function FloatingCryptoWidget() {
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
   const [contentHeight, setContentHeight] = useState<number>(0);
 
+  // 管理预警消息
+  usePriceAlertManager(tokens);
+
   // 是否正在排序拖拽（用于禁用外层拖拽）
   const [isSorting, setIsSorting] = useState(false);
 
@@ -98,6 +102,7 @@ export default function FloatingCryptoWidget() {
     }
   }, [collapsed, tokens?.length]);
 
+  // 监听价格更新
   useEffect(() => {
     // 监听 background.js 发来的消息
     function handleMessage(msg: any) {
@@ -122,29 +127,43 @@ export default function FloatingCryptoWidget() {
     };
   }, []);
 
-  // 数据状态
-  const [status, setStatus] = useState<DataStatus>(DataStatus.LIVE);
-  useEffect(() => {
-    const handler = (msg: any) => {
-      if (msg?.type === 'DATA_STATUS_CHANGE') {
-        const nextStatus = msg.data as DataStatus;
+  // 网络状态
+  const status = useDataStatus();
 
-        // 防御式校验（很重要）
-        if (Object.values(DataStatus).includes(nextStatus)) {
-          setStatus(nextStatus);
-        }
-      }
+  /**
+   * 1、监听页面可见性变化，当页面从隐藏变为可见时，通知 background 主动推送数据
+   * 2、初次渲染后，3s后查看是否有数据推送如果没有就重新拉取一次
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
     };
 
-    chrome.runtime.onMessage.addListener(handler);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    setTimeout(() => {
+      chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
+    }, 3000);
 
     return () => {
-      chrome.runtime.onMessage.removeListener(handler);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  },[]);
+  }, []);
 
-  // 管理预警消息
-  usePriceAlertManager(tokens);
+  /**
+   * 移动端隐藏token表
+   */
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 500);
+    };
+
+    handleResize(); // 初始化执行一次
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 排序开始
   const handleSortStart = () => {
@@ -212,21 +231,6 @@ export default function FloatingCryptoWidget() {
     });
   };
 
-  /**
-   * 移动端隐藏token表
-   */
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 500);
-    };
-
-    handleResize(); // 初始化执行一次
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <>
       {!isMobile && (
@@ -240,6 +244,8 @@ export default function FloatingCryptoWidget() {
           transition={{ duration: 0.3 }}
           className="fixed bottom-4 right-4 z-99999999"
           style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+          translate="no"
+          data-notranslate="true"
         >
           <CustomToaster />
           <motion.div layout className="w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg border border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide">
