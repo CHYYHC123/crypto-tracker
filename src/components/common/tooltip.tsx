@@ -12,7 +12,7 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 /* ---------------- Variants ---------------- */
 
-const tooltipContentVariants = cva('z-50 overflow-hidden rounded-md px-3 py-1.5 text-xs shadow-lg border', {
+const tooltipContentVariants = cva('z-1000000 overflow-hidden rounded-md px-3 py-1.5 text-xs shadow-lg border', {
   variants: {
     variant: {
       default: 'bg-gray-800 text-white border-gray-600',

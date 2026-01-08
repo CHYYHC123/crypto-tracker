@@ -7,11 +7,11 @@ import { CustomToaster } from '@/components/CustomToaster/index';
 import NetworkState from '@/content/views/networkState';
 import { DataStatus } from '@/types/index';
 
-// import { useInactivityRefresh } from '@/hooks/useInactivityRefresh';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
 
-import { TokenItem } from '@/types/index';
+import { TokenItem, PriceAlert } from '@/types/index';
+import AlertBadge from '@/popup/components/AlertBadge';
 
 // dnd-kit
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -22,13 +22,12 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 // 可排序的币种卡片组件
 interface SortableCoinItemProps {
   coin: TokenItem;
+  priceAlerts: PriceAlert[];
 }
 
 // 可排序的币种卡片组件
-function SortableCoinItem({ coin }: SortableCoinItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: coin.symbol
-  });
+function SortableCoinItem({ coin, priceAlerts }: SortableCoinItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: coin.symbol });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -36,6 +35,9 @@ function SortableCoinItem({ coin }: SortableCoinItemProps) {
     opacity: isDragging ? 0.8 : 1,
     zIndex: isDragging ? 100 : 1
   };
+
+  // 查找该币种对应的预警
+  const alert = priceAlerts.find(a => a.symbol.toUpperCase() === coin.symbol.toUpperCase());
 
   return (
     <div ref={setNodeRef} style={style} className={`flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition ${isDragging ? 'shadow-lg' : ''}`}>
@@ -57,7 +59,7 @@ function SortableCoinItem({ coin }: SortableCoinItemProps) {
         <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
-          <div className="text-[10px] opacity-60">{coin.id}</div>
+          {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{coin.symbol}</div>}
         </div>
       </div>
       <div className="text-right mr-1">
@@ -72,6 +74,7 @@ export default function FloatingCryptoWidget() {
   const [collapsed, setCollapsed] = useState(true);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [tokens, setTokens] = useState<TokenItem[]>([]);
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const widgetRef = useRef<HTMLDivElement | null>(null);
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
@@ -101,6 +104,39 @@ export default function FloatingCryptoWidget() {
       setContentHeight(contentRef.current.scrollHeight);
     }
   }, [collapsed, tokens?.length]);
+
+  // 读取 price_alerts
+  useEffect(() => {
+    const loadPriceAlerts = () => {
+      chrome.storage.local.get('price_alerts', res => {
+        const alerts = (res.price_alerts as PriceAlert[]) || [];
+        setPriceAlerts(alerts);
+      });
+    };
+
+    loadPriceAlerts();
+
+    // 监听 storage 变化
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.price_alerts) {
+        loadPriceAlerts();
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    // 监听消息通知
+    const handleMessage = (msg: any) => {
+      if (msg.type === 'PRICE_ALERTS_UPDATED') loadPriceAlerts();
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+      chrome.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, []);
 
   // 监听价格更新
   useEffect(() => {
@@ -256,7 +292,11 @@ export default function FloatingCryptoWidget() {
                     <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
                     <div className="ml-2">
                       <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
-                      <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>
+                      {(() => {
+                        const alert = priceAlerts.find(a => a.symbol.toUpperCase() === tokens[0]?.symbol.toUpperCase());
+                        console.log('alert', alert);
+                        return alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>;
+                      })()}
                     </div>
                   </div>
 
@@ -305,7 +345,7 @@ export default function FloatingCryptoWidget() {
                     <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleSortStart} onDragEnd={handleSortEnd}>
                       <SortableContext items={tokens.map(t => t.symbol)} strategy={verticalListSortingStrategy}>
                         {tokens?.map((coin: TokenItem) => (
-                          <SortableCoinItem key={coin.symbol} coin={coin} />
+                          <SortableCoinItem key={coin.symbol} coin={coin} priceAlerts={priceAlerts} />
                         ))}
                       </SortableContext>
                     </DndContext>

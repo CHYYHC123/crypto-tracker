@@ -16,6 +16,7 @@ import Tooltip from '@/components/common/tooltip';
 
 import PriceAlertInput from './components/PriceAlter';
 import { Direction } from './components/PriceAlter';
+import AlertBadge from './components/AlertBadge';
 
 import type { TokenItem, PriceAlert } from '@/types/index';
 
@@ -39,6 +40,7 @@ function fetchPrices(): Promise<TokenItem[]> {
 export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
   // 网络状态
   const status = useDataStatus();
@@ -56,6 +58,39 @@ export default function PopupContent() {
   useEffect(() => {
     setTokens(tokenList ?? []);
   }, [tokenList]);
+
+  // 读取 price_alerts
+  useEffect(() => {
+    const loadPriceAlerts = () => {
+      chrome.storage.local.get('price_alerts', res => {
+        const alerts = (res.price_alerts as PriceAlert[]) || [];
+        setPriceAlerts(alerts);
+      });
+    };
+
+    loadPriceAlerts();
+
+    // 监听 storage 变化
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.price_alerts) {
+        loadPriceAlerts();
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    // 监听消息通知
+    const handleMessage = (msg: any) => {
+      if (msg.type === 'PRICE_ALERTS_UPDATED') loadPriceAlerts();
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+      chrome.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, []);
 
   // 搜索输入框
   const [searchValue, setSearchValue] = useState<string>('');
@@ -312,9 +347,8 @@ export default function PopupContent() {
           enabled: true,
           updatedAt: Date.now()
         };
-      }
-      // 不存在 → 新增
-      else {
+      } else {
+        // 不存在 → 新增
         updatedAlerts = [...oldAlerts, newAlert];
       }
       await chrome.storage.local.set({
@@ -395,13 +429,15 @@ export default function PopupContent() {
           {Array.isArray(tokens) && tokens.length > 0 ? (
             tokens.map((item: TokenItem) => {
               const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
+              // 查找该币种对应的预警
+              const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
               return (
                 <motion.div whileHover={{ scale: 1 }} key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
                   <div className="flex items-center">
                     <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
                     <div className="ml-2 min-w-15">
                       <div className="text-[13px] font-bold">{item?.symbol}</div>
-                      <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>
+                      {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>}
                     </div>
                   </div>
                   <div className="text-left ml-5">
