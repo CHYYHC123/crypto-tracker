@@ -5,18 +5,30 @@ import { PriceAlert } from '@/types/index';
 
 /**
  * 需求：
- * 这个组件主要是用来显示已经配置的预警价格，
- * 根据存储的 local 中的 price_alerts 进行渲染，字体颜色要引人注目一些
- * 其他要补充的你可以适当补充，但是要以我要求为主，不能有较大不同
+ * 1、如果 PriceAlert 中 enabled 为 false，实现禁用样式，bell-off，不用弹起 tooltipContent
+ * 2、popup 中点击 AlertBadge 可直接唤起 "币种价格预警弹窗"，弹窗中的数据要和现在存储的状态一样
+ * 3、<ActionMenuItem onClick={setPriceAlert}>Price Alert</ActionMenuItem> 唤起弹窗时，如果存在已经价格数据，要和表单中同步
  */
 interface AlertBadgeProps {
   AlertInfo: PriceAlert | null;
+  onClick?: () => void;
 }
 
-const AlertBadge = ({ AlertInfo }: AlertBadgeProps) => {
+const AlertBadge = ({ AlertInfo, onClick }: AlertBadgeProps) => {
   if (!AlertInfo) return null;
 
-  const { direction, targetPrice } = AlertInfo;
+  const { direction, targetPrice, enabled } = AlertInfo;
+
+  // 如果禁用，显示 bell-off 图标，不显示 tooltip
+  if (!enabled) {
+    return (
+      <div className={cn('flex items-center text-[12px] font-mono relative z-10')}>
+        <span className="text-gray-500" style={{ fontSize: '12px', opacity: 0.5 }} onClick={onClick} title="Price alert disabled">
+          🔕
+        </span>
+      </div>
+    );
+  }
 
   // 箭头 SVG
   const arrowIcon =
@@ -54,7 +66,7 @@ const AlertBadge = ({ AlertInfo }: AlertBadgeProps) => {
   return (
     <div className={cn('flex items-center text-[12px] font-mono relative z-10')}>
       <Tooltip content={tooltipContent} side="top" variant="default">
-        <span className="text-[gold] cursor-pointer hover:opacity-80 transition-opacity" style={{ fontSize: '12px' }}>
+        <span className="text-[gold] cursor-pointer hover:opacity-80 transition-opacity" style={{ fontSize: '12px' }} onClick={onClick}>
           🔔
         </span>
       </Tooltip>

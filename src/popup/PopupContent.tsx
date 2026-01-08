@@ -301,27 +301,62 @@ export default function PopupContent() {
   const [price, setPrice] = useState(0);
   const [alertToken, setAlertToken] = useState<TokenItem | null>(null);
   const [direction, setDirection] = useState<Direction>('above'); // 'above' 或 'below'
-  const [enabledAlert, setEnabledAlert] = useState(true); // 是否禁用预警
+  const [enabledAlert, setEnabledAlert] = useState(true); // 是否启用预警
   const setPriceAlert = () => {
     if (!menuToken) return;
-    setPrice(menuToken.price || 0);
+
+    // 查找该币种是否已有预警配置
+    const existingAlert = priceAlerts.find(a => a.symbol.toUpperCase() === menuToken.symbol.toUpperCase());
+
+    if (existingAlert) {
+      // 如果存在预警，同步数据到表单
+      setPrice(existingAlert.targetPrice);
+      setDirection(existingAlert.direction);
+      setEnabledAlert(existingAlert.enabled);
+    } else {
+      // 如果不存在，使用默认值
+      setPrice(menuToken.price || 0);
+      setDirection('above');
+      setEnabledAlert(true);
+    }
+
     setAlertToken(menuToken);
     setShowPriceAlert(true);
     handleClose();
+  };
+
+  // 点击 AlertBadge 唤起弹窗
+  const handleAlertBadgeClick = (token: TokenItem) => {
+    const existingAlert = priceAlerts.find(a => a.symbol.toUpperCase() === token.symbol.toUpperCase());
+
+    if (existingAlert) {
+      // 同步现有预警数据到表单
+      setPrice(existingAlert.targetPrice);
+      setDirection(existingAlert.direction);
+      setEnabledAlert(existingAlert.enabled);
+    } else {
+      // 如果没有预警，使用当前价格和默认值
+      setPrice(token.price || 0);
+      setDirection('above');
+      setEnabledAlert(true);
+    }
+
+    setAlertToken(token);
+    setShowPriceAlert(true);
   };
   // 点击 Save 按钮
   const handlePriceAlert = async () => {
     if (!alertToken || !alertToken?.price) return;
 
     // ✅ 合理性校验（方向 + 当前价格）
-    if (direction === 'above' && price < alertToken.price) {
-      toast.error('Alert price must be higher than current price');
-      return;
-    }
-    if (direction === 'below' && price > alertToken.price) {
-      toast.error('Alert price must be lower than current price');
-      return;
-    }
+    // if (direction === 'above' && price < alertToken.price) {
+    //   toast.error('Alert price must be higher than current price');
+    //   return;
+    // }
+    // if (direction === 'below' && price > alertToken.price) {
+    //   toast.error('Alert price must be lower than current price');
+    //   return;
+    // }
 
     const newAlert: PriceAlert = {
       symbol: alertToken.symbol,
@@ -344,7 +379,7 @@ export default function PopupContent() {
           ...oldAlerts[existingIndex],
           targetPrice: price,
           direction,
-          enabled: true,
+          enabled: enabledAlert,
           updatedAt: Date.now()
         };
       } else {
@@ -437,7 +472,7 @@ export default function PopupContent() {
                     <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
                     <div className="ml-2 min-w-15">
                       <div className="text-[13px] font-bold">{item?.symbol}</div>
-                      {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>}
+                      {alert ? <AlertBadge AlertInfo={alert} onClick={() => handleAlertBadgeClick(item)} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>}
                     </div>
                   </div>
                   <div className="text-left ml-5">
