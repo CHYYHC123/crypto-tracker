@@ -18,6 +18,18 @@ const AlertBadge = ({ AlertInfo }: AlertBadgeProps) => {
 
   const { direction, targetPrice } = AlertInfo;
 
+  // 箭头 SVG
+  const arrowIcon =
+    direction === 'above' ? (
+      <svg width="12" height="12" fill="none" stroke="#34d399" viewBox="0 0 24 24" style={{ marginRight: '4px' }}>
+        <path d="M12 19V5M12 5l-4 4M12 5l4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ) : (
+      <svg width="12" height="12" fill="none" stroke="#fda4af" viewBox="0 0 24 24" style={{ marginRight: '4px' }}>
+        <path d="M12 5v14M12 19l-4-4M12 19l4-4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+
   // 提示内容
   const tooltipContent = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -26,11 +38,14 @@ const AlertBadge = ({ AlertInfo }: AlertBadgeProps) => {
         style={{
           fontSize: '10px',
           fontFamily: 'monospace',
+          display: 'flex',
+          alignItems: 'center',
           // 使用 Tailwind emerald-300 和 rose-300 的准确颜色值
-          color: direction === 'above' ? '#34d399' : '#34d399',
+          color: direction === 'above' ? '#34d399' : '#fda4af',
           textShadow: direction === 'above' ? '0 0 4px rgba(110,231,183,0.5)' : '0 0 4px rgba(253,164,175,0.5)'
         }}
       >
+        {arrowIcon}
         {direction === 'above' ? 'Above' : 'Below'} ${formatNumberWithCommas(targetPrice)}
       </div>
     </div>

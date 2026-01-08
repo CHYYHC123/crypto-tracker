@@ -63,7 +63,7 @@ function cleanup() {
 function checkExtensionAvailable(): boolean {
   try {
     // 检查 chrome.runtime.id 是否存在
-    console.log('chrome.runtime?.id', chrome.runtime?.id);
+    // console.log('chrome.runtime?.id', chrome.runtime?.id);
     if (!chrome.runtime?.id) {
       return false;
     }
