@@ -246,12 +246,14 @@ async function handleContentResync(sendResponse: (param: any) => void) {
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== 'local') return;
 
-  // 如果 price_alerts 变化了，通知 content script
+  // 如果 price_alerts 变化了，通知所有标签页的 content script
   if (changes.price_alerts) {
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    chrome.tabs.query({}, tabs => {
       tabs.forEach(tab => {
         if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, { type: 'PRICE_ALERTS_UPDATED' });
+          chrome.tabs.sendMessage(tab.id, { type: 'PRICE_ALERTS_UPDATED' }).catch(() => {
+            // 忽略无法发送消息的标签页（例如 chrome:// 页面）
+          });
         }
       });
     });
