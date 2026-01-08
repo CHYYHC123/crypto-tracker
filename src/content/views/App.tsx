@@ -294,7 +294,6 @@ export default function FloatingCryptoWidget() {
                       <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
                       {(() => {
                         const alert = priceAlerts.find(a => a.symbol.toUpperCase() === tokens[0]?.symbol.toUpperCase());
-                        console.log('alert', alert);
                         return alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>;
                       })()}
                     </div>

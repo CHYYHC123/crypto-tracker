@@ -12,7 +12,7 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 /* ---------------- Variants ---------------- */
 
-const tooltipContentVariants = cva('z-1000000 overflow-hidden rounded-md px-3 py-1.5 text-xs shadow-lg border', {
+const tooltipContentVariants = cva('overflow-hidden rounded-md px-3 py-1.5 text-xs shadow-lg border', {
   variants: {
     variant: {
       default: 'bg-gray-800 text-white border-gray-600',
@@ -43,7 +43,7 @@ export default function Tooltip({ content, children, side = 'top', sideOffset = 
         <TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
 
         <TooltipPrimitive.Portal>
-          <TooltipPrimitive.Content side={side} sideOffset={sideOffset} className={cn(tooltipContentVariants({ variant }))}>
+          <TooltipPrimitive.Content side={side} sideOffset={sideOffset} className={cn(tooltipContentVariants({ variant }), 'z-[999999999]')} style={{ zIndex: 999999999, pointerEvents: 'none' }} onPointerDownOutside={e => e.preventDefault()}>
             {content}
             <TooltipPrimitive.Arrow className="fill-gray-800" />
           </TooltipPrimitive.Content>

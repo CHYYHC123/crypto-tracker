@@ -20,18 +20,28 @@ const AlertBadge = ({ AlertInfo }: AlertBadgeProps) => {
 
   // 提示内容
   const tooltipContent = (
-    <div className="flex flex-col gap-0.5">
-      <div className="text-[12px] font-mono text-[gold]">🔔 Alert</div>
-      <div className={`text-[10px] font-mono ${direction === 'above' ? 'text-emerald-300 text-cyan drop-shadow-[0_0_4px_rgba(110,231,183,0.5)]' : 'text-emerald-300 text-cyan-300 drop-shadow-[0_0_4px_rgba(252,165,165,0.5)]'}`}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ fontSize: '12px', fontFamily: 'monospace', color: 'gold' }}>🔔 Alert</div>
+      <div
+        style={{
+          fontSize: '10px',
+          fontFamily: 'monospace',
+          // 使用 Tailwind emerald-300 和 rose-300 的准确颜色值
+          color: direction === 'above' ? '#34d399' : '#34d399',
+          textShadow: direction === 'above' ? '0 0 4px rgba(110,231,183,0.5)' : '0 0 4px rgba(253,164,175,0.5)'
+        }}
+      >
         {direction === 'above' ? 'Above' : 'Below'} ${formatNumberWithCommas(targetPrice)}
       </div>
     </div>
   );
 
   return (
-    <div className={cn('flex items-center text-[12px] font-mono')}>
+    <div className={cn('flex items-center text-[12px] font-mono relative z-10')}>
       <Tooltip content={tooltipContent} side="top" variant="default">
-        <span className="text-[gold] cursor-pointer hover:opacity-80 transition-opacity" style={{fontSize: '12px'}}>🔔</span>
+        <span className="text-[gold] cursor-pointer hover:opacity-80 transition-opacity" style={{ fontSize: '12px' }}>
+          🔔
+        </span>
       </Tooltip>
     </div>
   );
