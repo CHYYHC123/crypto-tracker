@@ -28,6 +28,39 @@ import { ExchangeList } from '@/config/exchangeConfig';
 import NetworkState from '@/content/views/networkState';
 import { useDataStatus } from '@/hooks/useDataStatus';
 
+// 通过消息传递访问 background 的 coinsManager
+async function getCoins(): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      if (response?.success) {
+        resolve(response.data);
+      } else {
+        reject(new Error(response?.error || 'Failed to get coins'));
+      }
+    });
+  });
+}
+
+async function setCoins(coins: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ type: 'SET_COINS', payload: { coins } }, response => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      if (response?.success) {
+        resolve();
+      } else {
+        reject(new Error(response?.error || 'Failed to set coins'));
+      }
+    });
+  });
+}
+
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
   return new Promise(resolve => {
@@ -192,15 +225,14 @@ export default function PopupContent() {
    */
   const saveToken = async (symbol: string): Promise<void> => {
     try {
-      const result = await chrome.storage.local.get(['coins']);
-      const oldCoins: string[] = (result.coins as string[]) ?? [];
+      const oldCoins = await getCoins();
       if (oldCoins?.includes(symbol)) {
         toast('Token already exists ⚠️', { duration: 2000 });
         setSearchValue('');
         return;
       }
       const newCoins = [...oldCoins, symbol];
-      await chrome.storage.local.set({ coins: newCoins });
+      await setCoins(newCoins);
       setSearchValue('');
       setCountdown(10);
 
@@ -255,8 +287,7 @@ export default function PopupContent() {
     if (!symbol || removing) return;
     setRemoving(true);
     try {
-      const result = await chrome.storage.local.get(['coins']);
-      const oldTokenList: string[] = (result.coins as string[]) ?? [];
+      const oldTokenList = await getCoins();
       if (!oldTokenList?.includes(symbol)) return;
 
       // 检查：如果只剩一个币种，不允许删除
@@ -269,7 +300,7 @@ export default function PopupContent() {
       // 👉 关键一步：过滤掉要删除的 symbol
       const newTokenList = oldTokenList.filter(item => item !== symbol);
       // 保存更新后的数组
-      await chrome.storage.local.set({ coins: newTokenList });
+      await setCoins(newTokenList);
       setCountdown(10);
       setTimeout(() => {
         mutate();

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, memo } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { formatNumberWithCommas } from '@/utils/index';
@@ -9,6 +9,7 @@ import { DataStatus } from '@/types/index';
 
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 import { TokenItem, PriceAlert } from '@/types/index';
 import AlertBadge from '@/popup/components/AlertBadge';
@@ -25,8 +26,37 @@ interface SortableCoinItemProps {
   priceAlerts: PriceAlert[];
 }
 
+// 自定义对比函数：只有价格、涨跌幅或预警状态变化时才重新渲染
+function arePropsEqual(prevProps: SortableCoinItemProps, nextProps: SortableCoinItemProps): boolean {
+  const prevCoin = prevProps.coin;
+  const nextCoin = nextProps.coin;
+
+  // 比较价格（使用 price_show 格式化后的值进行比较，避免浮点数精度问题）
+  if (prevCoin.price !== nextCoin.price) return false;
+
+  // 比较涨跌幅
+  if (prevCoin.change !== nextCoin.change) return false;
+
+  // 比较预警状态：查找该币种对应的预警，比较预警的关键属性
+  const prevAlert = prevProps.priceAlerts.find(a => a.symbol.toUpperCase() === prevCoin.symbol.toUpperCase());
+  const nextAlert = nextProps.priceAlerts.find(a => a.symbol.toUpperCase() === nextCoin.symbol.toUpperCase());
+
+  // 如果预警存在状态不同（一个有预警一个没有），需要重新渲染
+  if (!!prevAlert !== !!nextAlert) return false;
+
+  // 如果都有预警，比较预警的关键属性（enabled, targetPrice, direction）
+  if (prevAlert && nextAlert) {
+    if (prevAlert.enabled !== nextAlert.enabled) return false;
+    if (prevAlert.targetPrice !== nextAlert.targetPrice) return false;
+    if (prevAlert.direction !== nextAlert.direction) return false;
+  }
+
+  // 其他属性（symbol, icon 等）变化不影响渲染，因为它们在组件生命周期内不会改变
+  return true;
+}
+
 // 可排序的币种卡片组件
-function SortableCoinItem({ coin, priceAlerts }: SortableCoinItemProps) {
+const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAlerts }: SortableCoinItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: coin.symbol });
 
   const style = {
@@ -68,7 +98,7 @@ function SortableCoinItem({ coin, priceAlerts }: SortableCoinItemProps) {
       </div>
     </div>
   );
-}
+}, arePropsEqual);
 
 export default function FloatingCryptoWidget() {
   const [collapsed, setCollapsed] = useState(true);
@@ -79,6 +109,8 @@ export default function FloatingCryptoWidget() {
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
   const [contentHeight, setContentHeight] = useState<number>(0);
+
+  // console.log('触发渲染。。。')
 
   // 管理预警消息
   usePriceAlertManager(tokens);
@@ -145,14 +177,36 @@ export default function FloatingCryptoWidget() {
       if (msg.type === 'UPDATE_PRICE' && msg.data) {
         setTokens(prevTokens => {
           // 如果是首次加载或数量变化，直接使用新数据
-          if (!prevTokens.length || prevTokens.length !== msg.data.length) {
-            return msg.data;
-          }
-          // 保持当前顺序，只更新价格
-          return prevTokens.map(token => {
-            const updated = msg.data.find((t: TokenItem) => t.symbol === token.symbol);
-            return updated ? { ...token, price: updated.price, change: updated.change, lastPrice: updated.lastPrice } : token;
+          if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
+
+          // 优化：使用 Map 将查找复杂度从 O(n*m) 降为 O(n)
+          const updatedMap = new Map<string, TokenItem>();
+          msg.data.forEach((token: TokenItem) => {
+            updatedMap.set(token.symbol.toUpperCase(), token);
           });
+
+          // 保持当前顺序，只更新价格
+          let hasChanges = false;
+          const newTokens = prevTokens.map(token => {
+            const updated = updatedMap.get(token.symbol.toUpperCase());
+            if (!updated) return token; // 找不到对应 token，保持原样
+
+            // 优化：只有价格、涨跌幅或 lastPrice 真正变化时才创建新对象
+            const priceChanged = updated.price !== token.price;
+            const changeChanged = updated.change !== token.change;
+            const lastPriceChanged = updated.lastPrice !== token.lastPrice;
+
+            if (priceChanged || changeChanged || lastPriceChanged) {
+              hasChanges = true;
+              return { ...token, price: updated.price, change: updated.change, lastPrice: updated.lastPrice };
+            }
+
+            // 数据没有变化，保持原对象引用（有利于 React.memo）
+            return token;
+          });
+
+          // 优化：如果所有 token 都无变化，直接返回 prevTokens，避免触发 setState
+          return hasChanges ? newTokens : prevTokens;
         });
       }
     }
@@ -189,17 +243,7 @@ export default function FloatingCryptoWidget() {
   /**
    * 移动端隐藏token表
    */
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 500);
-    };
-
-    handleResize(); // 初始化执行一次
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
 
   // 排序开始
   const handleSortStart = () => {
@@ -279,7 +323,7 @@ export default function FloatingCryptoWidget() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className="fixed bottom-4 right-4 z-99999999"
-          style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+          style={{ transform: `translate(${position.x}px, ${position.y}px)`, willChange: 'transform' }}
           translate="no"
           data-notranslate="true"
         >

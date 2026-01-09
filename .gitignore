@@ -32,3 +32,6 @@ screenshot1
 *.crx
 *.pem
 
+*.doc
+*.docx
+
