@@ -15,15 +15,6 @@ import { ExchangeListMap, type ExchangeType, defaultDataSource } from '@/config/
 import { exportCryptoData } from '../utils/exportData';
 import { selectAndImportFile } from '../utils/importData';
 
-/**
- * 需求：
- * 1、实现导入需求：点击 <ActionMenuItem>导入币种</ActionMenuItem>,弹出 ConfirmDialog 进行二次确认
- * 2、选择本地json文件进行导入，文件要求
- *  - json 格式文件，
- *  - 选中文件中需要有 "coins": [],"price_alerts": [] 其中一个字段，可为空数组，如果字段不对提示；如果两者都不存在提示；如果存在但有字段不对提示，如果两个字段都为空数组当做提示。有效文件：只要有一个字段存在就可以，但是两个字段必须正确，导入时，要校验类型，缺少类型要提示，提示文案根据给出合理文案
- * 3、ConfirmDialog 中 description 封装一个组件，要有提示文案和json文件中字段示例
- *
- */
 const MenuCenter = () => {
   // 控制菜单弹出关闭逻辑
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);

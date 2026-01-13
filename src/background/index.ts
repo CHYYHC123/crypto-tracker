@@ -290,7 +290,6 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
         }
       });
     });
-    return;
   }
 
   const coinsChanged = isValueChanged(changes.coins, true);
