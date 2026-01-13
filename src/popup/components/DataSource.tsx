@@ -1,38 +1,22 @@
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Check } from 'lucide-react';
-import { ExchangeListMap, type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { ExchangeListMap, type ExchangeType } from '@/config/exchangeConfig';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export interface DataSourceProps {
+  currentSource: ExchangeType;
   onClose?: () => void;
   onSelect?: (source: ExchangeType) => void;
 }
 
-const DataSource: React.FC<DataSourceProps> = ({ onClose, onSelect }) => {
-  const [currentSource, setCurrentSource] = useState<ExchangeType>(defaultDataSource);
-
-  // 初始化当前选中的数据源
-  useEffect(() => {
-    const initDataSource = async () => {
-      const { data_source } = await chrome.storage.local.get('data_source');
-      if (typeof data_source === 'string' && ExchangeListMap[data_source as ExchangeType]) {
-        setCurrentSource(data_source as ExchangeType);
-      } else {
-        setCurrentSource(defaultDataSource);
-      }
-    };
-    initDataSource();
-  }, []);
-
+const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelect }) => {
   // 处理选择数据源
   const handleSelect = async (source: ExchangeType) => {
     const info = ExchangeListMap[source];
     if (info.disabled) return; // 跳过禁用的数据源
 
     await chrome.storage.local.set({ data_source: source });
-    setCurrentSource(source);
 
     // 调用回调
     onSelect?.(source);

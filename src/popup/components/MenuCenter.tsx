@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Menu } from 'lucide-react';
 import ActionMenu from '@/components/common/ActionMenu';
@@ -7,7 +7,7 @@ import ActionMenuItem from '@/components/common/ActionMenuItem';
 import Dialog from '@/components/common/dialog';
 import DataSource from './DataSource';
 
-import { defaultDataSource } from '@/config/exchangeConfig';
+import { ExchangeListMap, type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 
 const MenuCenter = () => {
   /**
@@ -23,7 +23,21 @@ const MenuCenter = () => {
     setAnchorEl(null);
   };
 
-  const [currentDataSource, setCurrentDataSource] = useState(defaultDataSource);
+  // 当前数据源
+  const [currentDataSource, setCurrentDataSource] = useState<ExchangeType>(defaultDataSource);
+
+  // 初始化当前选中的数据源
+  useEffect(() => {
+    const initDataSource = async () => {
+      const { data_source } = await chrome.storage.local.get('data_source');
+      if (typeof data_source === 'string' && ExchangeListMap[data_source as ExchangeType]) {
+        setCurrentDataSource(data_source as ExchangeType);
+      } else {
+        setCurrentDataSource(defaultDataSource);
+      }
+    };
+    initDataSource();
+  }, []);
 
   // 打开数据源对话框
   const [showDialog, setShowDialog] = useState(false);
@@ -45,10 +59,9 @@ const MenuCenter = () => {
       {/* 数据源选择对话框 */}
       <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
         <DataSource
+          currentSource={currentDataSource}
           onClose={() => setShowDialog(false)}
           onSelect={source => {
-            // 数据源切换逻辑已在 DataSource 内部处理
-            console.log('Data source selected:', source);
             setCurrentDataSource(source);
           }}
         />
