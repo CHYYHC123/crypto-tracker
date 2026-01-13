@@ -21,11 +21,13 @@ import MenuCenter from './components/MenuCenter';
 
 import type { TokenItem, PriceAlert } from '@/types/index';
 
-import { formatNumberWithCommas, queryTokenLocal } from '@/utils/index';
+import { formatNumberWithCommas } from '@/utils/index';
 import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
 
 import NetworkState from '@/content/views/networkState';
 import { useDataStatus } from '@/hooks/useDataStatus';
+import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { validateToken } from './utils/validateToken';
 
 // 通过消息传递访问 background 的 coinsManager
 async function getCoins(): Promise<string[]> {
@@ -131,6 +133,9 @@ export default function PopupContent() {
   // 强制添加弹窗
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingToken, setPendingToken] = useState<string>('');
+
+  // Loading 状态
+  const [loading, setLoading] = useState(false);
   const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
     setErrorTip(null); // 清除错误样式
     const rawValue = event.target.value;
@@ -152,28 +157,40 @@ export default function PopupContent() {
     if (event.key === 'Enter') await addToken();
   };
 
+  /**
+   * 需求：
+   * 1、提取验证币种是否有效这部分相关逻辑进行提取成一个方法，
+   * 2、预留字段 根据不同数据源走不同的 queryToken
+   * 3、不要修改原来的逻辑
+   *
+   */
   const addToken = async () => {
     if (!searchValue) return;
     if (alreadyExistToken) {
       setErrorTip(`${searchValue} already exists`);
       return;
     }
-    const isIpCN = await queryIpCN();
-    let effectiveToken = false;
-    if (isIpCN) {
-      effectiveToken = queryTokenLocal(searchValue);
-    } else {
-      effectiveToken = await queryToken(searchValue);
-    }
 
-    if (!effectiveToken) {
-      // 验证失败，显示确认弹窗让用户选择是否强制添加
-      setPendingToken(searchValue);
-      setShowConfirm(true);
-      setErrorTip(`Invalid token`);
-      return;
+    // 获取当前数据源
+    const { data_source } = await chrome.storage.local.get('data_source');
+    const currentDataSource = (data_source as ExchangeType) || defaultDataSource;
+
+    // 使用提取的验证方法
+    setLoading(true);
+    try {
+      const effectiveToken = await validateToken(searchValue, currentDataSource);
+
+      if (!effectiveToken) {
+        // 验证失败，显示确认弹窗让用户选择是否强制添加
+        setPendingToken(searchValue);
+        setShowConfirm(true);
+        setErrorTip(`Invalid token`);
+        return;
+      }
+      await saveToken(searchValue);
+    } finally {
+      setLoading(false);
     }
-    await saveToken(searchValue);
   };
 
   // 强制添加 token
@@ -182,40 +199,6 @@ export default function PopupContent() {
       await saveToken(pendingToken);
       setPendingToken('');
       setErrorTip(null);
-    }
-  };
-
-  /**
-   * 查询当前连接的网络否是大陆
-   */
-  const queryIpCN = async (): Promise<boolean> => {
-    try {
-      const ipinfo = await fetch('https://ipapi.co/json/').then(r => r.json());
-      if (ipinfo.country === 'CN') return true; // 非中国网络，大概率VPN或在海外
-      return false;
-    } catch (err) {
-      return true;
-    }
-  };
-
-  /**
-   * 查询是否是有效token
-   * https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT
-   * @param {string} symbol 要查询的token BTC、ETH
-   */
-  const [loading, setLoading] = useState(false);
-  const queryUrl = 'https://www.okx.com/api/v5/market/ticker';
-  const queryToken = async (symbol: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const res = await fetch(`${queryUrl}?instId=${symbol}-USDT`);
-      const data = await res.json();
-      if (data.code === '0') return true;
-      return false;
-    } catch (error) {
-      return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -440,7 +423,7 @@ export default function PopupContent() {
               <NetworkState status={status} />
             </div>
           </div>
-          <div className='mt-1'>
+          <div className="mt-1">
             <MenuCenter />
           </div>
         </div>
