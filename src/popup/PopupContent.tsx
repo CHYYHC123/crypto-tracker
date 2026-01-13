@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
-import Select from '@/components/common/select';
+// import Select from '@/components/common/select';
 import ConfirmDialog from '@/components/common/confirm-dialog';
 import { CustomToaster } from '@/components/CustomToaster/index';
 // @ts-ignore
@@ -17,13 +17,12 @@ import Tooltip from '@/components/common/tooltip';
 import PriceAlertInput from './components/PriceAlter';
 import { Direction } from './components/PriceAlter';
 import AlertBadge from './components/AlertBadge';
+import MenuCenter from './components/MenuCenter';
 
 import type { TokenItem, PriceAlert } from '@/types/index';
 
 import { formatNumberWithCommas, queryTokenLocal } from '@/utils/index';
 import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
-
-import { ExchangeList } from '@/config/exchangeConfig';
 
 import NetworkState from '@/content/views/networkState';
 import { useDataStatus } from '@/hooks/useDataStatus';
@@ -430,58 +429,19 @@ export default function PopupContent() {
     }
   };
 
-  // 数据源
-  const [value, setValue] = useState<string>(ExchangeList[0]);
-  const dataSource = useMemo(() => {
-    return ExchangeList.map(item => ({
-      label: item,
-      value: item,
-      desc: item === 'Gate' ? 'No VPN' : 'Need VPN'
-    }));
-  }, [ExchangeList]);
-
-  const initDataSource = async () => {
-    const { data_source } = await chrome.storage.local.get('data_source');
-    if (typeof data_source === 'string') {
-      setValue(data_source);
-    } else {
-      const defaultSource = ExchangeList[0];
-      if (defaultSource) {
-        setValue(defaultSource);
-        await chrome.storage.local.set({ data_source: defaultSource });
-      }
-    }
-  };
-
-  const changeSelect = async (val: string) => {
-    await chrome.storage.local.set({ data_source: val });
-    setValue(val);
-  };
-
-  useEffect(() => {
-    initDataSource();
-  }, []);
-
   return (
     <>
       <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <CustomToaster />
-        <div className="flex justify-between items-center flex-shrink-0">
+        <div className="flex justify-between flex-shrink-0">
           <div>
             <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
             <div className="mt-1">
               <NetworkState status={status} />
             </div>
           </div>
-          <div>
-            <Select
-              value={value}
-              onChange={(val: string) => {
-                changeSelect(val);
-              }}
-              placeholder="Data source"
-              options={dataSource}
-            />
+          <div className='mt-1'>
+            <MenuCenter />
           </div>
         </div>
         <div className="search_token mt-4 flex items-center flex-shrink-0">

@@ -1,13 +1,52 @@
+import OKXLOGO from '@/assets/image/logo/okx_logo.png';
+import GATELOGO from '@/assets/image/logo/gate_logo.png';
+import BNLOGO from '@/assets/image/logo/bn_logo.png';
+/** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
 
 /** 默认数据源 */
 export const defaultDataSource: ExchangeType = 'OKX';
 
-/** 用于 UI 的下拉列表 */
-export const ExchangeList: ExchangeType[] = ['OKX', 'Gate', 'BN'];
-
-// 交易所类型
+/** 交易所类型 */
 export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL';
+/** 交易所 UI 信息接口 */
+export interface ExchangeInfo {
+  type: ExchangeType;
+  name: string;
+  logo: string; // 图片 URL（通过 Vite 导入的图片会被处理为字符串）
+  needsVPN: boolean;
+  disabled: boolean;
+}
+
+/** 交易所 UI 信息配置 */
+export const ExchangeListMap: Record<ExchangeType, Omit<ExchangeInfo, 'type'>> = {
+  BN: {
+    name: 'Binance',
+    logo: BNLOGO,
+    needsVPN: true,
+    disabled: false
+  },
+  OKX: {
+    name: 'OKX',
+    logo: OKXLOGO,
+    needsVPN: true,
+    disabled: false
+  },
+  Gate: {
+    name: 'Gate.io',
+    logo: GATELOGO,
+    needsVPN: false,
+    disabled: false
+  },
+  HL: {
+    name: 'Hyperliquid',
+    logo: OKXLOGO, // 暂时使用 OKX logo
+    needsVPN: true,
+    disabled: true
+  }
+};
+/** 交易所类型 */
+export type displayCurrency = 'USD' | 'CNY' | 'EUR' | 'JPY';
 
 type SubscribeBuilder = (tokenList: string[]) => any;
 

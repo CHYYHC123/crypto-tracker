@@ -18,9 +18,7 @@ export function ActionMenu({ open, anchorEl, onClose, children, className }: Act
 
   // 关闭时重置样式，确保下次打开时重新计算
   useEffect(() => {
-    if (!open) {
-      setMenuStyle(null);
-    }
+    if (!open) setMenuStyle(null);
   }, [open]);
 
   // 测量 + 定位
