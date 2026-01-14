@@ -1,20 +1,26 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { formatNumberWithCommas } from '@/utils/index';
 import { Plus, Minus } from 'lucide-react';
-import { CustomToaster } from '@/components/CustomToaster/index';
-import NetworkState from '@/content/views/networkState';
-import { DataStatus } from '@/types/index';
-import DraggableContent from '@/components/DraggableContent/index';
-import { CoinsContent, SortableCoinItem, CoinsFooter } from './coins';
 
+import { formatNumberWithCommas } from '@/utils/index';
+
+// 组件
+import DraggableContent from '@/components/DraggableContent/index';
+import { CustomToaster } from '@/components/CustomToaster/index';
+import { CoinsContent, SortableCoinItem, CoinsFooter } from '@/content/views/coins';
+import NetworkState from '@/content/views/networkState';
+import AlertBadge from '@/popup/components/AlertBadge';
+import Badge from '@/components/common/badge';
+
+// hooks
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+// type
+import { DataStatus } from '@/types/index';
 import { TokenItem, PriceAlert } from '@/types/index';
-import AlertBadge from '@/popup/components/AlertBadge';
 
 // dnd-kit
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -137,10 +143,7 @@ export default function ContentMain() {
     }
     chrome.runtime.onMessage.addListener(handleMessage);
 
-    // chrome.runtime.sendMessage({
-    //   type: 'ALERT_TRIGGERED'
-    // });
-    // 卸载组件时移除监听
+  // 卸载组件时移除监听
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage);
     };

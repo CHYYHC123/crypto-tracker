@@ -430,6 +430,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
   } else if (message.type === 'ALERT_TRIGGERED') {
     setBadge('critical');
+    // chrome.notifications.create({
+    //   type: 'basic',
+    //   iconUrl: chrome.runtime.getURL('public/logo.png'),
+    //   title: 'Price Alert',
+    //   message: '测试预警'
+    // });
   } else if (message.type === 'ALERT_CLEAR') {
     setBadge('none');
   }
