@@ -113,7 +113,6 @@ export default function ContentMain() {
    * 移动端隐藏token表
    */
   const isMobile = useIsMobile();
-  if (isMobile) return null;
 
   // 网络状态
   const status = useDataStatus();
@@ -290,91 +289,93 @@ export default function ContentMain() {
 
   return (
     <>
-      <DraggableWidget disabled={isSorting}>
-        <CustomToaster />
+      {!isMobile && (
+        <DraggableWidget disabled={isSorting}>
+          <CustomToaster />
 
-        <motion.div layout className="relative w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide">
-          <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
-            {collapsed && tokens?.length > 0 ? (
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
-                  <div className="ml-2">
-                    <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
-                    {(() => {
-                      const alert = priceAlerts.find(a => a.symbol.toUpperCase() === tokens[0]?.symbol.toUpperCase());
-                      return alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>;
-                    })()}
+          <motion.div layout className="relative w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide">
+            <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
+              {collapsed && tokens?.length > 0 ? (
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
+                    <div className="ml-2">
+                      <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
+                      {(() => {
+                        const alert = priceAlerts.find(a => a.symbol.toUpperCase() === tokens[0]?.symbol.toUpperCase());
+                        return alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>;
+                      })()}
+                    </div>
                   </div>
+
+                  {status !== DataStatus.LIVE ? (
+                    <div style={{ marginRight: '12px' }} onClick={refreshData}>
+                      <NetworkState status={status} className="cursor-pointer" />
+                    </div>
+                  ) : (
+                    <div style={{ marginRight: '12px' }}>
+                      <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
+                      <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
+              )}
 
-                {status !== DataStatus.LIVE ? (
-                  <div style={{ marginRight: '12px' }} onClick={refreshData}>
-                    <NetworkState status={status} className="cursor-pointer" />
-                  </div>
-                ) : (
-                  <div style={{ marginRight: '12px' }}>
-                    <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
-                    <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
-                  </div>
-                )}
+              <div className="flex gap-2 items-center">
+                <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
+                  {collapsed ? <Plus size={12} /> : <Minus size={12} />}
+                </button>
               </div>
-            ) : (
-              <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
-            )}
-
-            <div className="flex gap-2 items-center">
-              <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                {collapsed ? <Plus size={12} /> : <Minus size={12} />}
-              </button>
             </div>
-          </div>
 
-          <AnimatePresence>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  ref={contentRef}
+                  key="content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{
+                    height: contentHeight || 'auto',
+                    opacity: 1,
+                    transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
+                  }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{
+                    height: { duration: 0.3, ease: 'easeInOut' },
+                    opacity: { duration: 0.2, ease: 'easeInOut' }
+                  }}
+                  className="px-3 pt-2 pb-0 space-y-2"
+                >
+                  {/* 拖拽列表容器 - restrictToParentElement 会限制在这个容器内 */}
+                  <div className="space-y-2">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleSortStart} onDragEnd={handleSortEnd}>
+                      <SortableContext items={tokens.map(t => t.symbol)} strategy={verticalListSortingStrategy}>
+                        {tokens?.map((coin: TokenItem) => (
+                          <SortableCoinItem key={coin.symbol} coin={coin} priceAlerts={priceAlerts} />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 底部操作栏 - 固定在底部，收起时隐藏 */}
             {!collapsed && (
-              <motion.div
-                ref={contentRef}
-                key="content"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{
-                  height: contentHeight || 'auto',
-                  opacity: 1,
-                  transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
-                }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{
-                  height: { duration: 0.3, ease: 'easeInOut' },
-                  opacity: { duration: 0.2, ease: 'easeInOut' }
-                }}
-                className="px-3 pt-2 pb-0 space-y-2"
-              >
-                {/* 拖拽列表容器 - restrictToParentElement 会限制在这个容器内 */}
-                <div className="space-y-2">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleSortStart} onDragEnd={handleSortEnd}>
-                    <SortableContext items={tokens.map(t => t.symbol)} strategy={verticalListSortingStrategy}>
-                      {tokens?.map((coin: TokenItem) => (
-                        <SortableCoinItem key={coin.symbol} coin={coin} priceAlerts={priceAlerts} />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
+              <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] ">
+                <div>
+                  <NetworkState status={status} />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* 底部操作栏 - 固定在底部，收起时隐藏 */}
-          {!collapsed && (
-            <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] ">
-              <div>
-                <NetworkState status={status} />
+                <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
+                  Refresh
+                </button>
               </div>
-              <button onClick={refreshData} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                Refresh
-              </button>
-            </div>
-          )}
-        </motion.div>
-      </DraggableWidget>
+            )}
+          </motion.div>
+        </DraggableWidget>
+      )}
     </>
   );
 }
