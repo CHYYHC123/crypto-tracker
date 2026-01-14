@@ -1,12 +1,12 @@
 import { ReactNode, useRef, useState } from 'react';
 import { motion, PanInfo } from 'framer-motion';
 
-interface DraggableWidgetProps {
-  disabled: boolean;  // 禁用拖拽
+interface DraggableContentProps {
+  disabled: boolean; // 禁用拖拽
   children: ReactNode;
 }
 
-export default function DraggableWidget({ disabled, children }: DraggableWidgetProps) {
+export default function DraggableContent({ disabled, children }: DraggableContentProps) {
   const widgetRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 

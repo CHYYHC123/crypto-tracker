@@ -6,7 +6,7 @@ import { Plus, Minus, GripVertical } from 'lucide-react';
 import { CustomToaster } from '@/components/CustomToaster/index';
 import NetworkState from '@/content/views/networkState';
 import { DataStatus } from '@/types/index';
-import DraggableWidget from '@/components/DraggableWidget';
+import DraggableWidget from '@/components/DraggableContent/index';
 
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
