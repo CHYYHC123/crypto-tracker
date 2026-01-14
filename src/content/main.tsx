@@ -21,7 +21,6 @@ shadowRoot.appendChild(styleEl);
 const resetStyles = `
   :host {
     font-size: 16px !important;
-    font-family: -apple-system, BlinkMacSystemFont, Pretendard, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
     line-height: 1.5 !important;
     color: inherit !important;
     background-color: transparent !important;

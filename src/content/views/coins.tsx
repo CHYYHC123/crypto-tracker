@@ -106,7 +106,7 @@ interface CoinsFooterProps {
 
 export const CoinsFooter = ({ status, onRefresh }: CoinsFooterProps) => {
   return (
-    <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px]">
+    <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] z-10">
       <div>
         <NetworkState status={status} />
       </div>

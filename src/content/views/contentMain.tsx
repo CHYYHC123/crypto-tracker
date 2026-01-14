@@ -11,7 +11,7 @@ import { CustomToaster } from '@/components/CustomToaster/index';
 import { CoinsContent, SortableCoinItem, CoinsFooter } from '@/content/views/coins';
 import NetworkState from '@/content/views/networkState';
 import AlertBadge from '@/popup/components/AlertBadge';
-import Badge from '@/components/common/badge';
+// import Badge from '@/components/common/badge';
 
 // hooks
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
