@@ -7,6 +7,7 @@ import type { Ticker } from '@/utils/ws/parseTicker';
 import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 import { getCoins, setCoins } from './coinsManager';
+import { setBadge } from './badge';
 
 let showTokenList: TokenItem[] | null = null;
 // 记录 showTokenList 最后更新的时间戳（用于检测 WebSocket 假死）
@@ -427,5 +428,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     } else {
       sendResponse({ success: false, msg: 'Invalid order' });
     }
+  } else if (message.type === 'ALERT_TRIGGERED') {
+    setBadge('critical');
+  } else if (message.type === 'ALERT_CLEAR') {
+    setBadge('none');
   }
 });

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import App from './views/App.tsx';
+import ContentMain from './views/contentMain.tsx';
 import tailwindStyles from '@/assets/css/tailwindcss.css?inline';
 
 const container = document.createElement('div');
@@ -11,31 +11,37 @@ container.setAttribute('data-notranslate', 'true');
 document.body.appendChild(container);
 
 const shadowRoot = container.attachShadow({ mode: 'open' });
-// 创建重置样式
-const resetStyles = `
-  :host {
-    font-size: 16px !important;
-    all: initial;
-    translate: no !important;
-  }
-  * {
-    translate: no !important;
-  }
-`;
-// 注入重置样式
-const resetStyleEl = document.createElement('style');
-resetStyleEl.textContent = resetStyles;
-shadowRoot.appendChild(resetStyleEl);
 
-// 注入 tailwind 样式
+// 先注入 tailwind 样式（必须在重置样式之前，确保 Tailwind 样式不被重置）
 const styleEl = document.createElement('style');
 styleEl.textContent = tailwindStyles;
 shadowRoot.appendChild(styleEl);
 
+// 创建重置样式（有选择性地重置，避免使用 all: initial 覆盖 Tailwind 样式）
+const resetStyles = `
+  :host {
+    font-size: 16px !important;
+    font-family: -apple-system, BlinkMacSystemFont, Pretendard, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    line-height: 1.5 !important;
+    color: inherit !important;
+    background-color: transparent !important;
+    translate: no !important;
+    box-sizing: border-box !important;
+  }
+  * {
+    translate: no !important;
+    box-sizing: border-box !important;
+  }
+`;
+// 注入重置样式（在 Tailwind 之后，但只重置必要的属性）
+const resetStyleEl = document.createElement('style');
+resetStyleEl.textContent = resetStyles;
+shadowRoot.appendChild(resetStyleEl);
+
 // 挂载一个 div 给 React Root
 const mountNode = document.createElement('div');
 mountNode.style.fontSize = '16px';
-mountNode.style.all = 'initial';
+// 移除 all: initial，避免覆盖 Tailwind 样式
 // 禁止翻译：在挂载节点上也添加 translate="no" 属性
 mountNode.setAttribute('translate', 'no');
 mountNode.setAttribute('data-notranslate', 'true');
@@ -105,7 +111,7 @@ function setupExtensionStatusChecker() {
 root = createRoot(mountNode);
 root.render(
   <StrictMode>
-    <App />
+    <ContentMain />
   </StrictMode>
 );
 

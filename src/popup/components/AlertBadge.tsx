@@ -1,14 +1,9 @@
+// 携带铃铛 🔔 
 import { formatNumberWithCommas } from '@/utils/index';
 import { cn } from '@/lib/utils';
 import Tooltip from '@/components/common/tooltip';
 import { PriceAlert } from '@/types/index';
 
-/**
- * 需求：
- * 1、如果 PriceAlert 中 enabled 为 false，实现禁用样式，bell-off，不用弹起 tooltipContent
- * 2、popup 中点击 AlertBadge 可直接唤起 "币种价格预警弹窗"，弹窗中的数据要和现在存储的状态一样
- * 3、<ActionMenuItem onClick={setPriceAlert}>Price Alert</ActionMenuItem> 唤起弹窗时，如果存在已经价格数据，要和表单中同步
- */
 interface AlertBadgeProps {
   AlertInfo: PriceAlert | null;
   onClick?: () => void;
@@ -64,7 +59,7 @@ const AlertBadge = ({ AlertInfo, onClick }: AlertBadgeProps) => {
   );
 
   return (
-    <div className={cn('flex items-center text-[12px] font-mono relative z-10')}>
+    <div className={cn('flex items-center text-[12px] font-mono relative z-1')}>
       <Tooltip content={tooltipContent} side="top" variant="default">
         <span className="text-[gold] cursor-pointer hover:opacity-80 transition-opacity" style={{ fontSize: '12px' }} onClick={onClick}>
           🔔
