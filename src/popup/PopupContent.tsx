@@ -1,12 +1,8 @@
-import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
 
-import Input from '@/components/common/input';
-import Button from '@/components/common/button';
-// import Select from '@/components/common/select';
 import ConfirmDialog from '@/components/common/confirm-dialog';
 import { CustomToaster } from '@/components/CustomToaster/index';
 // @ts-ignore
@@ -17,17 +13,15 @@ import Tooltip from '@/components/common/tooltip';
 import PriceAlertInput from './components/PriceAlter';
 import { Direction } from './components/PriceAlter';
 import AlertBadge from './components/AlertBadge';
-import MenuCenter from './components/MenuCenter';
+import { Header } from '@/popup/components/Header';
+import { TokenSearch } from '@/popup/components/TokenSearch';
+import { EmptyState } from '@/popup/components/EmptyState';
+import { Footer } from '@/popup/components/Footer';
 
 import type { TokenItem, PriceAlert } from '@/types/index';
 
 import { formatNumberWithCommas } from '@/utils/index';
-import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
-
-import NetworkState from '@/content/components/networkState';
-import { useDataStatus } from '@/hooks/useDataStatus';
-import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
-import { validateToken } from './utils/validateToken';
+import { Ellipsis, X, Power, PowerOff } from 'lucide-react';
 
 // 通过消息传递访问 background 的 coinsManager
 async function getCoins(): Promise<string[]> {
@@ -76,9 +70,6 @@ export default function PopupContent() {
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
-  // 网络状态
-  const status = useDataStatus();
-
   // 轮询，每15秒自动刷新一次
   const {
     data: tokenList,
@@ -126,109 +117,10 @@ export default function PopupContent() {
     };
   }, []);
 
-  // 搜索输入框
-  const [searchValue, setSearchValue] = useState<string>('');
-  const [errorTip, setErrorTip] = useState<string | null>(null);
-
-  // 强制添加弹窗
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingToken, setPendingToken] = useState<string>('');
-
-  // Loading 状态
-  const [loading, setLoading] = useState(false);
-  const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
-    setErrorTip(null); // 清除错误样式
-    const rawValue = event.target.value;
-    // 1. 仅保留英文字母
-    const onlyLetters = rawValue.replace(/[^a-zA-Z0-9]/g, '');
-    // 2. 转为大写
-    const uppercased = onlyLetters.toUpperCase();
-    setSearchValue(uppercased);
-  };
-
-  // Token是否已经存在
-  const alreadyExistToken = useMemo(() => {
-    const alreadyExist = tokens?.some((token: TokenItem) => token.symbol === searchValue);
-    return alreadyExist;
-  }, [searchValue]);
-
-  // 添加 token 按下回车键触发
-  const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') await addToken();
-  };
-
-  /**
-   * 需求：
-   * 1、提取验证币种是否有效这部分相关逻辑进行提取成一个方法，
-   * 2、预留字段 根据不同数据源走不同的 queryToken
-   * 3、不要修改原来的逻辑
-   *
-   */
-  const addToken = async () => {
-    if (!searchValue) return;
-    if (alreadyExistToken) {
-      setErrorTip(`${searchValue} already exists`);
-      return;
-    }
-
-    // 获取当前数据源
-    const { data_source } = await chrome.storage.local.get('data_source');
-    const currentDataSource = (data_source as ExchangeType) || defaultDataSource;
-
-    // 使用提取的验证方法
-    setLoading(true);
-    try {
-      const effectiveToken = await validateToken(searchValue, currentDataSource);
-
-      if (!effectiveToken) {
-        // 验证失败，显示确认弹窗让用户选择是否强制添加
-        setPendingToken(searchValue);
-        setShowConfirm(true);
-        setErrorTip(`Invalid token`);
-        return;
-      }
-      await saveToken(searchValue);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 强制添加 token
-  const handleForceAdd = async () => {
-    if (pendingToken) {
-      await saveToken(pendingToken);
-      setPendingToken('');
-      setErrorTip(null);
-    }
-  };
-
-  /**
-   * 保存 token 到 storage.local 中
-   */
-  const saveToken = async (symbol: string): Promise<void> => {
-    try {
-      const oldCoins = await getCoins();
-      if (oldCoins?.includes(symbol)) {
-        toast('Token already exists ⚠️', { duration: 2000 });
-        setSearchValue('');
-        return;
-      }
-      const newCoins = [...oldCoins, symbol];
-      await setCoins(newCoins);
-      setSearchValue('');
-      setCountdown(10);
-
-      setTimeout(() => {
-        mutate();
-        toast.success('Token added successfully', {
-          duration: 2000
-        });
-      }, 1500);
-    } catch (error) {
-      toast.error('Token addition failed', {
-        duration: 2000
-      });
-    }
+  // Token 添加成功后的回调
+  const handleTokenAdded = () => {
+    setCountdown(10);
+    mutate();
   };
 
   // 倒计时
@@ -416,23 +308,9 @@ export default function PopupContent() {
     <>
       <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <CustomToaster />
-        <div className="flex justify-between flex-shrink-0">
-          <div>
-            <h2 className="m-0 text-base font-semibold">Crypto Tracker</h2>
-            <div className="mt-1">
-              <NetworkState status={status} />
-            </div>
-          </div>
-          <div className="mt-1">
-            <MenuCenter />
-          </div>
-        </div>
-        <div className="search_token mt-4 flex items-center flex-shrink-0">
-          <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
-          <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
-            Add
-          </Button>
-        </div>
+        <Header />
+
+        <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
         <div className="mt-5 overflow-auto flex-1 scrollbar-hide">
           {Array.isArray(tokens) && tokens.length > 0 ? (
@@ -465,19 +343,11 @@ export default function PopupContent() {
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center h-[150px] text-white/40">
-              <div className="text-sm">No tokens yet</div>
-              <div className="text-xs mt-1 opacity-60">Add a token to get started</div>
-            </div>
+            <EmptyState />
           )}
         </div>
 
-        <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 flex-shrink-0">
-          <div className="text-xs text-white/50">{isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}</div>
-          <button className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs" onClick={refreshData}>
-            Refresh
-          </button>
-        </div>
+        <Footer isLoading={isLoading} countdown={countdown} onRefresh={refreshData} />
       </div>
 
       {/* ActionMenu - 移到最外层 div 外面，避免影响父容器布局 */}
@@ -493,26 +363,6 @@ export default function PopupContent() {
           Remove
         </ActionMenuItem>
       </ActionMenu>
-
-      {/* 强制添加确认弹窗 */}
-      <ConfirmDialog
-        open={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleForceAdd}
-        type="danger"
-        title="Invalid Token"
-        description={
-          <>
-            <div className="px-4 py-2 text-gray-300 text-sm leading-relaxed">
-              The token '{pendingToken}' was not found.
-              <br />
-              It may not display price data. Please remove '{pendingToken}' if no data appears.
-            </div>
-          </>
-        }
-        confirmText="Force Add"
-        cancelText="Cancel"
-      />
 
       {/* 设计币种价格预警弹窗 */}
       <ConfirmDialog

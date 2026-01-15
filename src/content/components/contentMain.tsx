@@ -214,10 +214,7 @@ export default function ContentMain() {
                   ref={contentRef}
                   key="content"
                   initial={{ maxHeight: 0, opacity: 0 }}
-                  animate={{
-                    maxHeight: '400px',
-                    opacity: 1
-                  }}
+                  animate={{ maxHeight: '400px', opacity: 1 }}
                   exit={{ maxHeight: 0, opacity: 0 }}
                   transition={{
                     maxHeight: { duration: 0.3, ease: 'easeInOut' },
