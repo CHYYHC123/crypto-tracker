@@ -8,13 +8,11 @@ import { cn } from '@/lib/utils';
 import { formatNumberWithCommas } from '@/utils/index';
 import { TokenItem, PriceAlert, DataStatus } from '@/types/index';
 import AlertBadge from '@/popup/components/AlertBadge';
-import NetworkState from '@/content/views/networkState';
+
 
 export type CoinsContentProps = ComponentProps<typeof motion.div>;
 
-export const CoinsContent = ({ className, ...props }: CoinsContentProps) => (
-  <motion.div layout className={cn('relative w-60 max-h-[50vh] overflow-y-auto bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide', className)} {...props} />
-);
+export const CoinsContent = ({ className, ...props }: CoinsContentProps) => <motion.div className={cn('relative bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide', className)} {...props} />;
 
 // 可排序的币种卡片组件
 interface SortableCoinItemProps {
@@ -96,23 +94,4 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
   );
 }, arePropsEqual);
 
-// 底部操作栏组件
-interface CoinsFooterProps {
-  /** 网络状态 */
-  status: DataStatus;
-  /** 刷新数据回调 */
-  onRefresh: () => void;
-}
 
-export const CoinsFooter = ({ status, onRefresh }: CoinsFooterProps) => {
-  return (
-    <div className="sticky bottom-0 px-3 py-2 bg-gray-900 border-t border-white/5 flex justify-between items-center text-[10px] z-10">
-      <div>
-        <NetworkState status={status} />
-      </div>
-      <button onClick={onRefresh} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-        Refresh
-      </button>
-    </div>
-  );
-};

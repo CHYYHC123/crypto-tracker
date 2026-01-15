@@ -1,17 +1,13 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, Minus } from 'lucide-react';
-
-import { formatNumberWithCommas } from '@/utils/index';
 
 // 组件
 import DraggableContent from '@/components/DraggableContent/index';
 import { CustomToaster } from '@/components/CustomToaster/index';
-import { CoinsContent, SortableCoinItem, CoinsFooter } from '@/content/views/coins';
-import NetworkState from '@/content/views/networkState';
-import AlertBadge from '@/popup/components/AlertBadge';
-// import Badge from '@/components/common/badge';
+import { CoinsContent, SortableCoinItem } from '@/content/components/coins';
+import { CoinsFooter } from '@/content/components/coinsFooter';
+import { CoinsHeader } from '@/content/components/coinsHeader';
 
 // hooks
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
@@ -19,7 +15,6 @@ import { useDataStatus } from '@/hooks/useDataStatus';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 // type
-import { DataStatus } from '@/types/index';
 import { TokenItem, PriceAlert } from '@/types/index';
 
 // dnd-kit
@@ -33,7 +28,6 @@ export default function ContentMain() {
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
-  const [contentHeight, setContentHeight] = useState<number>(0);
 
   /**
    * 移动端隐藏token表
@@ -59,14 +53,6 @@ export default function ContentMain() {
       }
     })
   );
-
-  // 内容高度
-  useLayoutEffect(() => {
-    if (!collapsed && contentRef.current) {
-      // 读取 auto 时真实高度
-      setContentHeight(contentRef.current.scrollHeight);
-    }
-  }, [collapsed, tokens?.length]);
 
   // 读取 price_alerts
   useEffect(() => {
@@ -143,7 +129,7 @@ export default function ContentMain() {
     }
     chrome.runtime.onMessage.addListener(handleMessage);
 
-  // 卸载组件时移除监听
+    // 卸载组件时移除监听
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
@@ -215,61 +201,29 @@ export default function ContentMain() {
       {!isMobile && (
         <DraggableContent disabled={isSorting}>
           <CustomToaster />
-
-          <CoinsContent>
-            <div className="flex justify-between items-center p-3 cursor-move sticky top-0 bg-gray-900 backdrop-blur-lg z-10">
-              {collapsed && tokens?.length > 0 ? (
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{tokens[0]?.icon}</div>
-                    <div className="ml-2">
-                      <div className="text-xs font-medium">{tokens[0]?.symbol}</div>
-                      {(() => {
-                        const alert = priceAlerts.find(a => a.symbol.toUpperCase() === tokens[0]?.symbol.toUpperCase());
-                        return alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{tokens[0]?.id}</div>;
-                      })()}
-                    </div>
-                  </div>
-
-                  {status !== DataStatus.LIVE ? (
-                    <div style={{ marginRight: '12px' }} onClick={refreshData}>
-                      <NetworkState status={status} className="cursor-pointer" />
-                    </div>
-                  ) : (
-                    <div style={{ marginRight: '12px' }}>
-                      <div className="text-xs font-semibold">{formatNumberWithCommas(tokens[0].price!)}</div>
-                      <div className={`text-[10px] ${tokens[0]?.change! >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{tokens[0]?.change! >= 0 ? '+' + tokens[0]?.change + '%' : tokens[0]?.change + '%'}</div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
-              )}
-
-              <div className="flex gap-2 items-center">
-                <button onClick={() => setCollapsed(!collapsed)} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer">
-                  {collapsed ? <Plus size={12} /> : <Minus size={12} />}
-                </button>
-              </div>
+          <CoinsContent layout className="w-60 max-h-100 flex flex-col overflow-hidden">
+            {/* 固定在顶部的 Header */}
+            <div className="flex-shrink-0">
+              <CoinsHeader status={status} collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} displayToken={tokens?.length > 0 ? tokens[0] : null} priceAlerts={priceAlerts} onRefresh={refreshData} />
             </div>
 
+            {/* 可滚动的中间内容区域 */}
             <AnimatePresence>
               {!collapsed && (
                 <motion.div
                   ref={contentRef}
                   key="content"
-                  initial={{ height: 0, opacity: 0 }}
+                  initial={{ maxHeight: 0, opacity: 0 }}
                   animate={{
-                    height: contentHeight || 'auto',
-                    opacity: 1,
-                    transitionEnd: { height: 'auto' } //动画完后设回 auto，保证自适应
+                    maxHeight: '400px',
+                    opacity: 1
                   }}
-                  exit={{ height: 0, opacity: 0 }}
+                  exit={{ maxHeight: 0, opacity: 0 }}
                   transition={{
-                    height: { duration: 0.3, ease: 'easeInOut' },
+                    maxHeight: { duration: 0.3, ease: 'easeInOut' },
                     opacity: { duration: 0.2, ease: 'easeInOut' }
                   }}
-                  className="px-3 pt-2 pb-0 space-y-2"
+                  className="flex-1 overflow-y-auto scrollbar-hide px-3 pt-2 pb-0 space-y-2 min-h-0"
                 >
                   {/* 拖拽列表容器 - restrictToParentElement 会限制在这个容器内 */}
                   <div className="space-y-2">
@@ -284,7 +238,13 @@ export default function ContentMain() {
                 </motion.div>
               )}
             </AnimatePresence>
-            {!collapsed && <CoinsFooter status={status} onRefresh={refreshData} />}
+
+            {/* 固定在底部的 Footer */}
+            {!collapsed && (
+              <div className="flex-shrink-0">
+                <CoinsFooter status={status} onRefresh={refreshData} />
+              </div>
+            )}
           </CoinsContent>
         </DraggableContent>
       )}

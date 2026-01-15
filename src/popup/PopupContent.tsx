@@ -24,7 +24,7 @@ import type { TokenItem, PriceAlert } from '@/types/index';
 import { formatNumberWithCommas } from '@/utils/index';
 import { Loader, Ellipsis, X, Power, PowerOff } from 'lucide-react';
 
-import NetworkState from '@/content/views/networkState';
+import NetworkState from '@/content/components/networkState';
 import { useDataStatus } from '@/hooks/useDataStatus';
 import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 import { validateToken } from './utils/validateToken';

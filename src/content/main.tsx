@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import ContentMain from './views/contentMain.tsx';
+import ContentMain from './components/contentMain.tsx';
 import tailwindStyles from '@/assets/css/tailwindcss.css?inline';
 
 const container = document.createElement('div');
