@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
 
@@ -17,6 +17,7 @@ import { Header } from '@/popup/components/Header';
 import { TokenSearch } from '@/popup/components/TokenSearch';
 import { EmptyState } from '@/popup/components/EmptyState';
 import { Footer } from '@/popup/components/Footer';
+import Checkbox from '@/components/common/checkbox';
 
 import type { TokenItem, PriceAlert } from '@/types/index';
 
@@ -69,6 +70,7 @@ export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   // 轮询，每15秒自动刷新一次
   const {
@@ -308,7 +310,7 @@ export default function PopupContent() {
     <>
       <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <CustomToaster />
-        <Header />
+        <Header showCheckboxes={showCheckboxes} onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)} />
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
@@ -319,27 +321,44 @@ export default function PopupContent() {
               // 查找该币种对应的预警
               const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
               return (
-                <motion.div whileHover={{ scale: 1 }} key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition">
-                  <div className="flex items-center">
-                    <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
-                    <div className="ml-2 min-w-15">
-                      <div className="text-[13px] font-bold">{item?.symbol}</div>
-                      {alert ? <AlertBadge AlertInfo={alert} onClick={() => handleAlertBadgeClick(item)} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>}
+                <div className="flex items-center">
+                  <AnimatePresence>
+                    {showCheckboxes && (
+                      <motion.div initial={{ opacity: 0, width: 0, marginRight: 0 }} animate={{ opacity: 1, width: 20, marginRight: 8 }} exit={{ opacity: 0, width: 0, marginRight: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }} className="overflow-hidden flex-shrink-0">
+                        <div className="w-5">
+                          <Checkbox />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <motion.div
+                    layout
+                    whileHover={{ scale: 1 }}
+                    key={item.id}
+                    className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition flex-1 min-w-0"
+                    transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], layout: { duration: 0.3 } }}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{item?.icon}</div>
+                      <div className="ml-2 min-w-15">
+                        <div className="text-[13px] font-bold">{item?.symbol}</div>
+                        {alert ? <AlertBadge AlertInfo={alert} onClick={() => handleAlertBadgeClick(item)} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{item.id}</div>}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-left ml-5">
-                    <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
-                    <div className="text-[11px]" style={{ color: chColor }}>
-                      {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
+                    <div className="text-left ml-5">
+                      <div className="font-semibold text-sm">{item?.price ? formatNumberWithCommas(item?.price) : '-'}</div>
+                      <div className="text-[11px]" style={{ color: chColor }}>
+                        {item.change === null ? '—' : item.change >= 0 ? '+' + item.change + '%' : item.change + '%'}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="justify-self-end">
-                    <div onClick={e => handleOpen(e, item)} aria-haspopup="true" aria-expanded={open && menuToken?.symbol === item.symbol} className={`px-2 py-1 bg-white/0 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>
-                      <Ellipsis size={16} />
+                    <div className="justify-self-end">
+                      <div onClick={e => handleOpen(e, item)} aria-haspopup="true" aria-expanded={open && menuToken?.symbol === item.symbol} className={`px-2 py-1 bg-white/0 rounded-md transition text-xs ${removing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}>
+                        <Ellipsis size={16} />
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               );
             })
           ) : (
