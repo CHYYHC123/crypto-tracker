@@ -6,7 +6,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { formatNumberWithCommas } from '@/utils/index';
-import { TokenItem, PriceAlert, DataStatus } from '@/types/index';
+import { TokenItem, PriceAlert } from '@/types/index';
 import AlertBadge from '@/popup/components/AlertBadge';
 
 
