@@ -71,6 +71,7 @@ export default function PopupContent() {
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [selectedTokens, setSelectedTokens] = useState<Set<string>>(new Set());
 
   // 轮询，每15秒自动刷新一次
   const {
@@ -306,6 +307,69 @@ export default function PopupContent() {
     }
   };
 
+  // 批量删除相关逻辑
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTokens(new Set(tokens.map(token => token.symbol)));
+    } else {
+      setSelectedTokens(new Set());
+    }
+  };
+
+  const handleToggleToken = (symbol: string, checked: boolean) => {
+    const newSelected = new Set(selectedTokens);
+    if (checked) {
+      newSelected.add(symbol);
+    } else {
+      newSelected.delete(symbol);
+    }
+    setSelectedTokens(newSelected);
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedTokens.size === 0 || removing) return;
+
+    const selectedCount = selectedTokens.size;
+
+    // 检查：如果删除后没有币种了，不允许删除
+    if (tokens.length - selectedCount <= 0) {
+      toast.error('At least one token must be kept', { duration: 2000 });
+      return;
+    }
+
+    setRemoving(true);
+    try {
+      const oldTokenList = await getCoins();
+      const newTokenList = oldTokenList.filter(symbol => !selectedTokens.has(symbol));
+      await setCoins(newTokenList);
+      setSelectedTokens(new Set());
+      setShowCheckboxes(false);
+      setCountdown(10);
+      setTimeout(() => {
+        mutate();
+        toast.success(`${selectedCount} token(s) have been removed`, { duration: 2000 });
+      }, 1500);
+    } catch (error) {
+      toast.error('Failed to remove tokens', { duration: 2000 });
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const handleCancelBatch = () => {
+    setSelectedTokens(new Set());
+    setShowCheckboxes(false);
+  };
+
+  // 当关闭选择模式时，清空选中状态
+  useEffect(() => {
+    if (!showCheckboxes) {
+      setSelectedTokens(new Set());
+    }
+  }, [showCheckboxes]);
+
+  const isAllSelected = tokens.length > 0 && selectedTokens.size === tokens.length;
+  const isIndeterminate = selectedTokens.size > 0 && selectedTokens.size < tokens.length;
   return (
     <>
       <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
@@ -314,7 +378,7 @@ export default function PopupContent() {
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
-        <div className="mt-5 overflow-auto flex-1 scrollbar-hide">
+        <div className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
           {Array.isArray(tokens) && tokens.length > 0 ? (
             tokens.map((item: TokenItem) => {
               const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';
@@ -326,7 +390,7 @@ export default function PopupContent() {
                     {showCheckboxes && (
                       <motion.div initial={{ opacity: 0, width: 0, marginRight: 0 }} animate={{ opacity: 1, width: 20, marginRight: 8 }} exit={{ opacity: 0, width: 0, marginRight: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }} className="overflow-hidden flex-shrink-0">
                         <div className="w-5">
-                          <Checkbox />
+                          <Checkbox checked={selectedTokens.has(item.symbol)} onChange={e => handleToggleToken(item.symbol, e.target.checked)} />
                         </div>
                       </motion.div>
                     )}
@@ -366,7 +430,18 @@ export default function PopupContent() {
           )}
         </div>
 
-        <Footer isLoading={isLoading} countdown={countdown} onRefresh={refreshData} />
+        <Footer
+          isLoading={isLoading}
+          countdown={countdown}
+          onRefresh={refreshData}
+          showCheckboxes={showCheckboxes}
+          isAllSelected={isAllSelected}
+          isIndeterminate={isIndeterminate}
+          onToggleSelectAll={handleToggleSelectAll}
+          selectedCount={selectedTokens.size}
+          onCancel={handleCancelBatch}
+          onConfirmDelete={handleBatchDelete}
+        />
       </div>
 
       {/* ActionMenu - 移到最外层 div 外面，避免影响父容器布局 */}
