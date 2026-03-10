@@ -7,7 +7,9 @@ export default defineManifest({
   version: pkg.version,
   description: 'Real-time crypto price tracker with floating widget.',
   icons: {
-    48: 'public/logo.png'
+    16: 'public/logo16.png',
+    48: 'public/logo48.png',
+    128: 'public/logo128.png' // 应用商店展示与安装所需
   },
   background: {
     service_worker: 'src/background/index.js',
@@ -15,7 +17,7 @@ export default defineManifest({
   },
   action: {
     default_icon: {
-      48: 'public/logo.png'
+      48: 'public/logo48.png'
     },
     default_title: 'Crypto Tracker',
     default_popup: 'src/popup/index.html'
@@ -28,8 +30,5 @@ export default defineManifest({
       run_at: 'document_idle' // 脚本何时执行
     }
   ],
-  host_permissions: ['https://www.okx.com/*', 'https://ipapi.co/*']
-  // side_panel: {
-  //   // default_path: 'src/sidepanel/index.html'
-  // }
+  host_permissions: ['https://www.okx.com/*', 'https://ipapi.co/*', 'wss://wspri.okx.com/*']
 });

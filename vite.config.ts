@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import zip from 'vite-plugin-zip-pack';
 import manifest from './manifest.config.js';
-import { name, version } from './package.json';
+import { version } from './package.json';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -15,7 +15,7 @@ export default defineConfig({
     // 防止多个 React 副本导致 hooks 报错
     dedupe: ['react', 'react-dom']
   },
-  plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` })],
+  plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release', outFileName: `crypto-tracker-${version}.zip` })],
   server: {
     cors: {
       origin: [/chrome-extension:\/\//]

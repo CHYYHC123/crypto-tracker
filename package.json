@@ -1,7 +1,7 @@
 {
   "name": "Crypto Tracker",
   "type": "module",
-  "version": "1.0.17",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,9 @@
     "build": "tsc -b && node scripts/getToken.js && vite build ",
     "build_no_getToken": "tsc -b && vite build ",
     "build_sh": "bash scripts/build.sh",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "npm run build_no_getToken",
+    "pack": "npm run release && echo '✅ 发布包已生成: release/crypto-tracker-*.zip'"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",

@@ -1,6 +1,6 @@
 import { price_show, throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
-import { defaultDataSource, ExchangeType } from '@/config/exchangeConfig';
+import { defaultDataSource, ExchangeListMap, ExchangeType } from '@/config/exchangeConfig';
 
 import { parseWSMessage } from '@/utils/ws/parseTicker';
 import type { Ticker } from '@/utils/ws/parseTicker';
@@ -170,11 +170,17 @@ wsManager.onStatusChange(status => {
 // 建立 WebSocket 连接
 async function connectWebSocket(tokenList: string[]) {
   const { data_source } = await chrome.storage.local.get('data_source');
-  const exchange = (data_source as ExchangeType) || defaultDataSource;
+  let exchange = (data_source as ExchangeType) || defaultDataSource;
 
   // 如果没有存储数据源，保存默认值
   if (!data_source) {
     await chrome.storage.local.set({ data_source: defaultDataSource });
+  }
+
+  // 若当前交易所被禁用，则回退到默认数据源并持久化
+  if (ExchangeListMap[exchange]?.disabled) {
+    exchange = defaultDataSource;
+    await chrome.storage.local.set({ data_source: exchange });
   }
 
   // 连接前重置时间戳，避免误判（连接成功后如果正常，会很快收到数据并更新时间戳）
@@ -312,7 +318,7 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
     }
   }
 
-  console.log('Storage changed:', { coinsChanged, dataSourceChanged });
+  // console.log('Storage changed:', { coinsChanged, dataSourceChanged });
 
   const latestCoins = await getValidCoinList();
   initShowTokenList(latestCoins);
@@ -430,12 +436,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
   } else if (message.type === 'ALERT_TRIGGERED') {
     setBadge('critical');
-    // chrome.notifications.create({
-    //   type: 'basic',
-    //   iconUrl: chrome.runtime.getURL('public/logo.png'),
-    //   title: 'Price Alert',
-    //   message: '测试预警'
-    // });
   } else if (message.type === 'ALERT_CLEAR') {
     setBadge('none');
   }

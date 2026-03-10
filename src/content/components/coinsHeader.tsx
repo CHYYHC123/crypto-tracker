@@ -46,7 +46,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
   return (
     <div className="flex justify-between items-center p-3 cursor-move bg-gray-900 backdrop-blur-lg z-10">
       {collapsed && displayToken ? (
-        <div className="flex items-center justify-between w-full ">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
             <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{displayToken.icon}</div>
             <div className="ml-2">
@@ -62,7 +62,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
           ) : (
             <div className="mr-3 text-right">
               {displayToken.price && <div className="text-xs font-semibold">{formatNumberWithCommas(displayToken.price)}</div>}
-              {changeDisplay && <div className={`text-[10px] ${changeDisplay.className}`}>{changeDisplay.text}</div>}
+              <div className={`text-[10px] ${changeDisplay?.className}`}>{changeDisplay?.text ?? '0%'}</div>
             </div>
           )}
         </div>

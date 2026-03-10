@@ -256,16 +256,6 @@ export default function PopupContent() {
   const handlePriceAlert = async () => {
     if (!alertToken || !alertToken?.price) return;
 
-    // ✅ 合理性校验（方向 + 当前价格）
-    // if (direction === 'above' && price < alertToken.price) {
-    //   toast.error('Alert price must be higher than current price');
-    //   return;
-    // }
-    // if (direction === 'below' && price > alertToken.price) {
-    //   toast.error('Alert price must be lower than current price');
-    //   return;
-    // }
-
     const newAlert: PriceAlert = {
       symbol: alertToken.symbol,
       targetPrice: price,
