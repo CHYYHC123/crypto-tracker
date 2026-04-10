@@ -24,7 +24,7 @@ export const ExchangeListMap: Record<ExchangeType, Omit<ExchangeInfo, 'type'>> =
     name: 'Binance',
     logo: BNLOGO,
     needsVPN: true,
-    disabled: true
+    disabled: false
   },
   OKX: {
     name: 'OKX',
@@ -36,7 +36,7 @@ export const ExchangeListMap: Record<ExchangeType, Omit<ExchangeInfo, 'type'>> =
     name: 'Gate.io',
     logo: GATELOGO,
     needsVPN: false,
-    disabled: true
+    disabled: false
   },
   HL: {
     name: 'Hyperliquid',

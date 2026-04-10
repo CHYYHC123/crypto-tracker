@@ -22,7 +22,7 @@ export default defineManifest({
     default_title: 'Crypto Tracker',
     default_popup: 'src/popup/index.html'
   },
-  permissions: ['storage', 'activeTab', 'scripting', 'idle', 'notifications'],
+  permissions: ['storage', 'activeTab', 'idle', 'notifications'],
   content_scripts: [
     {
       js: ['src/content/main.tsx'],
@@ -30,5 +30,11 @@ export default defineManifest({
       run_at: 'document_idle' // 脚本何时执行
     }
   ],
-  host_permissions: ['https://www.okx.com/*', 'https://ipapi.co/*', 'wss://wspri.okx.com/*']
+  host_permissions: [
+    'https://www.okx.com/*',
+    'https://ipapi.co/*',
+    'wss://wspri.okx.com/*',
+    'wss://api.gateio.ws/*',
+    'wss://stream.binance.com/*'
+  ]
 });

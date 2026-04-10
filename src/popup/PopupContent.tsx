@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
@@ -360,6 +360,16 @@ export default function PopupContent() {
 
   const isAllSelected = tokens.length > 0 && selectedTokens.size === tokens.length;
   const isIndeterminate = selectedTokens.size > 0 && selectedTokens.size < tokens.length;
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const prevTokensLengthRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (tokens.length > prevTokensLengthRef.current && prevTokensLengthRef.current > 0) {
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    }
+    prevTokensLengthRef.current = tokens.length;
+  }, [tokens.length]);
   return (
     <>
       <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
@@ -368,7 +378,7 @@ export default function PopupContent() {
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
-        <div className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
+        <div ref={listRef} className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
           {Array.isArray(tokens) && tokens.length > 0 ? (
             tokens.map((item: TokenItem) => {
               const chColor = item?.change === null ? '#999' : item?.change >= 0 ? '#16a34a' : '#ef4444';

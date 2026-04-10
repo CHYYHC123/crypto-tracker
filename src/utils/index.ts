@@ -1,4 +1,12 @@
-import { SUPPORTEDTOKEN, TokenSymbol } from './tokens';
+import { SUPPORTED_TOKENS } from './tokens';
+
+// platform 位运算常量: BN=1, OKX=2, Gate=4
+export const PLATFORM = { BN: 1, OKX: 2, GATE: 4 } as const;
+
+// 模块加载时构建一次 Map，查询 O(1)
+const TOKEN_MAP = new Map<string, number>(
+  SUPPORTED_TOKENS.map((t) => [t.symbol, t.platform])
+);
 /**
  * 保留小数点位数
  */
@@ -109,10 +117,21 @@ export function formatNumberNoRound(number: number, decimalPlaces = 8): string {
   return parts.join('.');
 }
 /**
- * @description 查询本地token
- * @param symbol 要查询的 token
+ * 查询本地 token 是否存在
+ * @param symbol  币种名称，大小写不敏感
+ * @param platform 可选，平台位掩码（PLATFORM.BN / PLATFORM.OKX / PLATFORM.GATE 或组合）
+ *                 不传时只要在任意平台存在即返回 true
  */
+export function queryTokenLocal(symbol: string, platform?: number): boolean {
+  const bits = TOKEN_MAP.get(symbol.toUpperCase());
+  if (bits === undefined) return false;
+  if (platform === undefined) return true;
+  return (bits & platform) !== 0;
+}
 
-export function queryTokenLocal(symbol: string): boolean {
-  return SUPPORTEDTOKEN?.includes(symbol as TokenSymbol);
+/**
+ * 获取 token 的平台位掩码，token 不存在时返回 0
+ */
+export function getTokenPlatform(symbol: string): number {
+  return TOKEN_MAP.get(symbol.toUpperCase()) ?? 0;
 }

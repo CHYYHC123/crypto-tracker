@@ -59,15 +59,12 @@ export async function validateToken(symbol: string, dataSource: ExchangeType = d
       return await queryToken(symbol);
     case 'Gate':
       // TODO: 实现 Gate 的验证逻辑
-      // 例如：return await queryTokenGate(symbol);
       return await queryToken(symbol); // 暂时使用 OKX 的方式
     case 'BN':
       // TODO: 实现 Binance 的验证逻辑
-      // 例如：return await queryTokenBinance(symbol);
       return await queryToken(symbol); // 暂时使用 OKX 的方式
     case 'HL':
       // TODO: 实现 Hyperliquid 的验证逻辑
-      // 例如：return await queryTokenHyperliquid(symbol);
       return await queryToken(symbol); // 暂时使用 OKX 的方式
     default:
       // 默认使用 OKX 的验证方式
