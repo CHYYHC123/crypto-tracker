@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/4/10 11:37:31
+// 更新时间: 2026/4/10 16:26:27
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -2072,6 +2072,5 @@ export const SUPPORTED_TOKENS = [
   }
 ] as const;
 
-export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const;
 export type TokenItem = typeof SUPPORTED_TOKENS[number];
 export type TokenSymbol = TokenItem['symbol'];

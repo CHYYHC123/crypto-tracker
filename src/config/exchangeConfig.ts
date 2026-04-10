@@ -3,6 +3,7 @@ import GATELOGO from '@/assets/image/logo/gate_logo.png';
 import BNLOGO from '@/assets/image/logo/bn_logo.png';
 /** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
+export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const;
 
 /** 默认数据源 */
 export const defaultDataSource: ExchangeType = 'OKX';

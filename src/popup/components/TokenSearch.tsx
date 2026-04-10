@@ -8,8 +8,8 @@ import Button from '@/components/common/button';
 import Dialog from '@/components/common/dialog';
 
 import type { TokenItem } from '@/types/index';
-import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
-import { SUPPORTED_TOKENS, POPULAR_TOKENS } from '@/utils/tokens';
+import { type ExchangeType, defaultDataSource, POPULAR_TOKENS } from '@/config/exchangeConfig';
+import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { PLATFORM } from '@/utils/index';
 
 // 热门推
