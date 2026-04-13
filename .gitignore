@@ -11,7 +11,7 @@ INTERVIEW.md*
 
 node_modules
 dist
-# release
+release
 dist-ssr
 *.local
 blog

@@ -48,7 +48,6 @@ The browser permissions declared by the Extension are used only to provide the f
 
 - **Storage**: Save your watchlist and alert settings.
 - **Active tab / Scripting**: Show the floating widget on the pages you browse.
-- **Notifications**: Show system notifications when prices trigger the alerts you set.
 - **Host access (okx.com, ipapi.co, etc.)**: Request market data and network/region information.
 
 We do not use these permissions to collect data unrelated to the Extension’s purpose.
