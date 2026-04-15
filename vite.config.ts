@@ -15,7 +15,7 @@ export default defineConfig({
     // 防止多个 React 副本导致 hooks 报错
     dedupe: ['react', 'react-dom']
   },
-  plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release', outFileName: `crypto-tracker-${version}.zip` })],
+  plugins: [react(), tailwindcss(), crx({ manifest }), zip({ outDir: 'release1', outFileName: `crypto-tracker-${version}.zip` })],
   server: {
     cors: {
       origin: [/chrome-extension:\/\//]

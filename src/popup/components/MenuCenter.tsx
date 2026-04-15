@@ -92,6 +92,8 @@ const MenuCenter = () => {
 
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <ActionMenuItem onClick={handleDataSource}>Data source（{currentDataSource}）</ActionMenuItem>
+        <ActionMenuItem>Change ranking</ActionMenuItem>
+        <ActionMenuItem>Alert settings</ActionMenuItem>
         <ActionMenuItem onClick={handleExport}>Export coins</ActionMenuItem>
         <ActionMenuItem onClick={handleImportClick}>Import coins</ActionMenuItem>
       </ActionMenu>
