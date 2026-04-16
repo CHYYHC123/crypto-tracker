@@ -94,7 +94,7 @@ function setupExtensionStatusChecker() {
         clearInterval(checkInterval);
         cleanup();
       }
-    }, 2000);
+    }, 5000);
 
     // 也监听页面可见性变化，当页面重新可见时立即检查
     document.addEventListener('visibilitychange', () => {

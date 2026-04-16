@@ -1,15 +1,21 @@
 import OKXLOGO from '@/assets/image/logo/okx_logo.png';
 import GATELOGO from '@/assets/image/logo/gate_logo.png';
 import BNLOGO from '@/assets/image/logo/bn_logo.png';
+
+import { GlobalAlerts } from '@/types';
 /** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
 export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const;
 
-/** 默认数据源 */
-export const defaultDataSource: ExchangeType = 'OKX';
+/** 默认 全局预警配置 */
+export const defaultGlobalAlert: GlobalAlerts = { bull: '10', bear: '10', step: '1', enabled: true };
 
 /** 交易所类型 */
 export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL';
+
+/** 默认数据源 */
+export const defaultDataSource: ExchangeType = 'OKX';
+
 /** 交易所 UI 信息接口 */
 export interface ExchangeInfo {
   type: ExchangeType;

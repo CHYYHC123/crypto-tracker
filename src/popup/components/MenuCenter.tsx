@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Menu, AlertTriangle, Info, X } from 'lucide-react';
 import ActionMenu from '@/components/common/ActionMenu';
@@ -16,6 +17,7 @@ import { exportCryptoData } from '../utils/exportData';
 import { selectAndImportFile } from '../utils/importData';
 
 const MenuCenter = () => {
+  const navigate = useNavigate();
   // 控制菜单弹出关闭逻辑
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
@@ -92,8 +94,8 @@ const MenuCenter = () => {
 
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <ActionMenuItem onClick={handleDataSource}>Data source（{currentDataSource}）</ActionMenuItem>
+        <ActionMenuItem onClick={() => { navigate('/alert-settings'); handleClose(); }}>Global Price Monitor</ActionMenuItem>
         <ActionMenuItem>Change ranking</ActionMenuItem>
-        <ActionMenuItem>Alert settings</ActionMenuItem>
         <ActionMenuItem onClick={handleExport}>Export coins</ActionMenuItem>
         <ActionMenuItem onClick={handleImportClick}>Import coins</ActionMenuItem>
       </ActionMenu>

@@ -13,9 +13,11 @@ import { CoinsHeader } from '@/content/components/coinsHeader';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { usePriceAlerts } from '@/content/hooks/usePriceAlerts';
+import { useGlobalAlerts } from '@/content/hooks/useGlobalAlerts';
 
 // type
-import { TokenItem, PriceAlert } from '@/types/index';
+import { TokenItem } from '@/types/index';
 
 // dnd-kit
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -25,7 +27,7 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 export default function ContentMain() {
   const [collapsed, setCollapsed] = useState(true);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
-  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const priceAlerts = usePriceAlerts();
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
 
@@ -39,6 +41,7 @@ export default function ContentMain() {
 
   // 管理预警消息
   usePriceAlertManager(tokens);
+  useGlobalAlerts(tokens);
 
   // 是否正在排序拖拽（用于禁用外层拖拽）
   const [isSorting, setIsSorting] = useState(false);
@@ -53,39 +56,6 @@ export default function ContentMain() {
       }
     })
   );
-
-  // 读取 price_alerts
-  useEffect(() => {
-    const loadPriceAlerts = () => {
-      chrome.storage.local.get('price_alerts', res => {
-        const alerts = (res.price_alerts as PriceAlert[]) || [];
-        setPriceAlerts(alerts);
-      });
-    };
-
-    loadPriceAlerts();
-
-    // 监听 storage 变化
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.price_alerts) {
-        loadPriceAlerts();
-      }
-    };
-
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    // 监听消息通知
-    const handleMessage = (msg: any) => {
-      if (msg.type === 'PRICE_ALERTS_UPDATED') loadPriceAlerts();
-    };
-
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-      chrome.runtime.onMessage.removeListener(handleMessage);
-    };
-  }, []);
 
   // 监听价格更新
   useEffect(() => {

@@ -1,5 +1,9 @@
 export type BadgeLevel = 'none' | 'info' | 'warning' | 'critical';
 
+/**
+ * 设置 badge 图标 和 背景色  --- 浏览器插件图标上的小红点
+ * 
+*/
 export function setBadge(level: BadgeLevel, count?: number) {
   switch (level) {
     case 'critical':

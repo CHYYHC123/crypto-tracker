@@ -4,15 +4,14 @@ import useSWR from 'swr';
 import toast from 'react-hot-toast';
 
 import ConfirmDialog from '@/components/common/confirm-dialog';
-import { CustomToaster } from '@/components/CustomToaster/index';
 // @ts-ignore
 import ActionMenu from '@/components/common/ActionMenu';
 import ActionMenuItem from '@/components/common/ActionMenuItem';
 import Tooltip from '@/components/common/tooltip';
 
-import PriceAlertInput from './components/PriceAlter';
-import { Direction } from './components/PriceAlter';
-import AlertBadge from './components/AlertBadge';
+import PriceAlertInput from '@/popup/components/PriceAlter';
+import { Direction } from '@/popup/components/PriceAlter';
+import AlertBadge from '@/popup/components/AlertBadge';
 import { Header } from '@/popup/components/Header';
 import { TokenSearch } from '@/popup/components/TokenSearch';
 import { EmptyState } from '@/popup/components/EmptyState';
@@ -372,8 +371,7 @@ export default function PopupContent() {
   }, [tokens.length]);
   return (
     <>
-      <div className="w-[360px] h-[480px] font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
-        <CustomToaster />
+      <div className="w-full h-full font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <Header showCheckboxes={showCheckboxes} onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)} />
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
@@ -385,7 +383,7 @@ export default function PopupContent() {
               // 查找该币种对应的预警
               const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
               return (
-                <div className="flex items-center">
+                <div key={item.id} className="flex items-center">
                   <AnimatePresence>
                     {showCheckboxes && (
                       <motion.div initial={{ opacity: 0, width: 0, marginRight: 0 }} animate={{ opacity: 1, width: 20, marginRight: 8 }} exit={{ opacity: 0, width: 0, marginRight: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }} className="overflow-hidden flex-shrink-0">

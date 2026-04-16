@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({ showCheckboxes, onToggleCheckbox
             </AnimatePresence>
           </div>
         </motion.div>
-        <MenuCenter />
+        <MenuCenter  />
       </div>
     </div>
   );

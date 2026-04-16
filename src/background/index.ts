@@ -8,6 +8,7 @@ import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 import { getCoins, setCoins } from './coinsManager';
 import { setBadge } from './badge';
+// import { initTriggerCount } from './globalAlertsManager';
 
 let showTokenList: TokenItem[] | null = null;
 // 记录 showTokenList 最后更新的时间戳（用于检测 WebSocket 假死）
@@ -280,6 +281,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   const tokenList = await getCoins();
   initShowTokenList(tokenList);
   connectWebSocket(tokenList);
+  // initTriggerCount();
 });
 
 // 监听 storage 变化
@@ -317,8 +319,6 @@ chrome.storage.onChanged.addListener(async (changes, area) => {
       return;
     }
   }
-
-  // console.log('Storage changed:', { coinsChanged, dataSourceChanged });
 
   const latestCoins = await getValidCoinList();
   initShowTokenList(latestCoins);
@@ -438,5 +438,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     setBadge('critical');
   } else if (message.type === 'ALERT_CLEAR') {
     setBadge('none');
+  } else if (message.type === 'SHOW_NOTIFICATION') {
+    const { title, message: body, iconUrl } = message.payload;
+    console.log('title', title, iconUrl);
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: iconUrl || '/logo128.png',
+      title: title || 'Crypto Tracker',
+      message: body || '',
+      priority: 2
+    });
   }
 });
