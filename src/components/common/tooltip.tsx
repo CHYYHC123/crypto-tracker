@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useCallback } from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 /* ---------------- Root ---------------- */
@@ -22,20 +23,17 @@ type TooltipProps = {
 };
 
 const TooltipContentCSS: React.CSSProperties = {
-  // 基础样式（对应 Tailwind 类名）
   overflow: 'hidden',
-  borderRadius: '0.375rem', // rounded-md
-  paddingLeft: '0.75rem', // px-3
-  paddingRight: '0.75rem', // px-3
-  paddingTop: '0.375rem', // py-1.5
-  paddingBottom: '0.375rem', // py-1.5
-  fontSize: '0.75rem', // text-xs
+  borderRadius: '0.375rem',
+  paddingLeft: '0.75rem',
+  paddingRight: '0.75rem',
+  paddingTop: '0.375rem',
+  paddingBottom: '0.375rem',
+  fontSize: '0.75rem',
   lineHeight: '1rem',
-  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', // shadow-lg
+  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
   borderWidth: '1px',
   borderStyle: 'solid',
-  // 其他样式
-  zIndex: 999999999,
   pointerEvents: 'none' as const
 };
 
@@ -66,6 +64,17 @@ export default function Tooltip({ content, children, side = 'top', sideOffset = 
 
   const variantStyles = getVariantStyles();
 
+  // style.setProperty 是唯一能在 JS 侧写入 !important inline style 的方式，
+  // 用于覆盖页面上 z-index: 2001 !important 之类的规则。
+  // Radix 会在 content 外层生成一个 [data-radix-popper-content-wrapper] div，
+  // 该 wrapper 也需要同步提升 z-index。
+  const handleContentRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    el.style.setProperty('z-index', '999999999', 'important');
+    const wrapper = el.closest<HTMLElement>('[data-radix-popper-content-wrapper]');
+    wrapper?.style.setProperty('z-index', '999999999', 'important');
+  }, []);
+
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <TooltipRoot>
@@ -73,13 +82,10 @@ export default function Tooltip({ content, children, side = 'top', sideOffset = 
 
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
+            ref={handleContentRef}
             side={side}
             sideOffset={sideOffset}
-            style={{
-              ...TooltipContentCSS,
-              // Variant 样式
-              ...variantStyles
-            }}
+            style={{ ...TooltipContentCSS, ...variantStyles }}
             onPointerDownOutside={e => e.preventDefault()}
           >
             {content}

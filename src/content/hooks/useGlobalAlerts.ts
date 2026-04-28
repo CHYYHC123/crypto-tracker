@@ -15,7 +15,7 @@ export function useGlobalAlerts(tokens: TokenItem[]) {
   const triggeredRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
-    // initGlobalAlertsCache();
+    initGlobalAlertsCache();
   }, []);
 
   const throttledCheck = useMemo(

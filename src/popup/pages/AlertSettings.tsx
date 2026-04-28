@@ -4,6 +4,7 @@ import { ArrowLeft, Power, PowerOff, CircleAlert } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 import type { GlobalAlerts } from '@/types/index';
+import { loadGlobalAlerts, saveGlobalAlerts } from '@/background/globalAlertsManager';
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
 import Tooltip from '@/components/common/tooltip';
@@ -107,15 +108,11 @@ export default function AlertSettings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    chrome.storage.local.get(['global_alerts'], res => {
-      console.log('res', res);
-      if (res.global_alerts) {
-        const data = res.global_alerts as GlobalAlerts;
-        setBullLimit(data.bull || '0');
-        setBearLimit(data.bear || '0');
-        setStepLimit(data.step || '0');
-        setLimitEnabled(data.enabled ?? false);
-      }
+    loadGlobalAlerts().then(data => {
+      setBullLimit(data.bull || '0');
+      setBearLimit(data.bear || '0');
+      setStepLimit(data.step || '0');
+      setLimitEnabled(data.enabled ?? false);
     });
   }, []);
 
@@ -129,7 +126,7 @@ export default function AlertSettings() {
     };
 
     try {
-      await chrome.storage.local.set({ global_alerts: globalAlerts });
+      await saveGlobalAlerts(globalAlerts);
       toast.success('Global alerts setting saved');
       setTimeout(() => {
         navigate('/');

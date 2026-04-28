@@ -103,7 +103,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     try {
       const oldCoins = await getCoins();
       if (oldCoins?.includes(symbol)) {
-        toast('Token already exists ⚠️', { duration: 2000 });
+        toast('Token already exists ⚠️', { duration: 2000, id: 'token-already-exists' });
         setSearchValue('');
         return false;
       }
@@ -111,11 +111,11 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
       setSearchValue('');
       setTimeout(() => {
         onTokenAdded?.();
-        toast.success('Token added successfully', { duration: 2000 });
+        toast.success('Token added successfully', { duration: 2000, id: 'token-added' });
       }, 1500);
       return true;
     } catch {
-      toast.error('Token addition failed', { duration: 2000 });
+      toast.error('Token addition failed', { duration: 2000, id: 'token-add-failed' });
       return false;
     }
   };
@@ -139,13 +139,13 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     if (exact) {
       await handleSelectToken(exact.symbol);
     } else {
-      toast(`${dialogSearch} is not in the supported list`, { duration: 2000 });
+      toast.error(`${dialogSearch} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
     }
   };
 
   const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
     setErrorTip(null);
-    setSearchValue(event.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase());
+    setSearchValue(event.target.value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '')?.toUpperCase());
   };
 
   // ========================= RENDER ==========================
@@ -163,7 +163,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
       <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/8">
-          <h3 className="text-white font-semibold text-base">Add crypto</h3>
+          <h3 className="text-white font-semibold text-base">Add Crypto</h3>
           <button onClick={() => setShowAddDialog(false)} className="text-gray-400 hover:text-white transition cursor-pointer">
             <X className="w-5 h-5" />
           </button>
@@ -176,7 +176,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
             <input
               ref={dialogInputRef}
               value={dialogSearch}
-              onChange={e => setDialogSearch(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
+              onChange={e => setDialogSearch(e.target.value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '')?.toUpperCase())}
               onKeyDown={handleDialogSearchEnter}
               placeholder="Search Symbol (e.g. BTC)"
               className="bg-transparent text-white text-sm placeholder:text-white/25 outline-none w-full"

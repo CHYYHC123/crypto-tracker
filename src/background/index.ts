@@ -8,7 +8,7 @@ import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 import { getCoins, setCoins } from './coinsManager';
 import { setBadge } from './badge';
-// import { initTriggerCount } from './globalAlertsManager';
+import { initGlobalAlertsOnInstall } from './globalAlertsManager';
 
 let showTokenList: TokenItem[] | null = null;
 // 记录 showTokenList 最后更新的时间戳（用于检测 WebSocket 假死）
@@ -281,7 +281,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   const tokenList = await getCoins();
   initShowTokenList(tokenList);
   connectWebSocket(tokenList);
-  // initTriggerCount();
+  initGlobalAlertsOnInstall();
 });
 
 // 监听 storage 变化

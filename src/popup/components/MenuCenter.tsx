@@ -95,7 +95,7 @@ const MenuCenter = () => {
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
         <ActionMenuItem onClick={handleDataSource}>Data source（{currentDataSource}）</ActionMenuItem>
         <ActionMenuItem onClick={() => { navigate('/alert-settings'); handleClose(); }}>Global Price Monitor</ActionMenuItem>
-        <ActionMenuItem>Change ranking</ActionMenuItem>
+        {/* <ActionMenuItem>Change ranking</ActionMenuItem> */}
         <ActionMenuItem onClick={handleExport}>Export coins</ActionMenuItem>
         <ActionMenuItem onClick={handleImportClick}>Import coins</ActionMenuItem>
       </ActionMenu>

@@ -28,11 +28,12 @@ let _listenerRegistered = false;
 
 // ─── 内部 IO ──────────────────────────────────────────────────────────────────
 
-function loadSettingsFromStorage(): Promise<GlobalAlerts> {
+/** 从 storage 读取 global_alerts，不存在时写入默认值并返回默认值 */
+export function loadGlobalAlerts(): Promise<GlobalAlerts> {
   return new Promise(resolve => {
     chrome.storage.local.get(SETTINGS_KEY, res => {
       if (chrome.runtime.lastError) {
-        console.error('[globalAlertsManager] loadSettings error:', chrome.runtime.lastError);
+        console.error('[globalAlertsManager] loadGlobalAlerts error:', chrome.runtime.lastError);
         resolve({ ...defaultGlobalAlert, enabled: false });
         return;
       }
@@ -43,6 +44,20 @@ function loadSettingsFromStorage(): Promise<GlobalAlerts> {
         chrome.storage.local.set({ [SETTINGS_KEY]: defaultGlobalAlert });
         resolve({ ...defaultGlobalAlert });
       }
+    });
+  });
+}
+
+/** 将 global_alerts 写入 storage */
+export function saveGlobalAlerts(settings: GlobalAlerts): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [SETTINGS_KEY]: settings }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('[globalAlertsManager] saveGlobalAlerts error:', chrome.runtime.lastError);
+        reject(chrome.runtime.lastError);
+        return;
+      }
+      resolve();
     });
   });
 }
@@ -74,17 +89,22 @@ export function saveTriggerCount(trigger: GlobalAlertsTrigger): void {
 // ─── 初始化 ───────────────────────────────────────────────────────────────────
 
 /**
- * 初始化 triggerCount：storage 中不存在时写入默认值
+ * 安装 / 更新时初始化：
+ * - global_alerts 不存在时写入 defaultGlobalAlert
+ * - global_alerts_trigger 不存在时写入 DEFAULT_TRIGGER
  * 在 background onInstalled 中调用
  */
-export function initTriggerCount(): void {
-  chrome.storage.local.get(TRIGGER_KEY, res => {
+export function initGlobalAlertsOnInstall(): void {
+  chrome.storage.local.get([SETTINGS_KEY, TRIGGER_KEY], res => {
     if (chrome.runtime.lastError) {
-      console.error('[globalAlertsManager] initTriggerCount error:', chrome.runtime.lastError);
+      console.error('[globalAlertsManager] initGlobalAlertsOnInstall error:', chrome.runtime.lastError);
       return;
     }
-    if (!res[TRIGGER_KEY]) {
-      chrome.storage.local.set({ [TRIGGER_KEY]: { ...DEFAULT_TRIGGER } });
+    const toSet: Record<string, unknown> = {};
+    if (!res[SETTINGS_KEY]) toSet[SETTINGS_KEY] = { ...defaultGlobalAlert };
+    if (!res[TRIGGER_KEY]) toSet[TRIGGER_KEY] = { ...DEFAULT_TRIGGER };
+    if (Object.keys(toSet).length > 0) {
+      chrome.storage.local.set(toSet);
     }
   });
 }
@@ -95,7 +115,7 @@ export function initTriggerCount(): void {
  */
 export async function initGlobalAlertsCache(): Promise<void> {
   [_settings, _trigger] = await Promise.all([
-    loadSettingsFromStorage(),
+    loadGlobalAlerts(),
     loadTriggerCount(),
   ]);
 
