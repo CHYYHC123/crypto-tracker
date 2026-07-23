@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/4/13 18:15:29
+// 更新时间: 2026/4/28 16:36:10
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -68,7 +68,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "AERGO",
-    "platform": 6
+    "platform": 2
   },
   {
     "symbol": "AEUR",
@@ -207,8 +207,16 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "AUDF",
+    "platform": 2
+  },
+  {
     "symbol": "AUDIO",
     "platform": 5
+  },
+  {
+    "symbol": "AUDM",
+    "platform": 2
   },
   {
     "symbol": "AVA",
@@ -305,10 +313,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "BICO",
     "platform": 7
-  },
-  {
-    "symbol": "BIFI",
-    "platform": 5
   },
   {
     "symbol": "BIGTIME",
@@ -415,6 +419,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "CHIP",
+    "platform": 7
+  },
+  {
     "symbol": "CHR",
     "platform": 5
   },
@@ -495,10 +503,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "DAI",
-    "platform": 2
-  },
-  {
     "symbol": "DASH",
     "platform": 7
   },
@@ -509,14 +513,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "DEGEN",
     "platform": 6
-  },
-  {
-    "symbol": "DEGO",
-    "platform": 5
-  },
-  {
-    "symbol": "DENT",
-    "platform": 5
   },
   {
     "symbol": "DEXE",
@@ -679,10 +675,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
-    "symbol": "FIO",
-    "platform": 5
-  },
-  {
     "symbol": "FLOKI",
     "platform": 7
   },
@@ -716,10 +708,6 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "FTT",
-    "platform": 5
-  },
-  {
-    "symbol": "FUN",
     "platform": 5
   },
   {
@@ -777,6 +765,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "GPS",
     "platform": 5
+  },
+  {
+    "symbol": "GRASS",
+    "platform": 6
   },
   {
     "symbol": "GRT",
@@ -1079,10 +1071,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "MDT",
-    "platform": 5
-  },
-  {
     "symbol": "ME",
     "platform": 7
   },
@@ -1284,10 +1272,6 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "OSMO",
-    "platform": 5
-  },
-  {
-    "symbol": "OXT",
     "platform": 5
   },
   {
@@ -1767,10 +1751,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "TRU",
-    "platform": 5
-  },
-  {
     "symbol": "TRUMP",
     "platform": 7
   },
@@ -1840,7 +1820,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "USDS",
-    "platform": 5
+    "platform": 7
   },
   {
     "symbol": "USTC",
@@ -1849,10 +1829,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "USUAL",
     "platform": 5
-  },
-  {
-    "symbol": "UTK",
-    "platform": 1
   },
   {
     "symbol": "VANA",
@@ -1897,10 +1873,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "WAL",
     "platform": 5
-  },
-  {
-    "symbol": "WAN",
-    "platform": 1
   },
   {
     "symbol": "WAXP",

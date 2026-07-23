@@ -277,11 +277,12 @@ async function handleContentResync(sendResponse: (param: any) => void) {
 }
 
 // 第一次安装或更新时 - 初始默认币种
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   const tokenList = await getCoins();
   initShowTokenList(tokenList);
   connectWebSocket(tokenList);
   initGlobalAlertsOnInstall();
+
 });
 
 // 监听 storage 变化

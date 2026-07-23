@@ -3,12 +3,12 @@
 import { GlobalAlerts, GlobalAlertsTrigger } from '@/types/index';
 import { defaultGlobalAlert } from '@/config/exchangeConfig';
 
-// ─── storage keys ────────────────────────────────────────────────────────────
+// ─── storage keys
 
 const SETTINGS_KEY = 'global_alerts';
 const TRIGGER_KEY = 'global_alerts_trigger';
 
-// ─── 常量 ────────────────────────────────────────────────────────────────────
+// ─── 常量
 
 const DECAY_INTERVAL = 8 * 60 * 60 * 1000;   // 8 小时减一次
 const RESET_INTERVAL = 24 * 60 * 60 * 1000;  // 24 小时未触发归零
@@ -20,13 +20,13 @@ export const DEFAULT_TRIGGER: GlobalAlertsTrigger = {
   lastDecayAt: 0
 };
 
-// ─── 模块级缓存 ───────────────────────────────────────────────────────────────
+// ─── 模块级缓存 
 
 let _settings: GlobalAlerts = { ...defaultGlobalAlert };
 let _trigger: GlobalAlertsTrigger = { ...DEFAULT_TRIGGER };
 let _listenerRegistered = false;
 
-// ─── 内部 IO ──────────────────────────────────────────────────────────────────
+// ─── 内部 IO
 
 /** 从 storage 读取 global_alerts，不存在时写入默认值并返回默认值 */
 export function loadGlobalAlerts(): Promise<GlobalAlerts> {
@@ -86,7 +86,7 @@ export function saveTriggerCount(trigger: GlobalAlertsTrigger): void {
   });
 }
 
-// ─── 初始化 ───────────────────────────────────────────────────────────────────
+// ─── 初始化 
 
 /**
  * 安装 / 更新时初始化：
@@ -139,7 +139,7 @@ export async function initGlobalAlertsCache(): Promise<void> {
   });
 }
 
-// ─── 纯函数 ───────────────────────────────────────────────────────────────────
+// ─── 纯函数
 
 /**
  * 计算衰减后的新 triggerCount（纯函数，不含 IO）
@@ -162,7 +162,7 @@ export function calcDecay(trigger: GlobalAlertsTrigger, now: number): GlobalAler
   return null;
 }
 
-// ─── 对外接口 ─────────────────────────────────────────────────────────────────
+// ─── 对外接口
 
 /**
  * 计算当前有效阈值（含衰减检查副作用）

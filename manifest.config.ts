@@ -35,6 +35,7 @@ export default defineManifest({
     'https://ipapi.co/*',
     'wss://wspri.okx.com/*',
     'wss://api.gateio.ws/*',
-    'wss://stream.binance.com/*'
+    'wss://stream.binance.com/*',
+    'https://www.google-analytics.com/*'
   ]
 });
