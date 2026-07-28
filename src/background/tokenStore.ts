@@ -1,0 +1,123 @@
+import { price_show, throttle } from '@/utils/index';
+import { TokenItem } from '@/types/index';
+import type { Ticker } from '@/utils/ws/parseTicker';
+import { getCoins } from '@/background/coinsManager';
+
+// ─── 状态
+
+let showTokenList: TokenItem[] | null = null;
+let tokenMap: Map<string, TokenItem> | null = null;
+// 最后收到 WS 数据的时间戳，用于假死检测
+let lastUpdateTime: number | null = null;
+// 防止并发触发多次异步初始化
+let isInitializing = false;
+
+// ─── getter（外部只读）
+
+export function getShowTokenList(): TokenItem[] | null {
+  return showTokenList;
+}
+
+export function getLastUpdateTime(): number | null {
+  return lastUpdateTime;
+}
+
+// ─── 初始化
+
+/**
+ * 根据币种列表初始化 showTokenList 与 tokenMap
+ * 原 initShowTokenList
+ */
+export function initTokenStore(tokenList: string[]): void {
+  showTokenList = tokenList.map(token => ({
+    id: token.toLowerCase(),
+    symbol: token.toUpperCase(),
+    price: 0,
+    change: 0,
+    icon: token.charAt(0).toUpperCase(),
+    lastPrice: 0,
+  }));
+
+  // 使用 "SYMBOL-USDT" 作为 key，匹配 WS 消息格式
+  tokenMap = new Map(showTokenList.map(t => [`${t.symbol}-USDT`, t]));
+}
+
+// ─── 价格更新
+
+/**
+ * 根据 ticker 更新 showTokenList 中对应币种的价格
+ * 原 updateTokenList
+ * 返回更新后的完整列表（价格无变化时返回 null）
+ */
+export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
+  if (!tokenData?.symbol || !tokenData?.last) return null;
+
+  // 未初始化时触发一次异步自愈初始化
+  if (!showTokenList || !Array.isArray(showTokenList) || !tokenMap) {
+    if (!isInitializing) {
+      isInitializing = true;
+      getCoins()
+        .then(initTokenStore)
+        .catch(err => console.error('[TokenStore] 自愈初始化失败:', err))
+        .finally(() => { isInitializing = false; });
+    }
+    return null;
+  }
+
+  const curPrice = Number(tokenData.last);
+  if (isNaN(curPrice) || curPrice <= 0) return null;
+
+  const openToday = tokenData.sodUtc8 ? Number(tokenData.sodUtc8) : null;
+
+  // O(1) 查找
+  const cryptoToUpdate = tokenMap.get(tokenData.symbol);
+  if (!cryptoToUpdate) return null;
+
+  const lastPrice = cryptoToUpdate.price || 0;
+  const priceDiff = Math.abs(curPrice - lastPrice);
+  let shouldUpdate = false;
+
+  if (priceDiff > 0.0001) {
+    shouldUpdate = true;
+  } else if (priceDiff > 0) {
+    // 价格差异极小时用格式化比较，处理浮点精度问题
+    shouldUpdate = price_show(curPrice) !== (lastPrice > 0 ? price_show(lastPrice) : 0);
+  }
+
+  const now = Date.now();
+
+  if (!shouldUpdate) {
+    // 价格没变化，但仍更新时间戳用于假死检测
+    lastUpdateTime = now;
+    return null;
+  }
+
+  cryptoToUpdate.price = curPrice;
+  cryptoToUpdate.lastPrice = lastPrice;
+
+  if (openToday && !isNaN(openToday) && openToday > 0) {
+    cryptoToUpdate.change = Number((((curPrice - openToday) / openToday) * 100).toFixed(2));
+  } else {
+    cryptoToUpdate.change = null;
+  }
+
+  lastUpdateTime = now;
+  return showTokenList;
+}
+
+// ─── 发布
+
+function _publish(tokenList: TokenItem[]): void {
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (tabs.length === 0 || chrome.runtime.lastError) return;
+    tabs.forEach(tab => {
+      if (!tab.id) return;
+      chrome.tabs.sendMessage(tab.id, { type: 'UPDATE_PRICE', data: tokenList }, () => {
+        chrome.runtime.lastError; // 静默消费错误，防止控制台报错
+      });
+    });
+  });
+}
+
+export const publishMessage = _publish;
+export const throttledPublish = throttle(_publish, 500);
