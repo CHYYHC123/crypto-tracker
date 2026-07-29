@@ -5,6 +5,8 @@ import { setupWsCallbacks, connectWebSocket, disconnectWs, wsManager } from '@/b
 import { onStorageChanged } from '@/background/storageHandler';
 import { onMessage } from '@/background/messageRouter';
 
+import { isWsZombie } from '@/utils/ws/zombieDect';
+
 // 注册 WS 消息回调和状态变化回调
 setupWsCallbacks();
 
@@ -41,7 +43,7 @@ chrome.idle.onStateChanged.addListener(newState => {
 // alarm 触发时检测 WS 状态，断线则重新初始化并重连
 chrome.alarms.onAlarm.addListener(async alarm => {
   if (alarm.name !== 'ws-keep-alive') return;
-  if (wsManager.isConnected() || wsManager.isConnecting()) return;
+  if (!isWsZombie()) return;
 
   const tokenList = await getCoins();
   initTokenStore(tokenList);
