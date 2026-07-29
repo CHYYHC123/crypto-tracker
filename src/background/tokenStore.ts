@@ -35,7 +35,7 @@ export function initTokenStore(tokenList: string[]): void {
     price: 0,
     change: 0,
     icon: token.charAt(0).toUpperCase(),
-    lastPrice: 0,
+    lastPrice: 0
   }));
 
   // 使用 "SYMBOL-USDT" 作为 key，匹配 WS 消息格式
@@ -46,7 +46,6 @@ export function initTokenStore(tokenList: string[]): void {
 
 /**
  * 根据 ticker 更新 showTokenList 中对应币种的价格
- * 原 updateTokenList
  * 返回更新后的完整列表（价格无变化时返回 null）
  */
 export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
@@ -59,7 +58,9 @@ export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
       getCoins()
         .then(initTokenStore)
         .catch(err => console.error('[TokenStore] 自愈初始化失败:', err))
-        .finally(() => { isInitializing = false; });
+        .finally(() => {
+          isInitializing = false;
+        });
     }
     return null;
   }
@@ -105,15 +106,16 @@ export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
   return showTokenList;
 }
 
-// ─── 发布
-
+//发布
 function _publish(tokenList: TokenItem[]): void {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     if (tabs.length === 0 || chrome.runtime.lastError) return;
     tabs.forEach(tab => {
       if (!tab.id) return;
       chrome.tabs.sendMessage(tab.id, { type: 'UPDATE_PRICE', data: tokenList }, () => {
-        chrome.runtime.lastError; // 静默消费错误，防止控制台报错
+        if (chrome.runtime.lastError) {
+          console.warn('[sendMessage失败]', chrome.runtime.lastError.message);
+        }
       });
     });
   });

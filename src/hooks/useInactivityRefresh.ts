@@ -41,6 +41,7 @@ export function useInactivityRefresh({
   // 每次数据变化时调用
   const updateData = () => {
     const currentData = getDataRef.current();
+    console.log('currentData', currentData);
     if (JSON.stringify(currentData) !== JSON.stringify(lastDataRef.current)) {
       lastDataRef.current = currentData;
       lastUpdateTimeRef.current = Date.now();

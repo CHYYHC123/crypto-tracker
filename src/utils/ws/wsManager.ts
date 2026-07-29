@@ -361,7 +361,7 @@ class WsManager {
   private startWatchdog() {
     this.stopWatchdog();
     this.watchdogTimer = setInterval(() => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+      // if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
       const now = Date.now();
       if (now - this.lastMessageAt > 8000) {
         console.warn('[WsManager] 心跳超时，触发重连');

@@ -63,6 +63,7 @@ export default function ContentMain() {
     function handleMessage(msg: any) {
       if (msg.type === 'UPDATE_PRICE' && msg.data) {
         setTokens(prevTokens => {
+          console.log('msg.data', msg.data);
           // 如果是首次加载或数量变化，直接使用新数据
           if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
 
@@ -106,8 +107,7 @@ export default function ContentMain() {
   }, []);
 
   /**
-   * 1、监听页面可见性变化，当页面从隐藏变为可见时，通知 background 主动推送数据
-   * 2、初次渲染后，3s后查看是否有数据推送如果没有就重新拉取一次
+   * 当页面从不可见到可见时触发
    */
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -173,7 +173,7 @@ export default function ContentMain() {
           <CustomToaster />
           <CoinsContent layout className="w-60 max-h-100 flex flex-col overflow-hidden">
             {/* 固定在顶部的 Header */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <CoinsHeader status={status} collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} displayToken={tokens?.length > 0 ? tokens[0] : null} priceAlerts={priceAlerts} onRefresh={refreshData} />
             </div>
 
