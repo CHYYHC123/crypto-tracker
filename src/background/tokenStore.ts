@@ -1,4 +1,4 @@
-import { price_show, throttle } from '@/utils/index';
+import { throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
 import type { Ticker } from '@/utils/ws/parseTicker';
 import { getCoins } from '@/background/coinsManager';
@@ -26,7 +26,6 @@ export function getLastUpdateTime(): number | null {
 
 /**
  * 根据币种列表初始化 showTokenList 与 tokenMap
- * 原 initShowTokenList
  */
 export function initTokenStore(tokenList: string[]): void {
   showTokenList = tokenList.map(token => ({
@@ -58,9 +57,7 @@ export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
       getCoins()
         .then(initTokenStore)
         .catch(err => console.error('[TokenStore] 自愈初始化失败:', err))
-        .finally(() => {
-          isInitializing = false;
-        });
+        .finally(() => (isInitializing = false));
     }
     return null;
   }
@@ -68,21 +65,23 @@ export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
   const curPrice = Number(tokenData.last);
   if (isNaN(curPrice) || curPrice <= 0) return null;
 
-  const openToday = tokenData.sodUtc8 ? Number(tokenData.sodUtc8) : null;
-
   // O(1) 查找
   const cryptoToUpdate = tokenMap.get(tokenData.symbol);
   if (!cryptoToUpdate) return null;
+  // console.log('cryptoToUpdate', cryptoToUpdate);
 
-  const lastPrice = cryptoToUpdate.price || 0;
-  const priceDiff = Math.abs(curPrice - lastPrice);
+  const lastChangePercent = cryptoToUpdate.change;
+  const curChangePercent = tokenData.changePercent;
+  const lastPrice = cryptoToUpdate.price;
+
   let shouldUpdate = false;
 
-  if (priceDiff > 0.0001) {
-    shouldUpdate = true;
-  } else if (priceDiff > 0) {
-    // 价格差异极小时用格式化比较，处理浮点精度问题
-    shouldUpdate = price_show(curPrice) !== (lastPrice > 0 ? price_show(lastPrice) : 0);
+  if (lastPrice == null || lastPrice <= 0 || lastChangePercent == null || curChangePercent == null || isNaN(curChangePercent)) {
+    // 首次入库或数据缺失时，价格有变化就更新
+    shouldUpdate = curPrice !== lastPrice;
+  } else {
+    // 涨跌幅变化 >= 0.01% 才触发更新
+    shouldUpdate = Math.abs(curChangePercent - lastChangePercent) >= 0.01;
   }
 
   const now = Date.now();
@@ -93,14 +92,15 @@ export function applyTickerUpdate(tokenData: Ticker): TokenItem[] | null {
     return null;
   }
 
+  cryptoToUpdate.lastPrice = lastPrice ?? 0;
   cryptoToUpdate.price = curPrice;
-  cryptoToUpdate.lastPrice = lastPrice;
 
-  if (openToday && !isNaN(openToday) && openToday > 0) {
-    cryptoToUpdate.change = Number((((curPrice - openToday) / openToday) * 100).toFixed(2));
-  } else {
-    cryptoToUpdate.change = null;
-  }
+  // if (openToday && !isNaN(openToday) && openToday > 0) {
+  //   cryptoToUpdate.change = Number((((curPrice - openToday) / openToday) * 100).toFixed(2));
+  // } else {
+  //   cryptoToUpdate.change = null;
+  // }
+  cryptoToUpdate.change = Number(tokenData.changePercent.toFixed(2));
 
   lastUpdateTime = now;
   return showTokenList;

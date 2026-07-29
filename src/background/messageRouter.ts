@@ -12,7 +12,6 @@ type SendResponse = (response: any) => void;
 type Handler = (message: any, sendResponse: SendResponse) => boolean | void;
 
 // ─── 各消息 Handler
-
 function handleGetDataStatus(_msg: any, sendResponse: SendResponse): void {
   sendResponse({
     success: true,

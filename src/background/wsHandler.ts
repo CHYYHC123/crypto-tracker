@@ -1,6 +1,6 @@
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 import { parseWSMessage } from '@/utils/ws/parseTicker';
-import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
+// import { fillSodUtc8 } from '@/utils/ws/sodUtc8';
 import { defaultDataSource, ExchangeListMap, ExchangeType } from '@/config/exchangeConfig';
 import { applyTickerUpdate, throttledPublish, initTokenStore } from '@/background/tokenStore';
 
@@ -14,7 +14,7 @@ export function handleWsMessage(data: any): void {
   try {
     let ticker = parseWSMessage(data);
     if (!ticker) return;
-    ticker = fillSodUtc8(ticker);
+    // ticker = fillSodUtc8(ticker);
 
     const updated = applyTickerUpdate(ticker);
     if (!Array.isArray(updated)) return;
