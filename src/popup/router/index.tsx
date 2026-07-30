@@ -15,6 +15,10 @@ export const router = createHashRouter([
         lazy: () => import('@/popup/pages/AlertSettings').then(m => ({ Component: m.default }))
       },
       {
+        path: '/data-source',
+        lazy: () => import('@/popup/pages/DataSource').then(m => ({ Component: m.default }))
+      },
+      {
         path: '/connect-us',
         lazy: () => import('@/popup/pages/ConnectUs').then(m => ({ Component: m.default }))
       }

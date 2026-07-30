@@ -1,8 +1,8 @@
 import type { TokenItem } from '@/types/index';
 import { verifyToken } from '@/utils/decryption';
-const MAX_COUNT = 5;
+const MAX_COUNT = 10;
 
-// 校验最大关注币种数量15个
+// 校验最大关注币种数量10个
 export async function validateCount(cyrptoList: TokenItem[]) {
   const { token_string } = await chrome.storage.local.get('token_string');
   const tokenString = token_string as string;

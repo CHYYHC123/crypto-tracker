@@ -96,7 +96,7 @@ export function ActionMenu({ open, anchorEl, onClose, children, className }: Act
             visibility: menuStyle ? 'visible' : 'hidden',
             ...menuStyle
           }}
-          className={cn('min-w-[180px] rounded-lg bg-[#1c1c1e]', 'border border-white/10 shadow-lg z-50 p-1 box-border', className)}
+          className={cn('min-w-45 rounded-lg bg-[#1c1c1e]', 'border border-white/10 shadow-lg z-50 p-1 box-border', className)}
         >
           {children}
         </motion.div>

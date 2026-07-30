@@ -1,16 +1,24 @@
-import { motion } from 'framer-motion';
-import { X, Check } from 'lucide-react';
-import { ExchangeListMap, type ExchangeType } from '@/config/exchangeConfig';
-import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
-export interface DataSourceProps {
-  currentSource: ExchangeType;
-  onClose?: () => void;
-  onSelect?: (source: ExchangeType) => void;
-}
+import { cn } from '@/lib/utils';
+import SubHeader from '@/popup/components/SubHeader';
+import { ExchangeListMap, type ExchangeType } from '@/config/exchangeConfig';
 
-const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelect }) => {
+function DataSource() {
+  const navigate = useNavigate();
+  const { dataSource } = useLocation().state;
+
+  const [currentSource, setCurrentSource] = useState<null | ExchangeType>(null);
+
+  // 初始化当前选中的数据源
+  useEffect(() => {
+    if (dataSource) setCurrentSource(dataSource as ExchangeType);
+  }, []);
+
   // 处理选择数据源
   const handleSelect = async (source: ExchangeType) => {
     const info = ExchangeListMap[source];
@@ -18,26 +26,14 @@ const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelec
 
     await chrome.storage.local.set({ data_source: source });
 
-    // 调用回调
-    onSelect?.(source);
-    onClose?.();
     toast.success(`Data source switched to ${info.name}`, { duration: 2000 });
+    navigate('/');
   };
 
   return (
-    <div className="h-[90vh]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <div className="text-white font-medium text-sm">Select Data Source</div>
-        {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition cursor-pointer">
-            <X className="w-5 h-5" />
-          </button>
-        )}
-      </div>
-
-      {/* Data Source List */}
-      <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto">
+    <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
+      <SubHeader title="Data Source" />
+      <div className="p-4 space-y-2 max-h-100 overflow-y-auto">
         {Object.entries(ExchangeListMap)
           .filter(([_, info]) => !info.disabled)
           .map(([source, info]) => {
@@ -48,7 +44,7 @@ const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelec
               <motion.button
                 key={source}
                 onClick={() => handleSelect(exchangeType)}
-                className={cn('w-full px-2 py-1 rounded-xl border-2 transition-all cursor-pointer text-left', isSelected ? 'bg-purple-500/30 border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-gray-800/50 border-white/10 hover:bg-gray-800 hover:border-white/20')}
+                className={cn('w-full px-3 py-3 rounded-xl border transition-all cursor-pointer text-left', isSelected ? 'bg-purple-500/30 border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-gray-800/50 border-white/10 hover:bg-gray-800 hover:border-white/20')}
                 whileHover={{
                   scale: 1.02,
                   boxShadow: '0 0 12px rgba(255, 255, 255, 0.15)'
@@ -63,7 +59,7 @@ const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelec
               >
                 <div className="flex items-center gap-3">
                   {/* Logo */}
-                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
                     <img src={info.logo} alt={info.name} className="w-full h-full object-contain" />
                   </div>
 
@@ -73,7 +69,7 @@ const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelec
                       <span className="text-white font-medium text-sm">{info.name}</span>
                       <div className="text-gray-400 text-xs mt-0.5">{info.needsVPN ? 'Need VPN' : 'No VPN'}</div>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
                   </div>
                 </div>
               </motion.button>
@@ -82,6 +78,6 @@ const DataSource: React.FC<DataSourceProps> = ({ currentSource, onClose, onSelec
       </div>
     </div>
   );
-};
+}
 
 export default DataSource;
