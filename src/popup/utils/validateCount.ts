@@ -1,6 +1,6 @@
 import type { TokenItem } from '@/types/index';
 import { verifyToken } from '@/utils/decryption';
-const MAX_COUNT = 15;
+const MAX_COUNT = 5;
 
 // 校验最大关注币种数量15个
 export async function validateCount(cyrptoList: TokenItem[]) {

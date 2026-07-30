@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Power, PowerOff, CircleAlert } from 'lucide-react';
+import { Power, PowerOff, CircleAlert } from 'lucide-react';
 
 import toast from 'react-hot-toast';
 import type { GlobalAlerts } from '@/types/index';
@@ -8,6 +8,8 @@ import { loadGlobalAlerts, saveGlobalAlerts } from '@/background/globalAlertsMan
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
 import Tooltip from '@/components/common/tooltip';
+
+import SubHeader from '@/popup/components/SubHeader';
 
 interface ThresholdInputProps {
   label: string;
@@ -139,12 +141,7 @@ export default function AlertSettings() {
 
   return (
     <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
-      <div className="p-4 border-b border-white/10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="p-1 transition-colors cursor-pointer">
-          <ArrowLeft size={24} />
-        </button>
-        <h3 className="text-[16px] font-semibold">Price Alerts</h3>
-      </div>
+      <SubHeader title="Price Alerts" />
 
       <div className="flex-1 overflow-auto p-4 space-y-6 scrollbar-hide">
         <section className="space-y-4">
