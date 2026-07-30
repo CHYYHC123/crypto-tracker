@@ -11,8 +11,8 @@ import type { TokenItem } from '@/types/index';
 import { type ExchangeType, defaultDataSource, POPULAR_TOKENS } from '@/config/exchangeConfig';
 import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { PLATFORM } from '@/utils/index';
+import { validateCount } from '@/popup/utils/validateCount';
 
-// 热门推
 
 // 数据源 → 平台 bit 映射，HL 不在 bitmask 里则不过滤
 const EXCHANGE_BIT: Partial<Record<ExchangeType, number>> = {
@@ -21,7 +21,6 @@ const EXCHANGE_BIT: Partial<Record<ExchangeType, number>> = {
   Gate: PLATFORM.GATE
 };
 
-// ----------------------------- helpers -----------------------------
 async function getCoins(): Promise<string[]> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
@@ -46,20 +45,19 @@ async function setCoins(coins: string[]): Promise<void> {
   });
 }
 
-// ----------------------------- types ------------------------------
 interface TokenSearchProps {
   tokens: TokenItem[];
   onTokenAdded?: () => void;
 }
 
-// ========================= TokenSearch ============================
+// TokenSearch
 export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
-  // ---------- 主页搜索（仅作为触发器，不直接使用） ----------
+  //  主页搜索（仅作为触发器，不直接使用）
   const [searchValue, setSearchValue] = useState('');
   const [errorTip, setErrorTip] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ---------- "Add crypto" 弹窗 ----------
+  // "Add crypto" 弹窗
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [dialogSearch, setDialogSearch] = useState('');
   const [currentDataSource, setCurrentDataSource] = useState<ExchangeType>(defaultDataSource);
@@ -70,6 +68,11 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
 
   // 打开弹窗：读取当前数据源
   const openAddDialog = async () => {
+    const canAdd = await validateCount(tokens);
+    if (!canAdd) {
+      toast.error('Max tracked cryptos reached. Contact admin to unlock.');
+      return;
+    }
     const { data_source } = await chrome.storage.local.get('data_source');
     setCurrentDataSource((data_source as ExchangeType) || defaultDataSource);
     setDialogSearch('');
@@ -98,7 +101,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     return filteredBySource.filter(t => t.symbol.startsWith(q));
   }, [filteredBySource, dialogSearch]);
 
-  // -------------------- 通用保存逻辑 --------------------
+  //  通用保存逻辑
   const saveToken = async (symbol: string): Promise<boolean> => {
     try {
       const oldCoins = await getCoins();
@@ -120,7 +123,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     }
   };
 
-  // -------------------- 弹窗内点击 token（已知合法币种，跳过验证）----
+  //  弹窗内点击 token（已知合法币种，跳过验证）
   const handleSelectToken = async (symbol: string) => {
     if (loading || addedSet.has(symbol)) return;
     setLoading(true);
@@ -132,7 +135,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     }
   };
 
-  // -------------------- 弹窗内搜索框 Enter：精确匹配则直接添加 ----
+  // 弹窗内搜索框 Enter：精确匹配则直接添加
   const handleDialogSearchEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !dialogSearch) return;
     const exact = filteredBySource.find(t => t.symbol === dialogSearch);
@@ -148,20 +151,17 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
     setSearchValue(event.target.value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '')?.toUpperCase());
   };
 
-  // ========================= RENDER ==========================
   return (
     <>
       {/* 触发行：输入框聚焦 或 点 Add 均打开弹窗 */}
-      <div className="search_token mt-4 flex items-center flex-shrink-0">
+      <div className="search_token mt-4 flex items-center shrink-0">
         <Input value={searchValue} errorTip={errorTip} placeholder="Search Symbol (e.g. BTC)" onFocus={openAddDialog} onChange={changeSearchValue} disabled={loading} readOnly />
         <Button className="ml-4" variant="gradient" disabled={loading} onClick={openAddDialog}>
           Add
         </Button>
       </div>
 
-      {/* ===================== Add crypto 弹窗 ===================== */}
       <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/8">
           <h3 className="text-white font-semibold text-base">Add Crypto</h3>
           <button onClick={() => setShowAddDialog(false)} className="text-gray-400 hover:text-white transition cursor-pointer">
@@ -172,7 +172,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
         {/* 搜索框 */}
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-center gap-2 bg-gray-800 rounded-xl px-3 py-2.5 border border-white/10 focus-within:border-white/25 transition">
-            <Search className="w-4 h-4 text-white/35 flex-shrink-0" />
+            <Search className="w-4 h-4 text-white/35 shrink-0" />
             <input
               ref={dialogInputRef}
               value={dialogSearch}
@@ -188,8 +188,6 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
             )}
           </div>
         </div>
-
-        {/* Popular Suggestions（未搜索时显示） */}
 
         <div className="px-4 py-2">
           <p className="text-[10px] font-semibold tracking-widest text-white/35 uppercase mb-2">Popular Suggestions</p>
@@ -211,7 +209,6 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
           </div>
         </div>
 
-        {/* Symbol 列表 */}
         <div className="px-4 pt-2 pb-1">
           <p className="text-[10px] font-semibold tracking-widest text-white/35 uppercase">
             Symbols
