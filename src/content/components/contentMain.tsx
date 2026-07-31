@@ -63,7 +63,7 @@ export default function ContentMain() {
     function handleMessage(msg: any) {
       if (msg.type === 'UPDATE_PRICE' && msg.data) {
         setTokens(prevTokens => {
-          console.log('msg.data', msg.data);
+          // console.log('msg.data', msg.data);
           // 如果是首次加载或数量变化，直接使用新数据
           if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
 

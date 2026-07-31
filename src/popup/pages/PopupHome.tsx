@@ -22,39 +22,7 @@ import type { TokenItem, PriceAlert } from '@/types/index';
 
 import { formatNumberWithCommas } from '@/utils/index';
 import { Ellipsis, X, Power, PowerOff } from 'lucide-react';
-
-// 通过消息传递访问 background 的 coinsManager
-async function getCoins(): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve(response.data);
-      } else {
-        reject(new Error(response?.error || 'Failed to get coins'));
-      }
-    });
-  });
-}
-
-async function setCoins(coins: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'SET_COINS', payload: { coins } }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve();
-      } else {
-        reject(new Error(response?.error || 'Failed to set coins'));
-      }
-    });
-  });
-}
+import { useBatchTokenSelect } from '@/popup/hooks/useBatchTokenSelect';
 
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
@@ -69,8 +37,6 @@ export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
-  const [showCheckboxes, setShowCheckboxes] = useState(false);
-  const [selectedTokens, setSelectedTokens] = useState<Set<string>>(new Set());
 
   // 轮询，每15秒自动刷新一次
   const {
@@ -85,6 +51,12 @@ export default function PopupContent() {
   useEffect(() => {
     setTokens(tokenList ?? []);
   }, [tokenList]);
+
+  const { batchSelect, selectedTokens, removing, handleToggleToken, removeToken } = useBatchTokenSelect({
+    tokens,
+    setCountdown,
+    mutate
+  });
 
   // 读取 price_alerts
   useEffect(() => {
@@ -146,46 +118,11 @@ export default function PopupContent() {
     chrome.runtime.sendMessage({ type: 'REFRESH', payload: { falg: true } }, async response => {
       if (response.success) {
         await mutate();
-        toast.success(response?.msg, {
-          duration: 2000
-        });
+        toast.success(response?.msg, { duration: 2000 });
       } else {
-        toast.error(response?.msg, {
-          duration: 2000
-        });
+        toast.error(response?.msg, { duration: 2000 });
       }
     });
-  };
-
-  // 移除按钮
-  const [removing, setRemoving] = useState(false);
-  const removeToken = async (symbol: string) => {
-    if (!symbol || removing) return;
-    setRemoving(true);
-    try {
-      const oldTokenList = await getCoins();
-      if (!oldTokenList?.includes(symbol)) return;
-
-      // 检查：如果只剩一个币种，不允许删除
-      if (oldTokenList.length <= 1) {
-        toast.loading('At least one token must be kept', { duration: 2000 });
-        setRemoving(false);
-        return;
-      }
-
-      // 👉 关键一步：过滤掉要删除的 symbol
-      const newTokenList = oldTokenList.filter(item => item !== symbol);
-      // 保存更新后的数组
-      await setCoins(newTokenList);
-      setCountdown(10);
-      setTimeout(() => {
-        mutate();
-        // 可选：提示成功
-        toast.success(`${symbol} has been removed`, { duration: 2000 });
-      }, 1500);
-    } finally {
-      setRemoving(false);
-    }
   };
 
   // ActionMenu 状态
@@ -296,70 +233,6 @@ export default function PopupContent() {
     }
   };
 
-  // 批量删除相关逻辑
-  const handleToggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedTokens(new Set(tokens.map(token => token.symbol)));
-    } else {
-      setSelectedTokens(new Set());
-    }
-  };
-
-  const handleToggleToken = (symbol: string, checked: boolean) => {
-    const newSelected = new Set(selectedTokens);
-    if (checked) {
-      newSelected.add(symbol);
-    } else {
-      newSelected.delete(symbol);
-    }
-    setSelectedTokens(newSelected);
-  };
-
-  const handleBatchDelete = async () => {
-    if (selectedTokens.size === 0 || removing) return;
-
-    const selectedCount = selectedTokens.size;
-
-    // 检查：如果删除后没有币种了，不允许删除
-    if (tokens.length - selectedCount <= 0) {
-      toast.error('At least one token must be kept', { duration: 2000 });
-      return;
-    }
-
-    setRemoving(true);
-    try {
-      const oldTokenList = await getCoins();
-      const newTokenList = oldTokenList.filter(symbol => !selectedTokens.has(symbol));
-      await setCoins(newTokenList);
-      setSelectedTokens(new Set());
-      setShowCheckboxes(false);
-      setCountdown(10);
-      setTimeout(() => {
-        mutate();
-        toast.success(`${selectedCount} token(s) have been removed`, { duration: 2000 });
-      }, 1500);
-    } catch (error) {
-      toast.error('Failed to remove tokens', { duration: 2000 });
-    } finally {
-      setRemoving(false);
-    }
-  };
-
-  const handleCancelBatch = () => {
-    setSelectedTokens(new Set());
-    setShowCheckboxes(false);
-  };
-
-  // 当关闭选择模式时，清空选中状态
-  useEffect(() => {
-    if (!showCheckboxes) {
-      setSelectedTokens(new Set());
-    }
-  }, [showCheckboxes]);
-
-  const isAllSelected = tokens.length > 0 && selectedTokens.size === tokens.length;
-  const isIndeterminate = selectedTokens.size > 0 && selectedTokens.size < tokens.length;
-
   const listRef = useRef<HTMLDivElement>(null);
   const prevTokensLengthRef = useRef<number>(0);
 
@@ -369,10 +242,11 @@ export default function PopupContent() {
     }
     prevTokensLengthRef.current = tokens.length;
   }, [tokens.length]);
+
   return (
     <>
       <div className="w-full h-full font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
-        <Header showCheckboxes={showCheckboxes} onToggleCheckboxes={() => setShowCheckboxes(!showCheckboxes)} />
+        <Header />
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
@@ -385,8 +259,8 @@ export default function PopupContent() {
               return (
                 <div key={item.id} className="flex items-center">
                   <AnimatePresence>
-                    {showCheckboxes && (
-                      <motion.div initial={{ opacity: 0, width: 0, marginRight: 0 }} animate={{ opacity: 1, width: 20, marginRight: 8 }} exit={{ opacity: 0, width: 0, marginRight: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }} className="overflow-hidden flex-shrink-0">
+                    {batchSelect.showCheckboxes && (
+                      <motion.div initial={{ opacity: 0, width: 0, marginRight: 0 }} animate={{ opacity: 1, width: 20, marginRight: 8 }} exit={{ opacity: 0, width: 0, marginRight: 0 }} transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }} className="overflow-hidden shrink-0">
                         <div className="w-5">
                           <Checkbox checked={selectedTokens.has(item.symbol)} onChange={e => handleToggleToken(item.symbol, e.target.checked)} />
                         </div>
@@ -428,18 +302,7 @@ export default function PopupContent() {
           )}
         </div>
 
-        <Footer
-          isLoading={isLoading}
-          countdown={countdown}
-          onRefresh={refreshData}
-          showCheckboxes={showCheckboxes}
-          isAllSelected={isAllSelected}
-          isIndeterminate={isIndeterminate}
-          onToggleSelectAll={handleToggleSelectAll}
-          selectedCount={selectedTokens.size}
-          onCancel={handleCancelBatch}
-          onConfirmDelete={handleBatchDelete}
-        />
+        <Footer isLoading={isLoading} countdown={countdown} onRefresh={refreshData} batchSelect={batchSelect} />
       </div>
 
       {/* ActionMenu - 移到最外层 div 外面，避免影响父容器布局 */}
@@ -464,7 +327,7 @@ export default function PopupContent() {
         type="custom"
         header={
           <>
-            <div className="p-3 border-b-1 border-gray-600">
+            <div className="p-3 border-b border-gray-600">
               <div className="flex justify-between gap-2">
                 <h3 className="text-white/90 font-semibold text-base flex items-center">
                   <span>Set alert for {alertToken?.symbol}</span>

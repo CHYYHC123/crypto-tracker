@@ -90,7 +90,7 @@ const MenuCenter = () => {
 
   return (
     <>
-      <div className="cursor-pointer w-6 h-6 flex items-center justify-center rounded-md transition-all duration-200 hover:scale-110" onClick={handleOpen}>
+      <div className="cursor-pointer w-6 h-6 flex items-center justify-center rounded-md transition-all duration-200" onClick={handleOpen}>
         <Menu size={24} aria-haspopup="true" className="text-white/70 transition-colors duration-200 hover:text-white" />
       </div>
 
