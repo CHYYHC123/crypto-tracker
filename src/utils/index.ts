@@ -4,9 +4,7 @@ import { SUPPORTED_TOKENS } from './tokens';
 export const PLATFORM = { BN: 1, OKX: 2, GATE: 4 } as const;
 
 // 模块加载时构建一次 Map，查询 O(1)
-const TOKEN_MAP = new Map<string, number>(
-  SUPPORTED_TOKENS.map((t) => [t.symbol, t.platform])
-);
+const TOKEN_MAP = new Map<string, number>(SUPPORTED_TOKENS.map(t => [t.symbol, t.platform]));
 /**
  * 保留小数点位数
  */
@@ -134,4 +132,19 @@ export function queryTokenLocal(symbol: string, platform?: number): boolean {
  */
 export function getTokenPlatform(symbol: string): number {
   return TOKEN_MAP.get(symbol.toUpperCase()) ?? 0;
+}
+
+/**
+ * 格式化钱包地址
+ * @param address 地址
+ * @param start 保留前面字符数量（包含0x）
+ * @param end 保留后面字符数量
+ */
+export function formatAddress(address: string, start = 12, end = 12): string {
+  // return address;
+  if (!address) return '';
+  if (address.length <= start + end) {
+    return address;
+  }
+  return `${address.slice(0, start)}...${address.slice(-end)}`;
 }

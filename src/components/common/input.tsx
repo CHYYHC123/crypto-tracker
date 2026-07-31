@@ -58,7 +58,7 @@ const Input: React.FC<InputProps> = ({ type = 'text', className, onKeyDown, onCo
       />
       <AnimatePresence>
         {errorTip && (
-          <motion.div key={errorTip} className="absolute text-[#ef4444] text-xs mt-[2px]" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.18 }}>
+          <motion.div key={errorTip} className="absolute text-[#ef4444] text-xs mt-0.5" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.18 }}>
             {errorTip}
           </motion.div>
         )}
