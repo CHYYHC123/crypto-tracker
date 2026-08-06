@@ -1,34 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
-// import { motion, AnimatePresence } from 'framer-motion';
 import useSWR from 'swr';
 import toast from 'react-hot-toast';
 
-// import ConfirmDialog from '@/components/common/confirm-dialog';
 // @ts-ignore
 import ActionMenu from '@/components/common/ActionMenu';
 import ActionMenuItem from '@/components/common/ActionMenuItem';
-// import Tooltip from '@/components/common/tooltip';
 
-// import PriceAlertInput from '@/popup/components/PriceAlter';
-// import { Direction } from '@/popup/components/PriceAlter';
-// import AlertBadge from '@/popup/components/AlertBadge';
 import { Header } from '@/popup/components/Header';
 import { TokenSearch } from '@/popup/components/TokenSearch';
 import { EmptyState } from '@/popup/components/EmptyState';
 import { Footer } from '@/popup/components/Footer';
-// import Checkbox from '@/components/common/checkbox';
 
 import type { TokenItem } from '@/types/index';
 
-// import { formatNumberWithCommas } from '@/utils/index';
-// import { X, Power, PowerOff } from 'lucide-react';
 import { useBatchTokenSelect } from '@/popup/hooks/useBatchTokenSelect';
 import { usePriceAlerts } from '@/popup/hooks/usePriceAlerts';
 import { useAutoScroll } from '@/popup/hooks/useAutoScroll';
 
+// import { useAssetType } from '@/popup/hooks/useAssetType';
+
 import AssetItem from '@/popup/components/PopupHome/AssetItem';
 import CheckBox from '@/popup/components/PopupHome/Checkbox';
 import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
+import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
 // 异步 fetcher，封装 sendMessage
 function fetchPrices(): Promise<TokenItem[]> {
@@ -42,8 +36,7 @@ function fetchPrices(): Promise<TokenItem[]> {
 export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
-  // const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
-
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
   // 价格预计 hooks
   const { priceAlerts } = usePriceAlerts();
 
@@ -67,39 +60,6 @@ export default function PopupContent() {
     setCountdown,
     mutate
   });
-
-  // 读取 price_alerts
-  // useEffect(() => {
-  //   const loadPriceAlerts = () => {
-  //     chrome.storage.local.get('price_alerts', res => {
-  //       const alerts = (res.price_alerts as PriceAlert[]) || [];
-  //       setPriceAlerts(alerts);
-  //     });
-  //   };
-
-  //   loadPriceAlerts();
-
-  //   // 监听 storage 变化
-  //   const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-  //     if (areaName === 'local' && changes.price_alerts) {
-  //       loadPriceAlerts();
-  //     }
-  //   };
-
-  //   chrome.storage.onChanged.addListener(handleStorageChange);
-
-  //   // 监听消息通知
-  //   const handleMessage = (msg: any) => {
-  //     if (msg.type === 'PRICE_ALERTS_UPDATED') loadPriceAlerts();
-  //   };
-
-  //   chrome.runtime.onMessage.addListener(handleMessage);
-
-  //   return () => {
-  //     chrome.storage.onChanged.removeListener(handleStorageChange);
-  //     chrome.runtime.onMessage.removeListener(handleMessage);
-  //   };
-  // }, []);
 
   // Token 添加成功后的回调
   const handleTokenAdded = () => {
@@ -139,7 +99,7 @@ export default function PopupContent() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [menuToken, setMenuToken] = useState<TokenItem | null>(null);
   const open = Boolean(anchorEl);
-  
+
   const handleOpen = (e: React.MouseEvent<HTMLElement>, tokenItme: TokenItem) => {
     if (removing) return;
     setAnchorEl(e.currentTarget);
@@ -179,23 +139,27 @@ export default function PopupContent() {
 
         <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
 
-        <div ref={listRef} className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
-          {Array.isArray(tokens) && tokens.length > 0 ? (
-            tokens.map((item: TokenItem) => {
-              // 查找该币种对应的预警
-              const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
-              return (
-                <div key={item.id} className="flex items-center">
-                  <CheckBox visible={batchSelect.showCheckboxes} checked={selectedTokens.has(item.symbol)} onChange={checked => handleToggleToken(item.symbol, checked)} />
+        {skeletonLoading ? (
+          <AssetListSkeleton count={5} />
+        ) : (
+          <div ref={listRef} className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
+            {Array.isArray(tokens) && tokens.length > 0 ? (
+              tokens.map((item: TokenItem) => {
+                // 查找该币种对应的预警
+                const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
+                return (
+                  <div key={item.id} className="flex items-center">
+                    <CheckBox visible={batchSelect.showCheckboxes} checked={selectedTokens.has(item.symbol)} onChange={checked => handleToggleToken(item.symbol, checked)} />
 
-                  <AssetItem removing={removing} dataInfo={item} alertInfo={alert} onAlertClick={handleAlertBadgeClick} onMenuClick={handleOpen} />
-                </div>
-              );
-            })
-          ) : (
-            <EmptyState />
-          )}
-        </div>
+                    <AssetItem removing={removing} dataInfo={item} alertInfo={alert} onAlertClick={handleAlertBadgeClick} onMenuClick={handleOpen} />
+                  </div>
+                );
+              })
+            ) : (
+              <EmptyState />
+            )}
+          </div>
+        )}
 
         <Footer isLoading={isLoading} countdown={countdown} onRefresh={refreshData} batchSelect={batchSelect} />
       </div>

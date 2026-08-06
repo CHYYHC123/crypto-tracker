@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils';
 import ActionMenu from '@/components/common/ActionMenu';
 import ActionMenuItem from '@/components/common/ActionMenuItem';
 
-type AssetTypes = 'crypto' | 'stocks';
+import { useAssetType } from '@/popup/hooks/useAssetType';
+import type { AssetTypes } from '@/types/index';
+
 
 const AssetClasses = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -17,15 +19,15 @@ const AssetClasses = () => {
     setAnchorEl(null);
   };
 
-  // 选择资产类型
-  const [assetType, setAssetType] = useState<AssetTypes>('crypto');
+  // 初始切换资产类型 hooks
+  const { assetType, setAssetType } = useAssetType();
   const handleDataSource = (type: AssetTypes) => {
     setAssetType(type);
     setAnchorEl(null);
   };
+
   return (
     <div className="relative">
-      {/* Trigger */}
       <button onClick={handleOpen} className="group flex items-center gap-2 py-1.5 px-2.5 rounded-xl border border-white/20 bg-[#0f172a] text-[12px] cursor-pointer text-white/75 hover:text-white hover:border-white/40 transition-all duration-200">
         <span className="text-white/75 group-hover:text-white transition-colors duration-200">{assetType === 'crypto' ? 'Crypto' : 'Stocks'}</span>
 
