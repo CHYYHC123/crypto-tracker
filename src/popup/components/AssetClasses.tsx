@@ -8,7 +8,7 @@ import ActionMenuItem from '@/components/common/ActionMenuItem';
 import { useAssetType } from '@/popup/hooks/useAssetType';
 import type { AssetTypes } from '@/types/index';
 
-
+// 资产类型切换弹出
 const AssetClasses = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);

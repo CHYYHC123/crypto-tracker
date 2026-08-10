@@ -10,8 +10,8 @@ const TRIGGER_KEY = 'global_alerts_trigger';
 
 // ─── 常量
 
-const DECAY_INTERVAL = 8 * 60 * 60 * 1000;   // 8 小时减一次
-const RESET_INTERVAL = 24 * 60 * 60 * 1000;  // 24 小时未触发归零
+const DECAY_INTERVAL = 8 * 60 * 60 * 1000; // 8 小时减一次
+const RESET_INTERVAL = 24 * 60 * 60 * 1000; // 24 小时未触发归零
 
 export const DEFAULT_TRIGGER: GlobalAlertsTrigger = {
   upCount: 0,
@@ -20,7 +20,7 @@ export const DEFAULT_TRIGGER: GlobalAlertsTrigger = {
   lastDecayAt: 0
 };
 
-// ─── 模块级缓存 
+// ─── 模块级缓存
 
 let _settings: GlobalAlerts = { ...defaultGlobalAlert };
 let _trigger: GlobalAlertsTrigger = { ...DEFAULT_TRIGGER };
@@ -86,7 +86,7 @@ export function saveTriggerCount(trigger: GlobalAlertsTrigger): void {
   });
 }
 
-// ─── 初始化 
+// ─── 初始化
 
 /**
  * 安装 / 更新时初始化：
@@ -94,10 +94,10 @@ export function saveTriggerCount(trigger: GlobalAlertsTrigger): void {
  * - global_alerts_trigger 不存在时写入 DEFAULT_TRIGGER
  * 在 background onInstalled 中调用
  */
-export function initGlobalAlertsOnInstall(): void {
+export function initGlobalAlerts(): void {
   chrome.storage.local.get([SETTINGS_KEY, TRIGGER_KEY], res => {
     if (chrome.runtime.lastError) {
-      console.error('[globalAlertsManager] initGlobalAlertsOnInstall error:', chrome.runtime.lastError);
+      console.error('[globalAlertsManager] initGlobalAlerts error:', chrome.runtime.lastError);
       return;
     }
     const toSet: Record<string, unknown> = {};
@@ -114,10 +114,7 @@ export function initGlobalAlertsOnInstall(): void {
  * 在 content script mount 时调用一次
  */
 export async function initGlobalAlertsCache(): Promise<void> {
-  [_settings, _trigger] = await Promise.all([
-    loadGlobalAlerts(),
-    loadTriggerCount(),
-  ]);
+  [_settings, _trigger] = await Promise.all([loadGlobalAlerts(), loadTriggerCount()]);
 
   if (_listenerRegistered) return;
   _listenerRegistered = true;
@@ -127,9 +124,7 @@ export async function initGlobalAlertsCache(): Promise<void> {
 
     if (changes[SETTINGS_KEY]) {
       const newVal = changes[SETTINGS_KEY].newValue as GlobalAlerts | undefined;
-      _settings = newVal
-        ? { bull: newVal.bull || '', bear: newVal.bear || '', step: newVal.step || '', enabled: !!newVal.enabled }
-        : { ...defaultGlobalAlert, enabled: false };
+      _settings = newVal ? { bull: newVal.bull || '', bear: newVal.bear || '', step: newVal.step || '', enabled: !!newVal.enabled } : { ...defaultGlobalAlert, enabled: false };
     }
 
     if (changes[TRIGGER_KEY]) {
@@ -188,7 +183,7 @@ export function getEffectiveThresholds(): {
   return {
     enabled: _settings.enabled,
     effectiveBull: bullBase !== null ? bullBase + step * _trigger.upCount : null,
-    effectiveBear: bearBase !== null ? bearBase + step * _trigger.downCount : null,
+    effectiveBear: bearBase !== null ? bearBase + step * _trigger.downCount : null
   };
 }
 
@@ -200,7 +195,7 @@ export function recordTrigger(upFired: boolean, downFired: boolean, now: number)
     ..._trigger,
     lastTriggerAt: now,
     upCount: upFired ? _trigger.upCount + 1 : _trigger.upCount,
-    downCount: downFired ? _trigger.downCount + 1 : _trigger.downCount,
+    downCount: downFired ? _trigger.downCount + 1 : _trigger.downCount
   };
   saveTriggerCount(_trigger);
 }

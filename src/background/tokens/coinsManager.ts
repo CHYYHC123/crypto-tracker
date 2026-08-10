@@ -1,32 +1,15 @@
-import { defaultCoinList } from '@/config/exchangeConfig';
-
 /**
  * Coins 管理器
- * 使用内存缓存 + 异步初始化，避免频繁读取 chrome.storage.local
  * 持久化时使用防抖，避免频繁写入（特别是 REORDER_TOKENS 场景）
  */
+
+import { defaultCoinList } from '@/config/exchangeConfig';
+import { debounce } from '@/lib/utils';
 
 // 内存缓存
 let cachedCoins: string[] | null = null;
 // 初始化 Promise，确保只初始化一次
 let initPromise: Promise<string[]> | null = null;
-// 防抖定时器
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-/**
- * 防抖函数
- */
-function debounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
-  return ((...args: Parameters<T>) => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    debounceTimer = setTimeout(() => {
-      fn(...args);
-      debounceTimer = null;
-    }, delay) as any;
-  }) as T;
-}
 
 /**
  * 异步初始化：从 chrome.storage.local 加载 coins
@@ -60,14 +43,10 @@ async function initializeCoins(): Promise<string[]> {
  */
 export async function getCoins(): Promise<string[]> {
   // 如果缓存已存在，直接返回
-  if (cachedCoins !== null) {
-    return cachedCoins;
-  }
+  if (cachedCoins !== null) return cachedCoins;
 
   // 如果正在初始化，等待初始化完成
-  if (initPromise) {
-    return initPromise;
-  }
+  if (initPromise) return initPromise;
 
   // 开始初始化
   initPromise = initializeCoins();
@@ -94,6 +73,7 @@ const debouncedPersist = debounce(async (coins: string[]) => {
   }
 }, 300); // 300ms 防抖延迟
 
+
 export async function setCoins(coins: string[]): Promise<void> {
   // 立即更新内存缓存
   cachedCoins = coins;
@@ -106,19 +86,13 @@ export async function setCoins(coins: string[]): Promise<void> {
  * 用于需要立即保存的场景
  */
 export async function persistCoinsImmediately(): Promise<void> {
-  // 清除防抖定时器
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-    debounceTimer = null;
-  }
-
   // 立即持久化
-  if (cachedCoins !== null) {
-    try {
-      await chrome.storage.local.set({ coins: cachedCoins });
-    } catch (error) {
-      console.error('[CoinsManager] 立即持久化失败:', error);
-    }
+  if (!cachedCoins) return;
+
+  try {
+    await chrome.storage.local.set({ coins: cachedCoins });
+  } catch (error) {
+    console.error('[CoinsManager] 立即持久化失败:', error);
   }
 }
 

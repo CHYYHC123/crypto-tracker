@@ -36,7 +36,7 @@ function fetchPrices(): Promise<TokenItem[]> {
 export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
   const [tokens, setTokens] = useState<TokenItem[]>([]);
-  const [skeletonLoading, setSkeletonLoading] = useState(true);
+  const [skeletonLoading, setSkeletonLoading] = useState(false);
   // 价格预计 hooks
   const { priceAlerts } = usePriceAlerts();
 

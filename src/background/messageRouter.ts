@@ -1,9 +1,15 @@
-import { getCoins, setCoins } from '@/background/coinsManager';
+import { getCoins, setCoins } from '@/background/tokens/coinsManager';
 import { setBadge } from '@/background/badge';
 import { wsManager, DataStatus } from '@/background/wsHandler';
 import { getShowTokenList, getLastUpdateTime, publishMessage, initTokenStore } from '@/background/tokenStore';
 import { connectWebSocket } from '@/background/wsHandler';
 import { TokenItem } from '@/types/index';
+
+import { DEFAULT_STOCKS } from '@/config/stocks';
+import { connectStockWS, stockWsManager } from '@/background/stocks/stockWsHandler';
+import { getStockList, getStockLastUpdateTime, throttledPublishStocks } from '@/background/stocks/stockStore';
+
+import { getAssetType } from '@/background/assetTypeManager';
 
 // ─── 类型
 
@@ -12,22 +18,32 @@ type SendResponse = (response: any) => void;
 type Handler = (message: any, sendResponse: SendResponse) => boolean | void;
 
 // ─── 各消息 Handler
-function handleGetDataStatus(_msg: any, sendResponse: SendResponse): void {
+
+/**
+ * 获取当前 WS 数据状态，根据 asset_type 选择对应的 WS 管理器
+ */
+async function handleGetDataStatus(_msg: any, sendResponse: SendResponse): Promise<void> {
+  const isStocks = (await getAssetType()) === 'stocks';
+  const manager = isStocks ? stockWsManager : wsManager;
   sendResponse({
     success: true,
-    data: wsManager.getDataStatus(),
-    isInCooldownMode: wsManager.isInCooldownMode(),
+    data: manager.getDataStatus(),
+    isInCooldownMode: manager.isInCooldownMode(),
   });
 }
 
 /**
- * 处理 REFRESH 手动刷新
- * 原 handleRefresh
+ * 处理 REFRESH 手动刷新，根据 asset_type 重连对应 WS
  */
 async function handleRefresh(_msg: any, sendResponse: SendResponse): Promise<void> {
   try {
-    const tokenList = await getCoins();
-    await connectWebSocket(tokenList);
+    const isStocks = (await getAssetType()) === 'stocks';
+    if (isStocks) {
+      await connectStockWS(DEFAULT_STOCKS);
+    } else {
+      const tokenList = await getCoins();
+      await connectWebSocket(tokenList);
+    }
     sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
   } catch {
     sendResponse({ success: false, msg: 'Refresh failed ❌' });
@@ -35,37 +51,58 @@ async function handleRefresh(_msg: any, sendResponse: SendResponse): Promise<voi
 }
 
 /**
- * 处理 CONTENT_RESYNC：content script 页面可见时同步数据，防止 WS 假死
- * 原 handleContentResync
+ * 自动刷新 → content 从不可见到可见时主动查询 WS 是否正常，根据 asset_type 选对应链路
  */
 async function handleContentResync(_msg: any, sendResponse: SendResponse): Promise<void> {
-  const status = wsManager.getDataStatus();
-  const now = Date.now();
+  const isStocks = (await getAssetType()) === 'stocks';
   const STALE_THRESHOLD = 10_000; // 10s 无数据则视为假死
+  const now = Date.now();
 
-  const lastUpdate = getLastUpdateTime();
-  const isTokenListStale = lastUpdate !== null && now - lastUpdate > STALE_THRESHOLD;
+  if (isStocks) {
+    const manager = stockWsManager;
+    const status = manager.getDataStatus();
+    const lastUpdate = getStockLastUpdateTime();
+    const isStale = lastUpdate !== null && now - lastUpdate > STALE_THRESHOLD;
 
-  if (isTokenListStale) {
-    const isStale = wsManager.detectAndHandleStaleConnection(STALE_THRESHOLD);
-    if (isStale) {
+    if (isStale && manager.detectAndHandleStaleConnection(STALE_THRESHOLD)) {
       await handleRefresh(_msg, sendResponse);
       return;
     }
+
+    const list = getStockList();
+    if ([DataStatus.LIVE, DataStatus.DEGRADED].includes(status) && list && list.length > 0) {
+      throttledPublishStocks(list);
+      return;
+    }
+
+    console.log('[Background] CONTENT_RESYNC (stocks) detected OFFLINE, trigger REFRESH');
+    await handleRefresh(_msg, sendResponse);
+    return;
   }
 
-  // WS 正常或可用 → 直接推送当前快照
+  // ── crypto 链路
+  const status = wsManager.getDataStatus();
+  const lastUpdate = getLastUpdateTime();
+  const isStale = lastUpdate !== null && now - lastUpdate > STALE_THRESHOLD;
+
+  if (isStale && wsManager.detectAndHandleStaleConnection(STALE_THRESHOLD)) {
+    await handleRefresh(_msg, sendResponse);
+    return;
+  }
+
   const list = getShowTokenList();
   if ([DataStatus.LIVE, DataStatus.DEGRADED].includes(status) && list && list.length > 0) {
     publishMessage(list);
     return;
   }
 
-  // 断线状态 → 触发重连
   console.log('[Background] CONTENT_RESYNC detected OFFLINE, trigger REFRESH');
   await handleRefresh(_msg, sendResponse);
 }
 
+/**
+ * 获取最新价格 → 15s 倒计时（popup，crypto 专属）
+ */
 function handleGetLatestPrices(_msg: any, sendResponse: SendResponse): void {
   const list = getShowTokenList();
   sendResponse({
@@ -101,8 +138,7 @@ function handleSetCoins(msg: any, sendResponse: SendResponse): boolean {
 }
 
 /**
- * 重新排序 showTokenList（不触发 WS 重连）
- * 原 REORDER_TOKENS handler
+ * 重新排序 showTokenList（不触发 WS 重连，crypto 专属）
  */
 function handleReorderTokens(msg: any, sendResponse: SendResponse): void {
   const newOrder: string[] = msg.payload?.order ?? [];
@@ -158,7 +194,7 @@ function handleShowNotification(msg: any, _sendResponse: SendResponse): void {
 // ─── 路由表
 
 const router = new Map<string, Handler>([
-  ['GET_DATA_STATUS',   handleGetDataStatus],
+  ['GET_DATA_STATUS',   (msg, res) => { handleGetDataStatus(msg, res); return true; }],
   ['CONTENT_RESYNC',    (msg, res) => { handleContentResync(msg, res); return true; }],
   ['REFRESH',           (msg, res) => { handleRefresh(msg, res); return true; }],
   ['GET_LATEST_PRICES', handleGetLatestPrices],

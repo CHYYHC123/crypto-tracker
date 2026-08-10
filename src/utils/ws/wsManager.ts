@@ -5,8 +5,6 @@ import { DataStatus } from '@/types/index';
 // Re-export DataStatus for convenience
 export { DataStatus };
 
-// ============ 类型定义 ============
-
 export interface WsManagerConfig {
   maxRetries?: number; // 最大重试次数，默认 5
   baseDelay?: number; // 基础延迟（毫秒），默认 1000
@@ -112,16 +110,15 @@ class WsManager {
       this.lastMessageAt = Date.now();
       this.startWatchdog();
 
-      // 发送订阅消息
-      if (tokenList.length > 0) {
+      // 发送订阅消息（alwaysSubscribe 为 true 时忽略 tokenList 是否为空，如 BNStock）
+      if (tokenList.length > 0 || config.alwaysSubscribe) {
         const msg = config.buildSubscribeMessage(tokenList);
-        // this.ws?.send(JSON.stringify(msg));
         if (Array.isArray(msg)) {
           msg.forEach(m => this.ws?.send(JSON.stringify(m)));
         } else {
           this.ws?.send(JSON.stringify(msg));
         }
-        console.log(`[WsManager] 已订阅 ${tokenList.length} 个币种`);
+        console.log(`[WsManager] 已发送订阅消息`);
       }
 
       // 触发回调

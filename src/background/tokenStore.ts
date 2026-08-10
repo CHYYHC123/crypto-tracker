@@ -1,9 +1,7 @@
 import { throttle } from '@/utils/index';
 import { TokenItem } from '@/types/index';
 import type { Ticker } from '@/utils/ws/parseTicker';
-import { getCoins } from '@/background/coinsManager';
-
-// ─── 状态
+import { getCoins } from '@/background/tokens/coinsManager';
 
 let showTokenList: TokenItem[] | null = null;
 let tokenMap: Map<string, TokenItem> | null = null;
@@ -13,7 +11,6 @@ let lastUpdateTime: number | null = null;
 let isInitializing = false;
 
 // ─── getter（外部只读）
-
 export function getShowTokenList(): TokenItem[] | null {
   return showTokenList;
 }
@@ -22,7 +19,6 @@ export function getLastUpdateTime(): number | null {
   return lastUpdateTime;
 }
 
-// ─── 初始化
 
 /**
  * 根据币种列表初始化 showTokenList 与 tokenMap
@@ -40,8 +36,6 @@ export function initTokenStore(tokenList: string[]): void {
   // 使用 "SYMBOL-USDT" 作为 key，匹配 WS 消息格式
   tokenMap = new Map(showTokenList.map(t => [`${t.symbol}-USDT`, t]));
 }
-
-// ─── 价格更新
 
 /**
  * 根据 ticker 更新 showTokenList 中对应币种的价格
