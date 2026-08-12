@@ -13,6 +13,7 @@ import Loading from '@/components/common/loading';
 // import ImportCoins from './ImportCoins';
 
 import { ExchangeListMap, type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { getDataSource } from '@/utils/local';
 import { exportCryptoData } from '../utils/exportData';
 // import { selectAndImportFile } from '../utils/importData';
 
@@ -32,15 +33,7 @@ const MenuCenter = () => {
   // 初始化当前选中的数据源
   const [currentDataSource, setCurrentDataSource] = useState<ExchangeType>(defaultDataSource);
   useEffect(() => {
-    const initDataSource = async () => {
-      const { data_source } = await chrome.storage.local.get('data_source');
-      if (typeof data_source === 'string' && ExchangeListMap[data_source as ExchangeType]) {
-        setCurrentDataSource(data_source as ExchangeType);
-      } else {
-        setCurrentDataSource(defaultDataSource);
-      }
-    };
-    initDataSource();
+    getDataSource().then(setCurrentDataSource);
   }, []);
 
   // 打开数据源对话框

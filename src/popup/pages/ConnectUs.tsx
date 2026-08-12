@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import CopyButton from '@/components/common/copyButton';
 import { TIPPING_ADDRESS, type TippingAddress } from '@/config/tippingAddress';
 import { formatAddress } from '@/utils';
+import { getTokenString, setTokenString } from '@/utils/local';
 // import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
 export default function ConnectUs() {
@@ -20,24 +21,21 @@ export default function ConnectUs() {
     setLicenseKey(e.target.value.trim());
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      setLicenseKey(e.currentTarget.value.trim());
-      chrome.storage.local.set({ token_string: licenseKey }, () => {
-        toast.success('License key saved successfully');
-        navigate('/');
-      });
+      const key = e.currentTarget.value.trim();
+      setLicenseKey(key);
+      await setTokenString(key);
+      toast.success('License key saved successfully');
+      navigate('/');
     }
   };
 
-  // 页面销毁的时候如果  licenseKey 存在就存入 storage
   useEffect(() => {
-    const fetchLicenseKey = async () => {
-      const { token_string } = await chrome.storage.local.get('token_string');
-      if (token_string) setLicenseKey(token_string as string);
-    };
-    fetchLicenseKey();
-  }, [licenseKey]);
+    getTokenString().then(token => {
+      if (token) setLicenseKey(token);
+    });
+  }, []);
 
   return (
     <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">

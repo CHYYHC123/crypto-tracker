@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import SubHeader from '@/popup/components/SubHeader';
 import { ExchangeListMap, type ExchangeType } from '@/config/exchangeConfig';
+import { setDataSource } from '@/utils/local';
 
 function DataSource() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ function DataSource() {
     const info = ExchangeListMap[source];
     if (info.disabled) return; // 跳过禁用的数据源
 
-    await chrome.storage.local.set({ data_source: source });
+    await setDataSource(source);
 
     toast.success(`Data source switched to ${info.name}`, { duration: 2000 });
     navigate('/');

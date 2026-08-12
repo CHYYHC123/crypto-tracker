@@ -7,6 +7,9 @@ export type TokenItem = {
   lastPrice: number | 0;
 };
 
+// 统一资产类型，推荐使用 AssetItem 替代 TokenItem
+export type { AssetItem, AssetCategory } from '@/types/asset';
+
 export interface PriceAlert {
   symbol: string;
   targetPrice: number;

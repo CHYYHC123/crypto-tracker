@@ -11,7 +11,7 @@ import { TokenSearch } from '@/popup/components/TokenSearch';
 import { EmptyState } from '@/popup/components/EmptyState';
 import { Footer } from '@/popup/components/Footer';
 
-import type { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 
 import { useBatchTokenSelect } from '@/popup/hooks/useBatchTokenSelect';
 import { usePriceAlerts } from '@/popup/hooks/usePriceAlerts';
@@ -25,7 +25,7 @@ import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
 // 异步 fetcher，封装 sendMessage
-function fetchPrices(): Promise<TokenItem[]> {
+function fetchPrices(): Promise<AssetItem[]> {
   return new Promise(resolve => {
     chrome.runtime.sendMessage({ type: 'GET_LATEST_PRICES' }, resp => {
       resolve(resp?.data || []);
@@ -35,7 +35,7 @@ function fetchPrices(): Promise<TokenItem[]> {
 
 export default function PopupContent() {
   const [countdown, setCountdown] = useState(10);
-  const [tokens, setTokens] = useState<TokenItem[]>([]);
+  const [tokens, setTokens] = useState<AssetItem[]>([]);
   const [skeletonLoading, setSkeletonLoading] = useState(false);
   // 价格预计 hooks
   const { priceAlerts } = usePriceAlerts();
@@ -45,7 +45,7 @@ export default function PopupContent() {
     data: tokenList,
     isLoading,
     mutate
-  } = useSWR<TokenItem[]>('token-prices', fetchPrices, {
+  } = useSWR<AssetItem[]>('token-prices', fetchPrices, {
     revalidateOnFocus: true, // 自动聚焦时刷新，体验更好
     fallbackData: [] // 默认返回一个空数组
   });
@@ -97,10 +97,10 @@ export default function PopupContent() {
 
   // ActionMenu 状态
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [menuToken, setMenuToken] = useState<TokenItem | null>(null);
+  const [menuToken, setMenuToken] = useState<AssetItem | null>(null);
   const open = Boolean(anchorEl);
 
-  const handleOpen = (e: React.MouseEvent<HTMLElement>, tokenItme: TokenItem) => {
+  const handleOpen = (e: React.MouseEvent<HTMLElement>, tokenItme: AssetItem) => {
     if (removing) return;
     setAnchorEl(e.currentTarget);
     setMenuToken(tokenItme);
@@ -113,7 +113,7 @@ export default function PopupContent() {
 
   // 设置预警价格
   const [showPriceAlert, setShowPriceAlert] = useState(false);
-  const [alertToken, setAlertToken] = useState<TokenItem | null>(null);
+  const [alertToken, setAlertToken] = useState<AssetItem | null>(null);
 
   const setPriceAlert = () => {
     if (!menuToken) return;
@@ -123,7 +123,7 @@ export default function PopupContent() {
   };
 
   // 点击 AlertBadge 唤起弹窗
-  const handleAlertBadgeClick = (token: TokenItem) => {
+  const handleAlertBadgeClick = (token: AssetItem) => {
     setAlertToken(token);
     setShowPriceAlert(true);
   };
@@ -144,7 +144,7 @@ export default function PopupContent() {
         ) : (
           <div ref={listRef} className="mt-5 overflow-auto flex-1 scrollbar-hide relative">
             {Array.isArray(tokens) && tokens.length > 0 ? (
-              tokens.map((item: TokenItem) => {
+              tokens.map((item: AssetItem) => {
                 // 查找该币种对应的预警
                 const alert = priceAlerts.find(a => a.symbol.toUpperCase() === item.symbol.toUpperCase());
                 return (

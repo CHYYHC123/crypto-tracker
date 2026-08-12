@@ -1,11 +1,11 @@
-import type { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 import { verifyToken } from '@/utils/decryption';
+import { getTokenString } from '@/utils/local';
+
 const MAX_COUNT = 10;
 
-// 校验最大关注币种数量10个
-export async function validateCount(cyrptoList: TokenItem[]) {
-  const { token_string } = await chrome.storage.local.get('token_string');
-  const tokenString = token_string as string;
+export async function validateCount(cyrptoList: AssetItem[]) {
+  const tokenString = await getTokenString();
 
   if (tokenString) {
     const isVerified = await verifyToken(tokenString);

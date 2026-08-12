@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import type { TokenItem, PriceAlert } from '@/types/index';
+import type { AssetItem as AssetItemType } from '@/types/asset';
+import type { PriceAlert } from '@/types/index';
 import { Ellipsis } from 'lucide-react';
 
 // import { cn } from '@/lib/utils';
@@ -10,10 +11,10 @@ import AlertBadge from '@/popup/components/AlertBadge';
 interface AssetItemProps {
   className?: string;
   removing: boolean;
-  dataInfo: TokenItem;
+  dataInfo: AssetItemType;
   alertInfo?: PriceAlert;
-  onAlertClick?: (token: TokenItem) => void;
-  onMenuClick: (e: React.MouseEvent<HTMLElement>, token: TokenItem) => void;
+  onAlertClick?: (token: AssetItemType) => void;
+  onMenuClick: (e: React.MouseEvent<HTMLElement>, token: AssetItemType) => void;
 }
 
 // 获取变化颜色
@@ -43,7 +44,7 @@ const AssetItem: React.FC<AssetItemProps> = ({ removing, dataInfo, alertInfo, on
   return (
     <motion.div layout whileHover={{ scale: 1 }} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition flex-1 min-w-0" transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], layout: { duration: 0.3 } }}>
       <div className="flex items-center">
-        <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{dataInfo?.icon}</div>
+        <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{dataInfo?.symbol?.charAt(0)}</div>
         <div className="ml-2 min-w-15">
           <div className="text-[13px] font-bold">{dataInfo?.symbol}</div>
           {alertInfo ? <AlertBadge AlertInfo={alertInfo} onClick={() => onAlertClick?.(dataInfo)} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{dataInfo.id}</div>}

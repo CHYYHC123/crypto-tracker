@@ -17,7 +17,7 @@ import { usePriceAlerts } from '@/content/hooks/usePriceAlerts';
 import { useGlobalAlerts } from '@/content/hooks/useGlobalAlerts';
 
 // type
-import { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 
 // dnd-kit
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -26,7 +26,7 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 
 export default function ContentMain() {
   const [collapsed, setCollapsed] = useState(true);
-  const [tokens, setTokens] = useState<TokenItem[]>([]);
+  const [tokens, setTokens] = useState<AssetItem[]>([]);
   const priceAlerts = usePriceAlerts();
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
@@ -61,25 +61,20 @@ export default function ContentMain() {
   useEffect(() => {
     // 监听 background.js 发来的消息
     function handleMessage(msg: any) {
-      if (msg.type === 'UPDATE_PRICE' && msg.data) {
+      if (msg.type === 'UPDATE_ASSET_PRICE' && msg.data) {
         setTokens(prevTokens => {
-          // console.log('msg.data', msg.data);
-          // 如果是首次加载或数量变化，直接使用新数据
           if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
 
-          // 优化：使用 Map 将查找复杂度从 O(n*m) 降为 O(n)
-          const updatedMap = new Map<string, TokenItem>();
-          msg.data.forEach((token: TokenItem) => {
+          const updatedMap = new Map<string, AssetItem>();
+          msg.data.forEach((token: AssetItem) => {
             updatedMap.set(token.symbol.toUpperCase(), token);
           });
 
-          // 保持当前顺序，只更新价格
           let hasChanges = false;
           const newTokens = prevTokens.map(token => {
             const updated = updatedMap.get(token.symbol.toUpperCase());
-            if (!updated) return token; // 找不到对应 token，保持原样
+            if (!updated) return token;
 
-            // 优化：只有价格、涨跌幅或 lastPrice 真正变化时才创建新对象
             const priceChanged = updated.price !== token.price;
             const changeChanged = updated.change !== token.change;
             const lastPriceChanged = updated.lastPrice !== token.lastPrice;
@@ -89,11 +84,9 @@ export default function ContentMain() {
               return { ...token, price: updated.price, change: updated.change, lastPrice: updated.lastPrice };
             }
 
-            // 数据没有变化，保持原对象引用（有利于 React.memo）
             return token;
           });
 
-          // 优化：如果所有 token 都无变化，直接返回 prevTokens，避免触发 setState
           return hasChanges ? newTokens : prevTokens;
         });
       }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import type { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 
 /** Footer batchSelect prop 的类型，由 useBatchTokenSelect 构造后直接传入 */
 export interface BatchSelectProps {
@@ -47,7 +47,7 @@ async function setCoins(coins: string[]): Promise<void> {
 }
 
 interface Options {
-  tokens: TokenItem[];
+  tokens: AssetItem[];
   setCountdown: (n: number) => void;
   mutate: () => Promise<any>;
 }

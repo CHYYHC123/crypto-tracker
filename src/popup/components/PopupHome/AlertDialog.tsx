@@ -8,12 +8,14 @@ import ConfirmDialog from '@/components/common/confirm-dialog';
 import Tooltip from '@/components/common/tooltip';
 import PriceAlertInput from '@/popup/components/PriceAlter';
 
-import type { TokenItem, PriceAlert } from '@/types';
+import type { AssetItem } from '@/types/asset';
+import type { PriceAlert } from '@/types';
 import type { Direction } from '@/popup/components/PriceAlter';
+import { getPriceAlerts, setPriceAlerts } from '@/utils/local';
 
 interface AlertDialogProps {
   open: boolean;
-  token: TokenItem | null;
+  token: AssetItem | null;
   onClose: () => void;
 }
 
@@ -24,8 +26,7 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
   useEffect(() => {
     if (!open || !token) return;
     const loadAlert = async () => {
-      const result = await chrome.storage.local.get(['price_alerts']);
-      const alerts = (result.price_alerts as PriceAlert[]) ?? [];
+      const alerts = (await getPriceAlerts()) ?? [];
       const current = alerts.find(item => item.symbol.toUpperCase() === token.symbol.toUpperCase());
       if (current) {
         setPrice(current.targetPrice);
@@ -52,8 +53,7 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
       updatedAt: Date.now()
     };
     try {
-      const result = await chrome.storage.local.get(['price_alerts']);
-      const oldAlerts = (result.price_alerts as PriceAlert[]) ?? [];
+      const oldAlerts = (await getPriceAlerts()) ?? [];
       const index = oldAlerts.findIndex(item => item.symbol.toUpperCase() === token.symbol.toUpperCase());
       let updatedAlerts: PriceAlert[];
       if (index > -1) {
@@ -68,9 +68,7 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
       } else {
         updatedAlerts = [...oldAlerts, newAlert];
       }
-      await chrome.storage.local.set({
-        price_alerts: updatedAlerts
-      });
+      await setPriceAlerts(updatedAlerts);
       toast.success(`Price alert set for ${token.symbol}`);
       onClose();
     } catch (error) {

@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { formatNumberWithCommas } from '@/utils/index';
 import { TokenItem, PriceAlert } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 import AlertBadge from '@/popup/components/AlertBadge';
 
 
@@ -16,7 +17,7 @@ export const CoinsContent = ({ className, ...props }: CoinsContentProps) => <mot
 
 // 可排序的币种卡片组件
 interface SortableCoinItemProps {
-  coin: TokenItem;
+  coin: AssetItem;
   priceAlerts: PriceAlert[];
 }
 
@@ -45,7 +46,7 @@ function arePropsEqual(prevProps: SortableCoinItemProps, nextProps: SortableCoin
     if (prevAlert.direction !== nextAlert.direction) return false;
   }
 
-  // 其他属性（symbol, icon 等）变化不影响渲染，因为它们在组件生命周期内不会改变
+  // 其他属性（symbol 等）变化不影响渲染，因为它们在组件生命周期内不会改变
   return true;
 }
 
@@ -80,7 +81,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
       </div>
 
       <div className="flex items-center gap-2 flex-1">
-        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
+        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.symbol.charAt(0)}</div>
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
           {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{coin.symbol}</div>}

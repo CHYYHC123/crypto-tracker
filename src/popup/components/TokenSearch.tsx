@@ -7,8 +7,9 @@ import Input from '@/components/common/input';
 import Button from '@/components/common/button';
 import Dialog from '@/components/common/dialog';
 
-import type { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 import { type ExchangeType, defaultDataSource, POPULAR_TOKENS } from '@/config/exchangeConfig';
+import { getDataSource } from '@/utils/local';
 import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { PLATFORM } from '@/utils/index';
 import { validateCount } from '@/popup/utils/validateCount';
@@ -46,7 +47,7 @@ async function setCoins(coins: string[]): Promise<void> {
 }
 
 interface TokenSearchProps {
-  tokens: TokenItem[];
+  tokens: AssetItem[];
   onTokenAdded?: () => void;
 }
 
@@ -73,8 +74,7 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
       toast.error('Max tracked cryptos reached. Contact admin to unlock.');
       return;
     }
-    const { data_source } = await chrome.storage.local.get('data_source');
-    setCurrentDataSource((data_source as ExchangeType) || defaultDataSource);
+    setCurrentDataSource(await getDataSource());
     setDialogSearch('');
     setShowAddDialog(true);
   };

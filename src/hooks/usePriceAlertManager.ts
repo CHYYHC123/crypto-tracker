@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { showPriceUp, showPriceDown } from '@/components/CustomToaster/index';
-import type { TokenItem as BaseTokenItem, PriceAlert } from '@/types/index';
+import type { AssetItem as BaseAssetItem, } from '@/types/asset';
+import type { PriceAlert } from '@/types/index';
 import { useQueue } from './useQueue';
+import { getPriceAlerts } from '@/utils/local';
 
 export type AlertMessage = {
   id: string; // 唯一 ID
@@ -13,7 +15,7 @@ export type AlertMessage = {
 // Chrome 消息类型定义
 type ChromeMessage = { type: 'PRICE_ALERTS_UPDATED' } | { type: string; [key: string]: unknown };
 
-export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
+export function usePriceAlertManager(latestTokens: BaseAssetItem[]) {
   // 使用 useQueue 管理队列，无需手动维护状态
   const { queue: alertQueue, addBatch, removeBatch, filter } = useQueue<AlertMessage>([]);
 
@@ -24,43 +26,34 @@ export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
   const lastPushTimeBySymbolRef = useRef<Record<string, number>>({});
 
   // 初始化读取 popup 本地预警配置
-  const loadAlerts = useCallback(() => {
-    chrome.storage.local.get('price_alerts', res => {
-      // 错误处理
-      if (chrome.runtime.lastError) {
-        console.error('[usePriceAlertManager] Failed to load alerts:', chrome.runtime.lastError);
-        return;
-      }
-
-      const priceAlerts = (res.price_alerts as PriceAlert[]) || [];
+  const loadAlerts = useCallback(async () => {
+    try {
+      const priceAlerts = (await getPriceAlerts()) ?? [];
       const map: Record<string, PriceAlert[]> = {};
       const newAlertIds = new Set<string>();
 
-      priceAlerts?.forEach(alert => {
-        // 数据验证
+      priceAlerts.forEach(alert => {
         if (!alert?.symbol || typeof alert.targetPrice !== 'number') {
           console.warn('[usePriceAlertManager] Invalid alert data:', alert);
           return;
         }
 
-        // 统一使用大写作为 key，确保大小写一致
         const symbolKey = alert.symbol.toUpperCase();
         if (!map[symbolKey]) map[symbolKey] = [];
         map[symbolKey].push(alert);
 
-        // 收集新的预警 ID（用于清理 triggeredAlertIdsRef）
-        // 使用 symbol + targetPrice + direction + createdAt 作为唯一标识
         const alertId = `${symbolKey}-${alert.targetPrice}-${alert.direction}-${alert.createdAt}`;
         newAlertIds.add(alertId);
       });
 
       setAlertsMap(map);
 
-      // 清理 triggeredAlertsRef 中已删除的预警 ID
       triggeredAlertsRef.current.forEach((_, id) => {
         if (!newAlertIds.has(id)) triggeredAlertsRef.current.delete(id);
       });
-    });
+    } catch (error) {
+      console.error('[usePriceAlertManager] Failed to load alerts:', error);
+    }
   }, []);
 
   // 监听 PRICE_ALERTS_UPDATED 预警配置
@@ -90,7 +83,7 @@ export function usePriceAlertManager(latestTokens: BaseTokenItem[]) {
     const now = Date.now();
     const newAlerts: AlertMessage[] = [];
 
-    latestTokens.forEach((token: BaseTokenItem) => {
+    latestTokens.forEach((token: BaseAssetItem) => {
       if (!token?.price || !token?.symbol) return;
 
       const symbol = token.symbol.toUpperCase();

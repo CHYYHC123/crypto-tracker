@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { TokenItem } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 import { throttle } from '@/utils/index';
 import { initGlobalAlertsCache, getEffectiveThresholds, recordTrigger } from '@/background/globalAlertsManager';
 
@@ -10,7 +10,7 @@ const COOLDOWN = 15 * 60 * 1000;
  * 职责：token.change 与 effectiveBull/effectiveBear 比较、冷却期管理、触发通知
  * settings 加载 / triggerCount 读写衰减 均由 globalAlertsManager 管理
  */
-export function useGlobalAlerts(tokens: TokenItem[]) {
+export function useGlobalAlerts(tokens: AssetItem[]) {
   // 记录已触发预警的币种和时间，防止短时间内重复触发
   const triggeredRef = useRef<Map<string, number>>(new Map());
 
@@ -20,7 +20,7 @@ export function useGlobalAlerts(tokens: TokenItem[]) {
 
   const throttledCheck = useMemo(
     () =>
-      throttle((currentTokens: TokenItem[]) => {
+      throttle((currentTokens: AssetItem[]) => {
         if (!currentTokens.length) return;
 
         const { enabled, effectiveBull, effectiveBear } = getEffectiveThresholds();

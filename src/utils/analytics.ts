@@ -3,23 +3,11 @@
 const GA_MEASUREMENT_ID = 'G-9XVXC9CHGR';
 const GA_API_SECRET = 'YOUR_API_SECRET'; // 替换为你的 API Secret
 
-async function getClientId(): Promise<string> {
-  return new Promise(resolve => {
-    chrome.storage.local.get('ga_client_id', result => {
-      if (result.ga_client_id) {
-        resolve(result.ga_client_id as string);
-      } else {
-        const newId = crypto.randomUUID();
-        chrome.storage.local.set({ ga_client_id: newId });
-        resolve(newId);
-      }
-    });
-  });
-}
+import { getGaClientId } from '@/utils/local';
 
 export async function trackEvent(eventName: string, params?: Record<string, unknown>) {
   try {
-    const clientId = await getClientId();
+    const clientId = await getGaClientId();
     await fetch(
       `https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`,
       {
