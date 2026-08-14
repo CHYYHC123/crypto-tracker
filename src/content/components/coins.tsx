@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import Logo from '@/components/common/logo';
 import { motion } from 'framer-motion';
 import type { ComponentProps } from 'react';
 import { GripVertical } from 'lucide-react';
@@ -6,10 +7,9 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { formatNumberWithCommas } from '@/utils/index';
-import { TokenItem, PriceAlert } from '@/types/index';
+import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
 import AlertBadge from '@/popup/components/AlertBadge';
-
 
 export type CoinsContentProps = ComponentProps<typeof motion.div>;
 
@@ -81,7 +81,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
       </div>
 
       <div className="flex items-center gap-2 flex-1">
-        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.symbol.charAt(0)}</div>
+        <Logo coin={coin} />
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
           {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{coin.symbol}</div>}
@@ -94,5 +94,3 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
     </div>
   );
 }, arePropsEqual);
-
-

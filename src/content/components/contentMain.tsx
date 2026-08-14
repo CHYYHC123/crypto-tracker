@@ -189,7 +189,7 @@ export default function ContentMain() {
                   <div className="space-y-2">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleSortStart} onDragEnd={handleSortEnd}>
                       <SortableContext items={tokens.map(t => t.symbol)} strategy={verticalListSortingStrategy}>
-                        {tokens?.map((coin: TokenItem) => (
+                        {tokens?.map((coin: AssetItem) => (
                           <SortableCoinItem key={coin.symbol} coin={coin} priceAlerts={priceAlerts} />
                         ))}
                       </SortableContext>
@@ -201,7 +201,7 @@ export default function ContentMain() {
 
             {/* 固定在底部的 Footer */}
             {!collapsed && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <CoinsFooter status={status} onRefresh={refreshData} />
               </div>
             )}

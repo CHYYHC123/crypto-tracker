@@ -6,7 +6,7 @@ import { formatNumberWithCommas } from '@/utils/index';
 import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
 import AlertBadge from '@/popup/components/AlertBadge';
-
+import Logo from '@/components/common/logo';
 // 头部组件
 interface CoinsHeaderProps {
   /** 网络状态 */
@@ -49,7 +49,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
       {collapsed && displayToken ? (
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{displayToken.symbol.charAt(0)}</div>
+            <Logo coin={displayToken} />
             <div className="ml-2">
               <div className="text-xs font-medium">{displayToken.symbol}</div>
               {currentAlert ? <AlertBadge AlertInfo={currentAlert} /> : <div className="text-[10px] opacity-60">{displayToken.id}</div>}

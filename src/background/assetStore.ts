@@ -7,7 +7,6 @@ let lastUpdateTime: number | null = null;
 let isInitializing = false;
 
 // ─── Getters
-
 export function getAssetList(): AssetItem[] | null {
   return assetList;
 }
@@ -21,13 +20,15 @@ export function getAssetLastUpdateTime(): number | null {
  * items 可以是仅含 symbol/category 的最小结构，price 等字段默认 0
  */
 export function initAssetStore(items: Pick<AssetItem, 'id' | 'symbol' | 'category'>[]): void {
+  console.log('items', items);
+
   assetList = items.map(item => ({
     id: item.id,
     symbol: item.symbol,
     category: item.category,
     price: 0,
     change: 0,
-    lastPrice: 0,
+    lastPrice: 0
   }));
 
   assetMap = new Map(assetList.map(a => [a.symbol.toUpperCase(), a]));

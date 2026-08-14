@@ -1,10 +1,12 @@
 import { wsManager, DataStatus } from '@/utils/ws/wsManager';
 import { parseWSMessage } from '@/background/tokens/parseTicker';
-import { applyAssetUpdate, throttledPublishAssets, initAssetStore, triggerSelfHeal, getAssetList } from '@/background/assetStore';
+import { applyAssetUpdate, throttledPublishAssets, publishAssets, initAssetStore, triggerSelfHeal, getAssetList } from '@/background/assetStore';
 
 import { getAssetType, getDataSource } from '@/utils/local';
 import { getCoins } from '@/background/tokens/coinsManager';
 import { DEFAULT_STOCKS } from '@/config/stocks';
+import { getBatchPrice } from '@/background/stocks/batchPrice';
+import type { AssetItem } from '@/types/asset';
 
 // 广播 WS 链接状态
 function broadcastWSStatus(status: DataStatus): void {
@@ -69,10 +71,45 @@ async function connectCryptoWS(): Promise<void> {
 
 /**
  * 建立 Stock WebSocket 连接，初始化 Store
+ * 连接前先批量拉取快照价格，避免 WS 数据到来前 UI 显示全 0
  */
 async function connectStockWS(): Promise<void> {
   const symbolList = DEFAULT_STOCKS;
+  const symbolSet = new Set(symbolList.map(s => s.toUpperCase()));
+
+  // 1. 先用空价格初始化 Store
   initAssetStore(symbolList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'stock' })));
+
+  // 2. 批量拉取快照价格，预填充 Store
+  try {
+    const rawList = await getBatchPrice(symbolSet);
+    if (rawList.length > 0) {
+      const items: AssetItem[] = rawList.map(d => {
+        const symbol = d.ac.replace(/^EQ_/, '').toUpperCase();
+        const price = parseFloat(d.c) || 0;
+        const prevClose = parseFloat(d.pc) || 0;
+        const change = prevClose > 0
+          ? parseFloat(((price - prevClose) / prevClose * 100).toFixed(2))
+          : 0;
+        return {
+          id: symbol.toLowerCase(),
+          symbol,
+          category: 'stock',
+          price,
+          change,
+          lastPrice: 0,
+          prevClose,
+          marketPhase: d.mp,
+        };
+      });
+      const updated = applyAssetUpdate(items);
+      if (updated) publishAssets(updated);
+    }
+  } catch (err) {
+    console.warn('[StockWS] 批量快照价格拉取失败，跳过预填充:', err);
+  }
+
+  // 3. 建立 WS 连接，后续实时推送覆盖快照数据
   await wsManager.connect('BNStock', []);
 }
 

@@ -36,6 +36,8 @@ export default defineManifest({
     'wss://wspri.okx.com/*',
     'wss://api.gateio.ws/*',
     'wss://stream.binance.com/*',
-    'https://www.google-analytics.com/*'
+    'https://www.google-analytics.com/*',
+    'https://bin.bnbstatic.com/*',
+    'https://www.binance.com/*'
   ]
 });

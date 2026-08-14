@@ -19,7 +19,7 @@ import { useAutoScroll } from '@/popup/hooks/useAutoScroll';
 
 // import { useAssetType } from '@/popup/hooks/useAssetType';
 
-import AssetItem from '@/popup/components/PopupHome/AssetItem';
+import AssetSubItem from '@/popup/components/PopupHome/AssetItem';
 import CheckBox from '@/popup/components/PopupHome/Checkbox';
 import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
@@ -151,7 +151,7 @@ export default function PopupContent() {
                   <div key={item.id} className="flex items-center">
                     <CheckBox visible={batchSelect.showCheckboxes} checked={selectedTokens.has(item.symbol)} onChange={checked => handleToggleToken(item.symbol, checked)} />
 
-                    <AssetItem removing={removing} dataInfo={item} alertInfo={alert} onAlertClick={handleAlertBadgeClick} onMenuClick={handleOpen} />
+                    <AssetSubItem removing={removing} dataInfo={item} alertInfo={alert} onAlertClick={handleAlertBadgeClick} onMenuClick={handleOpen} />
                   </div>
                 );
               })

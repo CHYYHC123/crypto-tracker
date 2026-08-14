@@ -6,10 +6,7 @@ import { useDataStatus } from '@/hooks/useDataStatus';
 // import { ListChecks, X } from 'lucide-react';
 import AssetClasses from '@/popup/components/AssetClasses';
 
-interface HeaderProps {
-  // showCheckboxes?: boolean;
-  // onToggleCheckboxes?: () => void;
-}
+interface HeaderProps {}
 export const Header: React.FC<HeaderProps> = () => {
   // 网络状态
   const status = useDataStatus();
