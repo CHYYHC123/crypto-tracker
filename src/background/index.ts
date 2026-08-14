@@ -1,7 +1,6 @@
 /**
  * @fileoverview [Background SW 核心入口]
  * 职责：负责 Extension 后台生命周期监听、WebSockets 保活机制及事件分发协调。
- * 
  */
 
 import { initGlobalAlerts } from '@/background/globalAlertsManager';
@@ -11,26 +10,11 @@ import { isWsZombie } from '@/utils/ws/zombieDect';
 
 import { connectWS, setupWSCallbacks, disconnectWS } from '@/background/assetWsHandler';
 
-// import { getAssetType } from '@/utils/local';
-// import { getCoins } from '@/background/tokens/coinsManager';
-// import { DEFAULT_STOCKS } from '@/config/stocks';
-
 // 注册 WS 回调 - 内部区分 AssetType 类型
 setupWSCallbacks();
 
 // 第一次安装或更新时 触发
 chrome.runtime.onInstalled.addListener(async () => {
-  // const assetType = await getAssetType();
-  // console.log('assetType', assetType);
-
-  // if (assetType === 'stocks') {
-  //   await connectStockWS(DEFAULT_STOCKS);
-  // } else {
-  //   const tokenList = await getCoins();
-  //   await connectCryptoWS(tokenList);
-  //
-  // }
-
   await connectWS();
   // 全局预警
   initGlobalAlerts();
@@ -42,10 +26,6 @@ chrome.storage.onChanged.addListener(onStorageChanged);
 
 // 监听系统空闲状态变化
 chrome.idle.onStateChanged.addListener(async newState => {
-  // const assetType = await getAssetType();
-  // const isStocks = assetType === 'stocks';
-  // const manager = isStocks ? stockWsManager : cryptoWsManager;
-
   // 这里可能存在 Bug 会不会断开后重新连接
   if (newState === 'locked') {
     disconnectWS();
