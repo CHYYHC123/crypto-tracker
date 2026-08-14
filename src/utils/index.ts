@@ -74,7 +74,7 @@ export function throttle<T extends (...args: any[]) => void>(fn: T, limit: numbe
  * @param decimalPlaces 保留的小数位数（默认2位）
  * @returns 格式化后的字符串，例如 12345.678 -> "12,345.68"
  */
-export function formatNumberWithCommas(number: number, decimalPlaces = 2): string {
+export function formatNumWithCommas(number: number, decimalPlaces = 2): string {
   if (isNaN(number) || number === null || !number) return '0';
   // 对非常小的数值做特殊处理
   if (Math.abs(number) > 1) {
@@ -132,6 +132,25 @@ export function queryTokenLocal(symbol: string, platform?: number): boolean {
  */
 export function getTokenPlatform(symbol: string): number {
   return TOKEN_MAP.get(symbol.toUpperCase()) ?? 0;
+}
+
+/**
+ * 根据涨跌幅返回对应的 Tailwind 文字颜色 class
+ * @example getChangeColorClass(2.5) → 'text-emerald-400'
+ */
+export function getChangeColorClass(change?: number | null): string {
+  if (change == null) return 'text-gray-400';
+  return change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+}
+
+/**
+ * 格式化涨跌幅百分比，null/undefined 时返回 '—'
+ * @example formatChange(2.5) → '+2.5%'  formatChange(-1.2) → '-1.2%'
+ */
+export function formatChange(change?: number | null): string {
+  if (change == null) return '—';
+  const prefix = change >= 0 ? '+' : '';
+  return `${prefix}${change}%`;
 }
 
 /**

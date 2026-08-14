@@ -1,15 +1,16 @@
 import { memo } from 'react';
+import type { ComponentProps } from 'react';
 import Logo from '@/components/common/logo';
 import { motion } from 'framer-motion';
-import type { ComponentProps } from 'react';
+
 import { GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { formatNumberWithCommas } from '@/utils/index';
+import { formatNumWithCommas, formatChange, getChangeColorClass } from '@/utils/index';
 import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
-import AlertBadge from '@/popup/components/AlertBadge';
+import AssetSubInfo from '@/components/common/AssetSubInfo';
 
 export type CoinsContentProps = ComponentProps<typeof motion.div>;
 
@@ -84,12 +85,12 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
         <Logo coin={coin} />
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
-          {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{coin.symbol}</div>}
+          <AssetSubInfo coin={coin} alert={alert} />
         </div>
       </div>
       <div className="text-right mr-1">
-        <div className="text-xs font-semibold">{formatNumberWithCommas(coin.price ?? 0)}</div>
-        <div className={`text-[10px] ${coin.change === null ? 'text-gray-400' : coin.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{coin.change === null ? '—' : coin.change >= 0 ? '+' + coin.change + '%' : coin.change + '%'}</div>
+        <div className="text-xs font-semibold">{formatNumWithCommas(coin.price ?? 0)}</div>
+        <div className={`text-[10px] ${getChangeColorClass(coin.change)}`}>{formatChange(coin.change)}</div>
       </div>
     </div>
   );

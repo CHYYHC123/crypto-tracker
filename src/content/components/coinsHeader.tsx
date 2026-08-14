@@ -2,11 +2,11 @@ import { memo, useMemo } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { DataStatus } from '@/types/index';
 import NetworkState from '@/content/components/networkState';
-import { formatNumberWithCommas } from '@/utils/index';
+import { formatNumWithCommas } from '@/utils/index';
 import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
-import AlertBadge from '@/popup/components/AlertBadge';
 import Logo from '@/components/common/logo';
+import AssetSubInfo from '@/components/common/AssetSubInfo';
 // 头部组件
 interface CoinsHeaderProps {
   /** 网络状态 */
@@ -52,7 +52,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
             <Logo coin={displayToken} />
             <div className="ml-2">
               <div className="text-xs font-medium">{displayToken.symbol}</div>
-              {currentAlert ? <AlertBadge AlertInfo={currentAlert} /> : <div className="text-[10px] opacity-60">{displayToken.id}</div>}
+              <AssetSubInfo coin={displayToken} alert={currentAlert} />
             </div>
           </div>
 
@@ -62,7 +62,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
             </div>
           ) : (
             <div className="mr-3 text-right">
-              {displayToken.price && <div className="text-xs font-semibold">{formatNumberWithCommas(displayToken.price)}</div>}
+              {displayToken.price && <div className="text-xs font-semibold">{formatNumWithCommas(displayToken.price)}</div>}
               <div className={`text-[10px] ${changeDisplay?.className}`}>{changeDisplay?.text ?? '0%'}</div>
             </div>
           )}

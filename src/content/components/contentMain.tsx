@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -15,6 +15,8 @@ import { useDataStatus } from '@/hooks/useDataStatus';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { usePriceAlerts } from '@/content/hooks/usePriceAlerts';
 import { useGlobalAlerts } from '@/content/hooks/useGlobalAlerts';
+import { useAssetTokens } from '@/content/hooks/useAssetTokens';
+import { useContentResync } from '@/content/hooks/useContentResync';
 
 // type
 import type { AssetItem } from '@/types/asset';
@@ -26,7 +28,8 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 
 export default function ContentMain() {
   const [collapsed, setCollapsed] = useState(true);
-  const [tokens, setTokens] = useState<AssetItem[]>([]);
+  const [tokens, setTokens] = useAssetTokens();
+  useContentResync();
   const priceAlerts = usePriceAlerts();
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
@@ -57,67 +60,6 @@ export default function ContentMain() {
     })
   );
 
-  // 监听价格更新
-  useEffect(() => {
-    // 监听 background.js 发来的消息
-    function handleMessage(msg: any) {
-      if (msg.type === 'UPDATE_ASSET_PRICE' && msg.data) {
-        setTokens(prevTokens => {
-          if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
-
-          const updatedMap = new Map<string, AssetItem>();
-          msg.data.forEach((token: AssetItem) => {
-            updatedMap.set(token.symbol.toUpperCase(), token);
-          });
-
-          let hasChanges = false;
-          const newTokens = prevTokens.map(token => {
-            const updated = updatedMap.get(token.symbol.toUpperCase());
-            if (!updated) return token;
-
-            const priceChanged = updated.price !== token.price;
-            const changeChanged = updated.change !== token.change;
-            const lastPriceChanged = updated.lastPrice !== token.lastPrice;
-
-            if (priceChanged || changeChanged || lastPriceChanged) {
-              hasChanges = true;
-              return { ...token, price: updated.price, change: updated.change, lastPrice: updated.lastPrice };
-            }
-
-            return token;
-          });
-
-          return hasChanges ? newTokens : prevTokens;
-        });
-      }
-    }
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    // 卸载组件时移除监听
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleMessage);
-    };
-  }, []);
-
-  /**
-   * 当页面从不可见到可见时触发
-   */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    setTimeout(() => {
-      chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
-    }, 3000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
   // 排序开始
   const handleSortStart = () => {
     setIsSorting(true);
@@ -147,15 +89,8 @@ export default function ContentMain() {
   // 手动刷新
   const refreshData = () => {
     chrome.runtime.sendMessage({ type: 'REFRESH', payload: { falg: true } }, response => {
-      if (response.success) {
-        toast.success(response?.msg, {
-          duration: 2000
-        });
-      } else {
-        toast.error(response?.msg, {
-          duration: 2000
-        });
-      }
+      const toastType = response.success ? 'success' : 'error';
+      toast[toastType](response?.msg, { duration: 2000 });
     });
   };
 

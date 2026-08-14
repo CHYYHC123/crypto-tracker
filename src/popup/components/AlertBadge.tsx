@@ -1,5 +1,5 @@
 // 携带铃铛 🔔 
-import { formatNumberWithCommas } from '@/utils/index';
+import { formatNumWithCommas } from '@/utils/index';
 import { cn } from '@/lib/utils';
 import Tooltip from '@/components/common/tooltip';
 import { PriceAlert } from '@/types/index';
@@ -53,7 +53,7 @@ const AlertBadge = ({ AlertInfo, onClick }: AlertBadgeProps) => {
         }}
       >
         {arrowIcon}
-        {direction === 'above' ? 'Above' : 'Below'} ${formatNumberWithCommas(targetPrice)}
+        {direction === 'above' ? 'Above' : 'Below'} ${formatNumWithCommas(targetPrice)}
       </div>
     </div>
   );

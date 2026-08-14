@@ -3,11 +3,11 @@ import type { AssetItem as AssetItemType } from '@/types/asset';
 import type { PriceAlert } from '@/types/index';
 import { Ellipsis } from 'lucide-react';
 
-// import { cn } from '@/lib/utils';
-import { formatNumberWithCommas } from '@/utils/index';
+import { cn } from '@/lib/utils';
+import { formatNumWithCommas, formatChange, getChangeColorClass } from '@/utils/index';
 
-import AlertBadge from '@/popup/components/AlertBadge';
 import Logo from '@/components/common/logo';
+import AssetSubInfo from '@/components/common/AssetSubInfo';
 
 interface AssetItemProps {
   className?: string;
@@ -18,28 +18,13 @@ interface AssetItemProps {
   onMenuClick: (e: React.MouseEvent<HTMLElement>, token: AssetItemType) => void;
 }
 
-// 获取变化颜色
-const getChangeColor = (change?: number | null): string => {
-  if (change == null) return '#999';
-  return change >= 0 ? '#16a34a' : '#ef4444';
-};
-
-// 格式化变化百分比
-const formatChange = (change?: number | null): string => {
-  if (change == null) return '—';
-  const prefix = change >= 0 ? '+' : '';
-  return `${prefix}${change}%`;
-};
-
 // 格式化价格
 const formatPrice = (price?: number | null): string => {
   if (price == null) return '-';
-  return formatNumberWithCommas(price);
+  return formatNumWithCommas(price);
 };
 
 const AssetItem: React.FC<AssetItemProps> = ({ removing, dataInfo, alertInfo, onAlertClick, onMenuClick }) => {
-  const chColor = getChangeColor(dataInfo?.change);
-
   return (
     <motion.div layout whileHover={{ scale: 1 }} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition flex-1 min-w-0" transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], layout: { duration: 0.3 } }}>
       <div className="flex items-center">
@@ -47,14 +32,12 @@ const AssetItem: React.FC<AssetItemProps> = ({ removing, dataInfo, alertInfo, on
 
         <div className="ml-2 min-w-15">
           <div className="text-[13px] font-bold">{dataInfo?.symbol}</div>
-          {alertInfo ? <AlertBadge AlertInfo={alertInfo} onClick={() => onAlertClick?.(dataInfo)} /> : <div className="text-[11px] font-mono text-[#9ca3af]">{dataInfo.id}</div>}
+          <AssetSubInfo coin={dataInfo} alert={alertInfo} onAlertClick={() => onAlertClick?.(dataInfo)} />
         </div>
       </div>
-      <div className="text-left ml-5">
+      <div className={cn('text-left ml-10')}>
         <div className="font-semibold text-sm">{formatPrice(dataInfo.price)}</div>
-        <div className="text-[11px]" style={{ color: chColor }}>
-          {formatChange(dataInfo?.change)}
-        </div>
+        <div className={`text-[11px] ${getChangeColorClass(dataInfo?.change)}`}>{formatChange(dataInfo?.change)}</div>
       </div>
 
       <div className="justify-self-end">

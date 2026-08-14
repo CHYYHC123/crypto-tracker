@@ -45,29 +45,6 @@ async function handleRefresh(_msg: any, sendResponse: SendResponse): Promise<voi
   }
 }
 
-async function handleContentResync(_msg: any, sendResponse: SendResponse): Promise<void> {
-  // const { manager, isStocks } = await getActiveManager();
-  // const STALE_THRESHOLD = 10_000;
-  // const now = Date.now();
-
-  // const status = manager.getDataStatus();
-  // const lastUpdate = getAssetLastUpdateTime();
-  // const isStale = lastUpdate !== null && now - lastUpdate > STALE_THRESHOLD;
-
-  // if (isStale && manager.detectAndHandleStaleConnection(STALE_THRESHOLD)) {
-
-  //   return;
-  // }
-
-  // const list = getAssetList();
-  // if ([DataStatus.LIVE, DataStatus.DEGRADED].includes(status) && list && list.length > 0) {
-  //   publishAssets(list);
-  //   return;
-  // }
-
-  // console.log(`[Background] CONTENT_RESYNC (${isStocks ? 'stocks' : 'crypto'}) detected OFFLINE, trigger REFRESH`);
-  await handleRefresh(_msg, sendResponse);
-}
 
 function handleGetLatestPrices(_msg: any, sendResponse: SendResponse): void {
   const list = getAssetList();
@@ -157,13 +134,6 @@ const router = new Map<string, Handler>([
     'GET_DATA_STATUS',
     (msg, res) => {
       handleGetDataStatus(msg, res);
-      return true;
-    }
-  ],
-  [
-    'CONTENT_RESYNC',
-    (msg, res) => {
-      handleContentResync(msg, res);
       return true;
     }
   ],
