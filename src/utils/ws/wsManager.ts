@@ -1,5 +1,5 @@
 import { ExchangeConfigMap, ExchangeType } from '@/config/exchangeConfig';
-import { prefetchOpenPrices } from './sodUtc8';
+// import { prefetchOpenPrices } from './sodUtc8';
 import { DataStatus } from '@/types/index';
 
 // Re-export DataStatus for convenience
@@ -37,7 +37,7 @@ class WsManager {
   // 重试相关状态
   private retryCount = 0;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
-  // 是否手动断开连接
+  // 是否手动断开连接 -- 手动断开不触发重新连接
   private isManualDisconnect = false;
 
   // 当前连接信息（用于重连）
@@ -87,11 +87,11 @@ class WsManager {
     }
 
     // 预取开盘价（Gate 和 BN 需要从 REST API 获取）
-    try {
-      await prefetchOpenPrices(exchange, tokenList);
-    } catch (err) {
-      console.log('[WsManager] 预取开盘价失败:', err);
-    }
+    // try {
+    //   await prefetchOpenPrices(exchange, tokenList);
+    // } catch (err) {
+    //   console.log('[WsManager] 预取开盘价失败:', err);
+    // }
 
     // 创建 WebSocket 连接
     console.log(`[WsManager] 正在连接 ${exchange}...`);

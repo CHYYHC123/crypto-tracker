@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/7/31 18:16:44
+// 更新时间: 2026/8/14 14:02:04
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -103,6 +103,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "ALABB",
+    "platform": 1
+  },
+  {
     "symbol": "ALGO",
     "platform": 7
   },
@@ -187,6 +191,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "ASMLB",
+    "platform": 1
+  },
+  {
     "symbol": "ASP",
     "platform": 6
   },
@@ -201,6 +209,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "ASTR",
     "platform": 7
+  },
+  {
+    "symbol": "ASTSB",
+    "platform": 1
   },
   {
     "symbol": "AT",
@@ -359,6 +371,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "BMNRB",
+    "platform": 1
+  },
+  {
     "symbol": "BMT",
     "platform": 5
   },
@@ -479,6 +495,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "COHRB",
+    "platform": 1
+  },
+  {
     "symbol": "COINB",
     "platform": 1
   },
@@ -504,6 +524,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "CRCLB",
+    "platform": 1
+  },
+  {
+    "symbol": "CRDOB",
     "platform": 1
   },
   {
@@ -600,6 +624,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "DORA",
+    "platform": 6
+  },
+  {
+    "symbol": "DOS",
     "platform": 6
   },
   {
@@ -811,6 +839,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
+    "symbol": "GMEB",
+    "platform": 1
+  },
+  {
     "symbol": "GMT",
     "platform": 7
   },
@@ -985,6 +1017,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "IQ",
     "platform": 5
+  },
+  {
+    "symbol": "IRENB",
+    "platform": 1
   },
   {
     "symbol": "IRYS",
@@ -1301,6 +1337,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "NEXO",
     "platform": 5
+  },
+  {
+    "symbol": "NFLXB",
+    "platform": 1
   },
   {
     "symbol": "NFT",
@@ -1751,6 +1791,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
+    "symbol": "SMCIB",
+    "platform": 1
+  },
+  {
     "symbol": "SMHB",
     "platform": 1
   },
@@ -2003,6 +2047,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "USARB",
+    "platform": 1
+  },
+  {
     "symbol": "USAT",
     "platform": 6
   },
@@ -2127,6 +2175,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "XAAOI",
+    "platform": 2
+  },
+  {
     "symbol": "XAAPL",
     "platform": 2
   },
@@ -2139,6 +2191,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "XALAB",
+    "platform": 2
+  },
+  {
     "symbol": "XAMAT",
     "platform": 2
   },
@@ -2148,6 +2204,14 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XAMZN",
+    "platform": 2
+  },
+  {
+    "symbol": "XAPP",
+    "platform": 2
+  },
+  {
+    "symbol": "XARM",
     "platform": 2
   },
   {
@@ -2167,12 +2231,28 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XBE",
+    "platform": 2
+  },
+  {
     "symbol": "XBMNR",
+    "platform": 2
+  },
+  {
+    "symbol": "XBSP",
+    "platform": 2
+  },
+  {
+    "symbol": "XCBRS",
     "platform": 2
   },
   {
     "symbol": "XCH",
     "platform": 6
+  },
+  {
+    "symbol": "XCOHR",
+    "platform": 2
   },
   {
     "symbol": "XCOIN",
@@ -2184,6 +2264,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XCRWD",
+    "platform": 2
+  },
+  {
+    "symbol": "XCRWV",
     "platform": 2
   },
   {
@@ -2271,6 +2355,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XNBIS",
+    "platform": 2
+  },
+  {
     "symbol": "XNFLX",
     "platform": 2
   },
@@ -2280,6 +2368,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XNVDA",
+    "platform": 2
+  },
+  {
+    "symbol": "XON",
     "platform": 2
   },
   {
@@ -2303,11 +2395,23 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XRKLB",
+    "platform": 2
+  },
+  {
     "symbol": "XRP",
     "platform": 7
   },
   {
+    "symbol": "XSHAZ",
+    "platform": 2
+  },
+  {
     "symbol": "XSKHY",
+    "platform": 2
+  },
+  {
+    "symbol": "XSMCI",
     "platform": 2
   },
   {
@@ -2331,11 +2435,23 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
+    "symbol": "XTESTA",
+    "platform": 2
+  },
+  {
+    "symbol": "XTQQQ",
+    "platform": 2
+  },
+  {
     "symbol": "XTSLA",
     "platform": 2
   },
   {
     "symbol": "XTSM",
+    "platform": 2
+  },
+  {
+    "symbol": "XTWLO",
     "platform": 2
   },
   {
