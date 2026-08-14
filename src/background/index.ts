@@ -10,6 +10,15 @@ import { isWsZombie } from '@/utils/ws/zombieDect';
 // 注册 WS 消息回调和状态变化回调
 setupWsCallbacks();
 
+// 确保 alarm 存在，不存在则创建（用于锁屏后恢复时重建）
+function ensureAlarm() {
+  chrome.alarms.get('ws-keep-alive', existing => {
+    if (!existing) {
+      chrome.alarms.create('ws-keep-alive', { periodInMinutes: 1 });
+    }
+  });
+}
+
 // 第一次安装或更新时：初始化默认币种并建立连接
 chrome.runtime.onInstalled.addListener(async () => {
   const tokenList = await getCoins();
@@ -18,31 +27,46 @@ chrome.runtime.onInstalled.addListener(async () => {
   initGlobalAlertsOnInstall();
 
   // 注册保活 alarm，每分钟触发一次唤醒 SW，防止 WS 静默断连
-  chrome.alarms.create('ws-keep-alive', { periodInMinutes: 1 });
+  ensureAlarm();
 });
 
 // 监听 storage 变化（coins / data_source / price_alerts）
 chrome.storage.onChanged.addListener(onStorageChanged);
 
 // 监听系统空闲状态变化
-chrome.idle.onStateChanged.addListener(newState => {
+chrome.idle.onStateChanged.addListener(async newState => {
   if (newState === 'locked') {
+    // 锁屏：销毁 alarm 避免在锁屏期间触发无效重连，然后断开 WS
+    chrome.alarms.clear('ws-keep-alive');
     disconnectWs();
     return;
   }
 
   if (newState === 'active') {
+    // 解锁：重建 alarm（可能已被锁屏时清除）
+    ensureAlarm();
+
     if (wsManager.isConnected() || wsManager.isConnecting()) {
       console.log('WS already alive, skip reconnect (idle → active)');
       return;
     }
-    wsManager.onNetworkRestore();
+
+    // SW 重启后 currentTokenList 会清空，onNetworkRestore 无法重连
+    // 统一走完整重连路径以确保数据正确初始化
+    const tokenList = await getCoins();
+    initTokenStore(tokenList);
+    connectWebSocket(tokenList);
   }
 });
 
 // alarm 触发时检测 WS 状态，断线则重新初始化并重连
 chrome.alarms.onAlarm.addListener(async alarm => {
   if (alarm.name !== 'ws-keep-alive') return;
+
+  // 锁屏期间跳过重连（防止 alarm 在 clear 前最后一次触发时重建连接）
+  const idleState = await chrome.idle.queryState(15);
+  if (idleState === 'locked') return;
+
   if (!isWsZombie()) return;
 
   const tokenList = await getCoins();
