@@ -1,12 +1,12 @@
 import { useState, memo } from 'react';
 import { cn } from '@/lib/utils';
-import type { AssetCategory } from '@/types/asset';
+import type { AssetTypes } from '@/types/asset';
 
 type LogoPreset = 'sm' | 'md' | 'lg';
 
 interface LogoProps {
   symbol: string;
-  category: AssetCategory;
+  category: AssetTypes;
   size?: LogoPreset | string;
   rounded?: string;
 }

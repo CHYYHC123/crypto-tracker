@@ -13,6 +13,7 @@ const APP_DEFAULTS = {
   data_source: defaultDataSource,
   asset_type: 'crypto' as AssetTypes,
   coins: defaultCoinList,
+  stocks_list: [] as string[],
   global_alerts: defaultGlobalAlert,
   global_alerts_trigger: DEFAULT_TRIGGER
 };

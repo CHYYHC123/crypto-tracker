@@ -1,5 +1,5 @@
-/** 资产类别定义 */
-export type AssetCategory = 'crypto' | 'stock';
+/** 统一资产类型（UI mode 与运行时 category 共用） */
+export type AssetTypes = 'crypto' | 'stocks';
 
 /**
  * 统一资产运行时展示模型（替换 TokenItem 与 StockItem）
@@ -8,7 +8,7 @@ export type AssetCategory = 'crypto' | 'stock';
 export interface AssetItem {
   id: string; // 规范化 ID，格式: `${symbol.toLowerCase()}`
   symbol: string; // 展示符号，如 "BTC"、"AAPL"
-  category: AssetCategory;
+  category: AssetTypes;
   price: number;
   change: number; // 涨跌幅（%）
   lastPrice: number; // 上一次价格快照，用于闪烁动画

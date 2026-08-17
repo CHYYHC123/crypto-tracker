@@ -28,7 +28,7 @@ function handleMessage(data: any): void {
     if (!getAssetList()) {
       triggerSelfHeal(async () => {
         const coins = await getCoins();
-        initAssetStore(coins.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' })));
+        initAssetStore(coins.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' as const })));
       });
       return;
     }
@@ -65,7 +65,7 @@ export async function connectWS(): Promise<void> {
 async function connectCryptoWS(): Promise<void> {
   const exchange = await getDataSource();
   const tokenList = await getCoins();
-  initAssetStore(tokenList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' })));
+  initAssetStore(tokenList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' as const })));
   await wsManager.connect(exchange, tokenList);
 }
 
@@ -78,7 +78,7 @@ async function connectStockWS(): Promise<void> {
   const symbolSet = new Set(symbolList.map(s => s.toUpperCase()));
 
   // 1. 先用空价格初始化 Store
-  initAssetStore(symbolList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'stock' })));
+  initAssetStore(symbolList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'stocks' as const })));
 
   // 2. 批量拉取快照价格，预填充 Store
   try {
@@ -94,7 +94,7 @@ async function connectStockWS(): Promise<void> {
         return {
           id: symbol.toLowerCase(),
           symbol,
-          category: 'stock',
+          category: 'stocks' as const,
           price,
           change,
           lastPrice: 0,

@@ -16,9 +16,10 @@ import Dialog from '@/components/common/dialog';
 import type { AssetItem } from '@/types/asset';
 import { POPULAR_TOKENS } from '@/config/exchangeConfig';
 import { POPULAR_STOCKS } from '@/config/stocks';
-import type { AssetTypes } from '@/types/index';
+import type { AssetTypes } from '@/types/asset';
 import { sanitizeSymbolInput } from '@/utils/index';
 import { validateCount } from '@/popup/utils/validateCount';
+import { useAddAsset } from '@/popup/hooks/useAddAsset';
 
 const MODE_CONFIG: Record<AssetTypes, { dialogTitle: string; placeholder: string; popularItems: readonly string[] | string[]; suffix: string }> = {
   crypto: {
@@ -35,31 +36,6 @@ const MODE_CONFIG: Record<AssetTypes, { dialogTitle: string; placeholder: string
   }
 };
 
-
-async function getCoins(): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      response?.success ? resolve(response.data) : reject(new Error(response?.error || 'Failed to get coins'));
-    });
-  });
-}
-
-async function setCoins(coins: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'SET_COINS', payload: { coins } }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      response?.success ? resolve() : reject(new Error(response?.error || 'Failed to set coins'));
-    });
-  });
-}
-
 interface TokenSearchProps {
   tokens: AssetItem[];
   onTokenAdded?: () => void;
@@ -69,7 +45,7 @@ interface TokenSearchProps {
 // TokenSearch
 export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSearchProps) => {
   const config = MODE_CONFIG[mode];
-  const [loading, setLoading] = useState(false);
+  const { saveAsset, loading } = useAddAsset(mode, onTokenAdded);
 
   // "Add crypto" 弹窗
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -100,47 +76,22 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
 
   const { symbolList: dialogTokenList } = useSymbolList({ mode, searchVal });
 
-  //  通用保存逻辑
-  const saveToken = async (symbol: string): Promise<boolean> => {
-    try {
-      const oldCoins = await getCoins();
-      if (oldCoins?.includes(symbol)) {
-        toast('Token already exists ⚠️', { duration: 2000, id: 'token-already-exists' });
-        return false;
-      }
-      await setCoins([...oldCoins, symbol]);
-      setTimeout(() => {
-        onTokenAdded?.();
-        toast.success('Token added successfully', { duration: 2000, id: 'token-added' });
-      }, 1500);
-      return true;
-    } catch {
-      toast.error('Token addition failed', { duration: 2000, id: 'token-add-failed' });
-      return false;
-    }
-  };
-
   //  弹窗内点击 token（已知合法币种，跳过验证）
   const handleSelectToken = async (symbol: string) => {
     if (loading || addedSet.has(symbol)) return;
-    setLoading(true);
-    try {
-      await saveToken(symbol);
-      setShowAddDialog(false);
-    } finally {
-      setLoading(false);
-    }
+    const ok = await saveAsset(symbol);
+    if (ok) setShowAddDialog(false);
   };
 
   // 弹窗内搜索框 Enter：精确匹配则直接添加
   const handleEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !searchVal) return;
     const exact = dialogTokenList.find(t => t.symbol === searchVal.toUpperCase());
-    if (exact) {
-      await handleSelectToken(exact.symbol);
-    } else {
+    if (!exact) {
       toast.error(`${searchVal} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
+      return;
     }
+    await handleSelectToken(exact.symbol);
   };
 
   // 搜索框输入变化

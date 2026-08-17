@@ -5,7 +5,7 @@ function toAssetItem(symbol: string, price: number, changePercent: number): Asse
   return {
     id: sym.toLowerCase(),
     symbol: sym,
-    category: 'crypto',
+    category: 'crypto' as const,
     price,
     change: Number(changePercent.toFixed(2)),
     lastPrice: 0
@@ -80,7 +80,7 @@ function parseBNStock(msg: any): AssetItem[] | null {
     result.push({
       id: r.s.toLowerCase(),
       symbol: r.s,
-      category: 'stock',
+      category: 'stocks',
       price,
       change: prevClose > 0 ? Number((((price - prevClose) / prevClose) * 100).toFixed(2)) : 0,
       lastPrice: 0,

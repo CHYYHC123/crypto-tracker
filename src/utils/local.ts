@@ -23,6 +23,7 @@ interface LocalSchema {
   asset_type: AssetTypes;
   price_alerts: PriceAlert[];
   coins: string[];
+  stocks_list: string[];
   token_string: string;
   ga_client_id: string;
   global_alerts: GlobalAlerts;
@@ -80,6 +81,12 @@ export const setPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal('pric
 export const getCoinsFromStorage = (): Promise<string[] | undefined> => getLocal('coins');
 
 export const setCoinsToStorage = (v: string[]): Promise<void> => setLocal('coins', v);
+
+// ─── stocks_list ─────────────────────────────────────────────────────────────
+
+export const getStocksList = (): Promise<string[] | undefined> => getLocal('stocks_list');
+
+export const setStocksList = (v: string[]): Promise<void> => setLocal('stocks_list', v);
 
 // ─── token_string ────────────────────────────────────────────────────────────
 

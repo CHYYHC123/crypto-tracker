@@ -8,7 +8,7 @@ export type TokenItem = {
 };
 
 // 统一资产类型，推荐使用 AssetItem 替代 TokenItem
-export type { AssetItem, AssetCategory } from '@/types/asset';
+export type { AssetItem, AssetTypes } from '@/types/asset';
 
 export interface PriceAlert {
   symbol: string;
@@ -39,4 +39,3 @@ export interface GlobalAlertsTrigger {
   lastDecayAt: number;
 }
 
-export type AssetTypes = 'crypto' | 'stocks';
