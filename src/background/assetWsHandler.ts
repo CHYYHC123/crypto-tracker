@@ -4,8 +4,9 @@ import { applyAssetUpdate, throttledPublishAssets, publishAssets, initAssetStore
 
 import { getAssetType, getDataSource } from '@/utils/local';
 import { getCoins } from '@/background/tokens/coinsManager';
-import { DEFAULT_STOCKS } from '@/config/stocks';
+import { getStocks } from '@/background/stocks/stocksManager';
 import { getBatchPrice } from '@/background/stocks/batchPrice';
+import { getCryptoBatchPrice } from '@/background/tokens/cryptoBatchPrice';
 import type { AssetItem } from '@/types/asset';
 
 // 广播 WS 链接状态
@@ -61,11 +62,23 @@ export async function connectWS(): Promise<void> {
 
 /**
  * 建立 Crypto WebSocket 连接
+ * 连接前先批量拉取快照价格，避免 WS 数据到来前 UI 显示全 0
  */
 async function connectCryptoWS(): Promise<void> {
   const exchange = await getDataSource();
   const tokenList = await getCoins();
   initAssetStore(tokenList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' as const })));
+
+  try {
+    const snapshots = await getCryptoBatchPrice(exchange, tokenList);
+    if (snapshots.length) {
+      const updated = applyAssetUpdate(snapshots);
+      if (updated) publishAssets(updated);
+    }
+  } catch (err) {
+    console.warn('[CryptoWS] 快照预填充失败，跳过:', err);
+  }
+
   await wsManager.connect(exchange, tokenList);
 }
 
@@ -74,7 +87,7 @@ async function connectCryptoWS(): Promise<void> {
  * 连接前先批量拉取快照价格，避免 WS 数据到来前 UI 显示全 0
  */
 async function connectStockWS(): Promise<void> {
-  const symbolList = DEFAULT_STOCKS;
+  const symbolList = await getStocks();
   const symbolSet = new Set(symbolList.map(s => s.toUpperCase()));
 
   // 1. 先用空价格初始化 Store
@@ -83,28 +96,27 @@ async function connectStockWS(): Promise<void> {
   // 2. 批量拉取快照价格，预填充 Store
   try {
     const rawList = await getBatchPrice(symbolSet);
-    if (rawList.length > 0) {
-      const items: AssetItem[] = rawList.map(d => {
-        const symbol = d.ac.replace(/^EQ_/, '').toUpperCase();
-        const price = parseFloat(d.c) || 0;
-        const prevClose = parseFloat(d.pc) || 0;
-        const change = prevClose > 0
-          ? parseFloat(((price - prevClose) / prevClose * 100).toFixed(2))
-          : 0;
-        return {
-          id: symbol.toLowerCase(),
-          symbol,
-          category: 'stocks' as const,
-          price,
-          change,
-          lastPrice: 0,
-          prevClose,
-          marketPhase: d.mp,
-        };
-      });
-      const updated = applyAssetUpdate(items);
-      if (updated) publishAssets(updated);
-    }
+    if (!rawList.length) return;
+
+    const items: AssetItem[] = rawList.map(d => {
+      const symbol = d.ac.replace(/^EQ_/, '').toUpperCase();
+      const price = parseFloat(d.c) || 0;
+      const prevClose = parseFloat(d.pc) || 0;
+      const change = prevClose > 0 ? parseFloat((((price - prevClose) / prevClose) * 100).toFixed(2)) : 0;
+      return {
+        id: symbol.toLowerCase(),
+        symbol,
+        category: 'stocks' as const,
+        price,
+        change,
+        lastPrice: 0,
+        prevClose,
+        marketPhase: d.mp
+      };
+    });
+
+    const updated = applyAssetUpdate(items);
+    if (updated) publishAssets(updated);
   } catch (err) {
     console.warn('[StockWS] 批量快照价格拉取失败，跳过预填充:', err);
   }

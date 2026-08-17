@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import type { AssetItem } from '@/types/asset';
+import type { AssetTypes } from '@/types/asset';
+import { getCoinsFromStorage, setCoinsToStorage, getStocksList, setStocksList } from '@/utils/local';
 
 /** Footer batchSelect prop 的类型，由 useBatchTokenSelect 构造后直接传入 */
 export interface BatchSelectProps {
@@ -14,45 +16,25 @@ export interface BatchSelectProps {
   handleBatchDelete: () => void;
 }
 
-async function getCoins(): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve(response.data);
-      } else {
-        reject(new Error(response?.error || 'Failed to get coins'));
-      }
-    });
-  });
+async function fetchList(mode: AssetTypes): Promise<string[]> {
+  return mode === 'crypto'
+    ? (await getCoinsFromStorage()) ?? []
+    : (await getStocksList()) ?? [];
 }
 
-async function setCoins(coins: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'SET_COINS', payload: { coins } }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve();
-      } else {
-        reject(new Error(response?.error || 'Failed to set coins'));
-      }
-    });
-  });
+async function saveList(mode: AssetTypes, list: string[]): Promise<void> {
+  return mode === 'crypto' ? setCoinsToStorage(list) : setStocksList(list);
 }
 
 interface Options {
+  mode: AssetTypes;
   tokens: AssetItem[];
   setCountdown: (n: number) => void;
   mutate: () => Promise<any>;
 }
 
-export function useBatchTokenSelect({ tokens, setCountdown, mutate }: Options) {
+// 批量删除资产
+export function useBatchTokenSelect({ mode, tokens, setCountdown, mutate }: Options) {
   const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [selectedTokens, setSelectedTokens] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState(false);
@@ -95,9 +77,9 @@ export function useBatchTokenSelect({ tokens, setCountdown, mutate }: Options) {
     }
     setRemoving(true);
     try {
-      const oldTokenList = await getCoins();
-      const newTokenList = oldTokenList.filter(symbol => !selectedTokens.has(symbol));
-      await setCoins(newTokenList);
+      const oldList = await fetchList(mode);
+      const newList = oldList.filter(symbol => !selectedTokens.has(symbol));
+      await saveList(mode, newList);
       setSelectedTokens(new Set());
       setShowCheckboxes(false);
       setCountdown(10);
@@ -121,14 +103,14 @@ export function useBatchTokenSelect({ tokens, setCountdown, mutate }: Options) {
     if (!symbol || removing) return;
     setRemoving(true);
     try {
-      const oldTokenList = await getCoins();
-      if (!oldTokenList?.includes(symbol)) return;
-      if (oldTokenList.length <= 1) {
+      const oldList = await fetchList(mode);
+      if (!oldList?.includes(symbol)) return;
+      if (oldList.length <= 1) {
         toast.loading('At least one token must be kept', { duration: 2000 });
         return;
       }
-      const newTokenList = oldTokenList.filter(item => item !== symbol);
-      await setCoins(newTokenList);
+      const newList = oldList.filter(item => item !== symbol);
+      await saveList(mode, newList);
       setCountdown(10);
       setTimeout(() => {
         mutate();
@@ -147,7 +129,7 @@ export function useBatchTokenSelect({ tokens, setCountdown, mutate }: Options) {
     handleToggleSelectAll,
     selectedCount: selectedTokens.size,
     handleCancelBatch,
-    handleBatchDelete,
+    handleBatchDelete
   };
 
   return {
@@ -155,6 +137,6 @@ export function useBatchTokenSelect({ tokens, setCountdown, mutate }: Options) {
     selectedTokens,
     removing,
     handleToggleToken,
-    removeToken,
+    removeToken
   };
 }

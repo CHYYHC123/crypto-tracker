@@ -1,22 +1,13 @@
-import { getCoins, setCoins } from '@/background/tokens/coinsManager';
+import { setCoins } from '@/background/tokens/coinsManager';
 import { setBadge } from '@/background/badge';
 import { wsManager, connectWS } from '@/background/assetWsHandler';
 import { getAssetList, publishAssets, initAssetStore } from '@/background/assetStore';
 import type { AssetItem } from '@/types/asset';
 
-// import { DEFAULT_STOCKS } from '@/config/stocks';
-// import { getAssetType } from '@/utils/local';
-
 // ─── 类型
 
 type SendResponse = (response: any) => void;
 type Handler = (message: any, sendResponse: SendResponse) => boolean | void;
-
-// ─── 辅助：根据 asset_type 返回当前激活的 WsManager
-// async function getActiveManager() {
-//   const isStocks = (await getAssetType()) === 'stocks';
-//   return { manager: isStocks ? stockWsManager : cryptoWsManager, isStocks };
-// }
 
 // ─── 各消息 Handler
 
@@ -30,21 +21,12 @@ async function handleGetDataStatus(_msg: any, sendResponse: SendResponse): Promi
 
 async function handleRefresh(_msg: any, sendResponse: SendResponse): Promise<void> {
   try {
-    // const { isStocks } = await getActiveManager();
-    // if (isStocks) {
-    //   await connectStockWS(DEFAULT_STOCKS);
-    // } else {
-    //   const tokenList = await getCoins();
-    //   await connectCryptoWS(tokenList);
-    // }
-
     connectWS();
     sendResponse({ success: true, msg: 'The refresh is complete 🚀' });
   } catch {
     sendResponse({ success: false, msg: 'Refresh failed ❌' });
   }
 }
-
 
 function handleGetLatestPrices(_msg: any, sendResponse: SendResponse): void {
   const list = getAssetList();
@@ -55,30 +37,6 @@ function handleGetLatestPrices(_msg: any, sendResponse: SendResponse): void {
   });
 }
 
-function handleGetCoins(_msg: any, sendResponse: SendResponse): boolean {
-  getCoins()
-    .then(coins => sendResponse({ success: true, data: coins }))
-    .catch(err => {
-      console.error('[Background] GET_COINS failed:', err);
-      sendResponse({ success: false, error: err.message });
-    });
-  return true;
-}
-
-function handleSetCoins(msg: any, sendResponse: SendResponse): boolean {
-  const coins = msg.payload?.coins as string[] | undefined;
-  if (!coins || !Array.isArray(coins)) {
-    sendResponse({ success: false, error: 'Invalid coins data' });
-    return true;
-  }
-  setCoins(coins)
-    .then(() => sendResponse({ success: true }))
-    .catch(err => {
-      console.error('[Background] SET_COINS failed:', err);
-      sendResponse({ success: false, error: err.message });
-    });
-  return true;
-}
 
 function handleReorderTokens(msg: any, sendResponse: SendResponse): void {
   const newOrder: string[] = msg.payload?.order ?? [];
@@ -145,8 +103,6 @@ const router = new Map<string, Handler>([
     }
   ],
   ['GET_LATEST_PRICES', handleGetLatestPrices],
-  ['GET_COINS', handleGetCoins],
-  ['SET_COINS', handleSetCoins],
   ['REORDER_TOKENS', handleReorderTokens],
   ['ALERT_TRIGGERED', () => setBadge('critical')],
   ['ALERT_CLEAR', () => setBadge('none')],

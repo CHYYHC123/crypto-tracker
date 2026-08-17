@@ -9,14 +9,9 @@
  */
 
 import type { PriceAlert, GlobalAlerts, GlobalAlertsTrigger, AssetTypes } from '@/types/index';
-import {
-  defaultDataSource,
-  ExchangeListMap,
-  type ExchangeType,
-  type SelectableExchangeType,
-} from '@/config/exchangeConfig';
+import { defaultDataSource, ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
 
-// ─── Schema：所有 key 与其值类型的唯一映射 ──────────────────────────────────
+// ─── Schema：所有 key 与其值类型的唯一映射
 
 interface LocalSchema {
   data_source: ExchangeType;
@@ -30,7 +25,7 @@ interface LocalSchema {
   global_alerts_trigger: GlobalAlertsTrigger;
 }
 
-// ─── 泛型底层（不对外导出）──────────────────────────────────────────────────
+// ─── 泛型底层（不对外导出
 
 async function getLocal<K extends keyof LocalSchema>(key: K): Promise<LocalSchema[K] | undefined> {
   const result = await chrome.storage.local.get(key);
@@ -41,7 +36,7 @@ async function setLocal<K extends keyof LocalSchema>(key: K, value: LocalSchema[
   await chrome.storage.local.set({ [key]: value });
 }
 
-// ─── data_source ────────────────────────────────────────────────────────────
+// ─── data_source
 
 /**
  * 读取数据源，含 disabled 校验：
@@ -61,7 +56,7 @@ export async function getDataSource(): Promise<ExchangeType> {
 
 export const setDataSource = (v: ExchangeType): Promise<void> => setLocal('data_source', v);
 
-// ─── asset_type ─────────────────────────────────────────────────────────────
+// ─── asset_type
 
 /** 读取资产类型，未设置时默认返回 'crypto' */
 export async function getAssetType(): Promise<AssetTypes> {
@@ -70,31 +65,31 @@ export async function getAssetType(): Promise<AssetTypes> {
 
 export const setAssetType = (v: AssetTypes): Promise<void> => setLocal('asset_type', v);
 
-// ─── price_alerts ────────────────────────────────────────────────────────────
+// ─── price_alerts
 
 export const getPriceAlerts = (): Promise<PriceAlert[] | undefined> => getLocal('price_alerts');
 
 export const setPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal('price_alerts', v);
 
-// ─── coins ───────────────────────────────────────────────────────────────────
+// ─── coins
 
 export const getCoinsFromStorage = (): Promise<string[] | undefined> => getLocal('coins');
 
 export const setCoinsToStorage = (v: string[]): Promise<void> => setLocal('coins', v);
 
-// ─── stocks_list ─────────────────────────────────────────────────────────────
+// ─── stocks_list
 
 export const getStocksList = (): Promise<string[] | undefined> => getLocal('stocks_list');
 
 export const setStocksList = (v: string[]): Promise<void> => setLocal('stocks_list', v);
 
-// ─── token_string ────────────────────────────────────────────────────────────
+// ─── token_string
 
 export const getTokenString = (): Promise<string | undefined> => getLocal('token_string');
 
 export const setTokenString = (v: string): Promise<void> => setLocal('token_string', v);
 
-// ─── ga_client_id ────────────────────────────────────────────────────────────
+// ─── ga_client_id
 
 /** 读取 GA client id，不存在时自动生成并持久化 */
 export async function getGaClientId(): Promise<string> {
@@ -107,13 +102,13 @@ export async function getGaClientId(): Promise<string> {
 
 export const setGaClientId = (v: string): Promise<void> => setLocal('ga_client_id', v);
 
-// ─── global_alerts ───────────────────────────────────────────────────────────
+// ─── global_alerts
 
 export const getGlobalAlerts = (): Promise<GlobalAlerts | undefined> => getLocal('global_alerts');
 
 export const setGlobalAlerts = (v: GlobalAlerts): Promise<void> => setLocal('global_alerts', v);
 
-// ─── global_alerts_trigger ───────────────────────────────────────────────────
+// ─── global_alerts_trigger
 
 export const getGlobalAlertsTrigger = (): Promise<GlobalAlertsTrigger | undefined> => getLocal('global_alerts_trigger');
 

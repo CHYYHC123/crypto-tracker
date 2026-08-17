@@ -17,6 +17,7 @@ import { useBatchTokenSelect } from '@/popup/hooks/useBatchTokenSelect';
 import { usePriceAlerts } from '@/popup/hooks/usePriceAlerts';
 import { useAutoScroll } from '@/popup/hooks/useAutoScroll';
 import { useAssetType } from '@/popup/hooks/useAssetType';
+import { useSkeletonLoading } from '@/popup/hooks/useSkeletonLoading';
 
 import AssetSubItem from '@/popup/components/PopupHome/AssetItem';
 import CheckBox from '@/popup/components/PopupHome/Checkbox';
@@ -24,25 +25,35 @@ import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
 export default function PopupContent() {
-  const { assetType: modeType } = useAssetType();
-;
-  const [skeletonLoading, setSkeletonLoading] = useState(false);
-  // 价格预计 hooks
+  const { assetType: modeType, loading: assetTypeInitLoading } = useAssetType();
+
+  // 价格预警 hooks
   const { priceAlerts } = usePriceAlerts();
 
   const { tokens, countdown, setCountdown, isLoading, mutate } = usePriceFetcher();
 
   // 批量删除币种 hooks
   const { batchSelect, selectedTokens, removing, handleToggleToken, removeToken } = useBatchTokenSelect({
+    mode: modeType,
     tokens,
     setCountdown,
     mutate
   });
 
+  // 骨架屏 loading（切换类型 / 删除 / 新增）
+  const { skeletonLoading, setSkeletonLoading } = useSkeletonLoading({
+    modeType,
+    assetTypeInitLoading,
+    tokens,
+    removing,
+    mutate
+  });
+
   // Token 添加成功后的回调
   const handleTokenAdded = () => {
+    setSkeletonLoading(true);
     setCountdown(10);
-    mutate();
+    mutate().then(() => setSkeletonLoading(false));
   };
 
   // 手动刷新

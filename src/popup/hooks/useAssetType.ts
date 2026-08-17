@@ -22,9 +22,7 @@ export function useAssetType(): UseAssetType {
   const setAssetType = (type: AssetTypes) => {
     setLoading(true);
     setAssetTypeState(type);
-    persistAssetType(type).then(() => {
-      setTimeout(() => setLoading(false), 2000);
-    });
+    persistAssetType(type);
   };
 
   return { assetType, loading, setAssetType };
