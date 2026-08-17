@@ -43,17 +43,12 @@ async function setLocal<K extends keyof LocalSchema>(key: K, value: LocalSchema[
 // ─── data_source ────────────────────────────────────────────────────────────
 
 /**
- * 读取数据源，含 fallback 与 disabled 校验：
- * - 未设置 → 写入默认值并返回
- * - 所选交易所已禁用 → 重置为默认值并返回
+ * 读取数据源，含 disabled 校验：
+ * - 所选交易所已禁用 → 重置为默认值并返回（修复无效状态）
+ * 默认值的写入由 background/initDefaultStorage 在安装时统一处理。
  */
 export async function getDataSource(): Promise<ExchangeType> {
-  let exchange = (await getLocal('data_source')) ?? defaultDataSource;
-
-  if (!exchange) {
-    await setLocal('data_source', defaultDataSource);
-    return defaultDataSource;
-  }
+  const exchange = (await getLocal('data_source')) ?? defaultDataSource;
 
   if (ExchangeListMap[exchange as SelectableExchangeType]?.disabled) {
     await setLocal('data_source', defaultDataSource);

@@ -28,7 +28,7 @@ let _listenerRegistered = false;
 
 // ─── 内部 IO
 
-/** 从 storage 读取 global_alerts，不存在时写入默认值并返回默认值 */
+/** 从 storage 读取 global_alerts，不存在时返回默认值（初始化由 initDefaultStorage 保证） */
 export function loadGlobalAlerts(): Promise<GlobalAlerts> {
   return new Promise(resolve => {
     chrome.storage.local.get(SETTINGS_KEY, res => {
@@ -41,7 +41,6 @@ export function loadGlobalAlerts(): Promise<GlobalAlerts> {
       if (data) {
         resolve({ bull: data.bull || '', bear: data.bear || '', step: data.step || '', enabled: !!data.enabled });
       } else {
-        chrome.storage.local.set({ [SETTINGS_KEY]: defaultGlobalAlert });
         resolve({ ...defaultGlobalAlert });
       }
     });
@@ -87,27 +86,6 @@ export function saveTriggerCount(trigger: GlobalAlertsTrigger): void {
 }
 
 // ─── 初始化
-
-/**
- * 安装 / 更新时初始化：
- * - global_alerts 不存在时写入 defaultGlobalAlert
- * - global_alerts_trigger 不存在时写入 DEFAULT_TRIGGER
- * 在 background onInstalled 中调用
- */
-export function initGlobalAlerts(): void {
-  chrome.storage.local.get([SETTINGS_KEY, TRIGGER_KEY], res => {
-    if (chrome.runtime.lastError) {
-      console.error('[globalAlertsManager] initGlobalAlerts error:', chrome.runtime.lastError);
-      return;
-    }
-    const toSet: Record<string, unknown> = {};
-    if (!res[SETTINGS_KEY]) toSet[SETTINGS_KEY] = { ...defaultGlobalAlert };
-    if (!res[TRIGGER_KEY]) toSet[TRIGGER_KEY] = { ...DEFAULT_TRIGGER };
-    if (Object.keys(toSet).length > 0) {
-      chrome.storage.local.set(toSet);
-    }
-  });
-}
 
 /**
  * 加载 settings 和 trigger 缓存，并注册 storage 监听器（只注册一次）

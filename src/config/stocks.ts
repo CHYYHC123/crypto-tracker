@@ -1,8 +1,8 @@
 // 默认展示股票
-const DEFAULT_STOCKS: string[] = ['ZS', 'AAPL', 'NVDA', 'TSLA', 'GOOGL', 'SPCX'];
+const DEFAULT_STOCKS: string[] = ['ZS', 'CRCL', 'AAPL', 'NVDA', 'TSLA', 'GOOGL', 'SPCX'];
 
 // 热门股票
-const POPULAR_STOCKS: string[] = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
+const POPULAR_STOCKS = ['NVDA', 'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'AVGO'] as const;
 
 const DEFAULT_STOCKS_SET = new Set(DEFAULT_STOCKS);
 

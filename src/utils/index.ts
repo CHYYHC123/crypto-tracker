@@ -154,6 +154,14 @@ export function formatChange(change?: number | null): string {
 }
 
 /**
+ * 过滤输入值：只保留字母、数字、中文，并转为大写
+ * 适用于 symbol 搜索框的 onChange 处理
+ */
+export function sanitizeSymbolInput(value: string): string {
+  return value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '').toUpperCase();
+}
+
+/**
  * 格式化钱包地址
  * @param address 地址
  * @param start 保留前面字符数量（包含0x）

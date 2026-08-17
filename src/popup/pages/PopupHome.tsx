@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import useSWR from 'swr';
+import { useState, useRef } from 'react';
+import { usePriceFetcher } from '@/popup/hooks/usePriceFetcher';
 import toast from 'react-hot-toast';
 
 // @ts-ignore
@@ -16,43 +16,21 @@ import type { AssetItem } from '@/types/asset';
 import { useBatchTokenSelect } from '@/popup/hooks/useBatchTokenSelect';
 import { usePriceAlerts } from '@/popup/hooks/usePriceAlerts';
 import { useAutoScroll } from '@/popup/hooks/useAutoScroll';
-
-// import { useAssetType } from '@/popup/hooks/useAssetType';
+import { useAssetType } from '@/popup/hooks/useAssetType';
 
 import AssetSubItem from '@/popup/components/PopupHome/AssetItem';
 import CheckBox from '@/popup/components/PopupHome/Checkbox';
 import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
-// 异步 fetcher，封装 sendMessage
-function fetchPrices(): Promise<AssetItem[]> {
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage({ type: 'GET_LATEST_PRICES' }, resp => {
-      resolve(resp?.data || []);
-    });
-  });
-}
-
 export default function PopupContent() {
-  const [countdown, setCountdown] = useState(10);
-  const [tokens, setTokens] = useState<AssetItem[]>([]);
+  const { assetType: modeType } = useAssetType();
+;
   const [skeletonLoading, setSkeletonLoading] = useState(false);
   // 价格预计 hooks
   const { priceAlerts } = usePriceAlerts();
 
-  // 轮询，每15秒自动刷新一次
-  const {
-    data: tokenList,
-    isLoading,
-    mutate
-  } = useSWR<AssetItem[]>('token-prices', fetchPrices, {
-    revalidateOnFocus: true, // 自动聚焦时刷新，体验更好
-    fallbackData: [] // 默认返回一个空数组
-  });
-
-  useEffect(() => {
-    setTokens(tokenList ?? []);
-  }, [tokenList]);
+  const { tokens, countdown, setCountdown, isLoading, mutate } = usePriceFetcher();
 
   // 批量删除币种 hooks
   const { batchSelect, selectedTokens, removing, handleToggleToken, removeToken } = useBatchTokenSelect({
@@ -67,31 +45,12 @@ export default function PopupContent() {
     mutate();
   };
 
-  // 倒计时
-  useEffect(() => {
-    setCountdown(10); // 初始化
-    const timer = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          mutate(); // 刷新一次（建议异步不需要等它返回）
-          return 10; // 立即重置倒计时
-        }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [tokens?.length]);
-
   // 手动刷新
   const refreshData = () => {
     setCountdown(10);
     chrome.runtime.sendMessage({ type: 'REFRESH', payload: { falg: true } }, async response => {
-      if (response.success) {
-        await mutate();
-        toast.success(response?.msg, { duration: 2000 });
-      } else {
-        toast.error(response?.msg, { duration: 2000 });
-      }
+      const toastType = response.success ? 'success' : 'error';
+      toast[toastType](response?.msg, { duration: 2000 });
     });
   };
 
@@ -105,6 +64,7 @@ export default function PopupContent() {
     setAnchorEl(e.currentTarget);
     setMenuToken(tokenItme);
   };
+
   // 关闭时重置样式，确保下次打开时重新计算
   const handleClose = () => {
     setAnchorEl(null);
@@ -137,7 +97,7 @@ export default function PopupContent() {
       <div className="w-full h-full font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <Header />
 
-        <TokenSearch tokens={tokens} onTokenAdded={handleTokenAdded} />
+        <TokenSearch mode={modeType} tokens={tokens} onTokenAdded={handleTokenAdded} />
 
         {skeletonLoading ? (
           <AssetListSkeleton count={5} />

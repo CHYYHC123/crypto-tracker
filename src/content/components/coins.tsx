@@ -82,7 +82,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
       </div>
 
       <div className="flex items-center gap-2 flex-1">
-        <Logo coin={coin} />
+        <Logo symbol={coin.symbol} category={coin.category} />
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
           <AssetSubInfo coin={coin} alert={alert} />

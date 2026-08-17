@@ -14,7 +14,7 @@ export function useAssetType(): UseAssetType {
 
   useEffect(() => {
     getAssetType().then(type => {
-      setAssetTypeState(type);
+      setAssetTypeState(type ?? 'crypto');
       setLoading(false);
     });
   }, []);

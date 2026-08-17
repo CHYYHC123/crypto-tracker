@@ -1,12 +1,14 @@
 import { useState, memo } from 'react';
-import type { AssetItem } from '@/types/asset';
+import { cn } from '@/lib/utils';
+import type { AssetCategory } from '@/types/asset';
 
 type LogoPreset = 'sm' | 'md' | 'lg';
 
 interface LogoProps {
-  coin: AssetItem;
-  /** 预设尺寸 'sm'|'md'|'lg'，或自定义 Tailwind class，如 "w-9 h-9 text-sm" */
+  symbol: string;
+  category: AssetCategory;
   size?: LogoPreset | string;
+  rounded?: string;
 }
 
 const STOCK_LOGO_BASE = 'https://bin.bnbstatic.com/static/stock';
@@ -21,35 +23,36 @@ function resolveSizeClass(size: LogoPreset | string = 'md'): string {
   return size in PRESET_CLASS ? PRESET_CLASS[size as LogoPreset] : size;
 }
 
-const LetterLogo = memo(({ symbol, sizeClass }: { symbol: string; sizeClass: string }) => (
-  <div className={`${sizeClass} flex items-center justify-center rounded-lg bg-white/10 font-medium`}>
+const LetterLogo = memo(({ symbol, sizeClass, rounded }: { symbol: string; sizeClass: string; rounded: string }) => (
+  <div className={cn(sizeClass, rounded, 'flex items-center justify-center bg-white/10 font-medium')}>
     {symbol.charAt(0)}
   </div>
 ));
 
 const Logo = memo(
-  ({ coin, size = 'md' }: LogoProps) => {
+  ({ symbol, category, size = 'md', rounded = 'rounded-lg' }: LogoProps) => {
     const [imgError, setImgError] = useState(false);
     const sizeClass = resolveSizeClass(size);
 
-    if (coin.category === 'crypto' || imgError) {
-      return <LetterLogo symbol={coin.symbol} sizeClass={sizeClass} />;
+    if (category === 'crypto' || imgError) {
+      return <LetterLogo symbol={symbol} sizeClass={sizeClass} rounded={rounded} />;
     }
 
     return (
       <img
-        src={`${STOCK_LOGO_BASE}/${coin.symbol.toUpperCase()}.png`}
-        alt={coin.symbol}
+        src={`${STOCK_LOGO_BASE}/${symbol.toUpperCase()}.png`}
+        alt={symbol}
         referrerPolicy="no-referrer"
-        className={`${sizeClass} rounded-lg object-cover`}
+        className={cn(sizeClass, rounded, 'object-cover')}
         onError={() => setImgError(true)}
       />
     );
   },
   (prev, next) =>
-    prev.coin.symbol === next.coin.symbol &&
-    prev.coin.category === next.coin.category &&
-    prev.size === next.size
+    prev.symbol === next.symbol &&
+    prev.category === next.category &&
+    prev.size === next.size &&
+    prev.rounded === next.rounded
 );
 
 export default Logo;

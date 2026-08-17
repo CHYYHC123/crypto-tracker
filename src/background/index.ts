@@ -3,12 +3,12 @@
  * 职责：负责 Extension 后台生命周期监听、WebSockets 保活机制及事件分发协调。
  */
 
-import { initGlobalAlerts } from '@/background/globalAlertsManager';
 import { onStorageChanged } from '@/background/storageHandler';
 import { onMessage } from '@/background/messageRouter';
 import { isWsZombie } from '@/utils/ws/zombieDect';
 
 import { connectWS, setupWSCallbacks, disconnectWS, wsManager } from '@/background/assetWsHandler';
+import { initDefaultStorage } from '@/background/initDefaultStorage';
 
 // 初始WS回调
 setupWSCallbacks();
@@ -22,11 +22,10 @@ function ensureAlarm() {
   });
 }
 
-// 第一次安装或更新时：初始化默认币种并建立连接
+// 第一次安装或更新时：初始化默认数据并建立连接
 chrome.runtime.onInstalled.addListener(async () => {
+  await initDefaultStorage();
   await connectWS();
-  // 全局预警
-  initGlobalAlerts();
 
   // 注册保活 alarm，每分钟触发一次唤醒 SW，防止 WS 静默断连
   ensureAlarm();

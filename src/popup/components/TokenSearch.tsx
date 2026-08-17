@@ -1,26 +1,40 @@
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Search, X } from 'lucide-react';
+
+import SearchInput from '@/components/common/SearchInput';
+import PopularSuggestions from '@/popup/components/search/PopularSuggestions';
+import DialogHeader from '@/popup/components/search/DialogHeader';
+import { TokenList } from '@/popup/components/search/TokenList';
+
+import { useSymbolList } from '@/popup/hooks/useSymbolList';
 
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
 import Dialog from '@/components/common/dialog';
 
 import type { AssetItem } from '@/types/asset';
-import { type ExchangeType, defaultDataSource, POPULAR_TOKENS } from '@/config/exchangeConfig';
-import { getDataSource } from '@/utils/local';
-import { SUPPORTED_TOKENS } from '@/utils/tokens';
-import { PLATFORM } from '@/utils/index';
+import { POPULAR_TOKENS } from '@/config/exchangeConfig';
+import { POPULAR_STOCKS } from '@/config/stocks';
+import type { AssetTypes } from '@/types/index';
+import { sanitizeSymbolInput } from '@/utils/index';
 import { validateCount } from '@/popup/utils/validateCount';
 
-
-// 数据源 → 平台 bit 映射，HL 不在 bitmask 里则不过滤
-const EXCHANGE_BIT: Partial<Record<ExchangeType, number>> = {
-  BN: PLATFORM.BN,
-  OKX: PLATFORM.OKX,
-  Gate: PLATFORM.GATE
+const MODE_CONFIG: Record<AssetTypes, { dialogTitle: string; placeholder: string; popularItems: readonly string[] | string[]; suffix: string }> = {
+  crypto: {
+    dialogTitle: 'Add Crypto',
+    placeholder: 'Search Symbol (e.g. BTC)',
+    popularItems: POPULAR_TOKENS,
+    suffix: '/USDT'
+  },
+  stocks: {
+    dialogTitle: 'Add Stock',
+    placeholder: 'Search Symbol (e.g. AAPL)',
+    popularItems: POPULAR_STOCKS,
+    suffix: ''
+  }
 };
+
 
 async function getCoins(): Promise<string[]> {
   return new Promise((resolve, reject) => {
@@ -49,57 +63,42 @@ async function setCoins(coins: string[]): Promise<void> {
 interface TokenSearchProps {
   tokens: AssetItem[];
   onTokenAdded?: () => void;
+  mode?: AssetTypes;
 }
 
 // TokenSearch
-export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
-  //  主页搜索（仅作为触发器，不直接使用）
-  const [searchValue, setSearchValue] = useState('');
-  const [errorTip, setErrorTip] = useState<string | null>(null);
+export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSearchProps) => {
+  const config = MODE_CONFIG[mode];
   const [loading, setLoading] = useState(false);
 
   // "Add crypto" 弹窗
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [dialogSearch, setDialogSearch] = useState('');
-  const [currentDataSource, setCurrentDataSource] = useState<ExchangeType>(defaultDataSource);
-  const dialogInputRef = useRef<HTMLInputElement>(null);
+  const [searchVal, setSearchVal] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 已添加的 symbol 集合（O(1) 查找）
   const addedSet = useMemo(() => new Set(tokens?.map(t => t.symbol) ?? []), [tokens]);
 
-  // 打开弹窗：读取当前数据源
+  // 打开弹窗
   const openAddDialog = async () => {
     const canAdd = await validateCount(tokens);
     if (!canAdd) {
       toast.error('Max tracked cryptos reached. Contact admin to unlock.');
       return;
     }
-    setCurrentDataSource(await getDataSource());
-    setDialogSearch('');
+    setSearchVal('');
     setShowAddDialog(true);
   };
 
   // 弹窗打开后聚焦搜索框
   useEffect(() => {
     if (showAddDialog) {
-      const timer = setTimeout(() => dialogInputRef.current?.focus(), 120);
+      const timer = setTimeout(() => inputRef.current?.focus(), 120);
       return () => clearTimeout(timer);
     }
   }, [showAddDialog]);
 
-  // 根据数据源过滤 SUPPORTED_TOKENS
-  const filteredBySource = useMemo(() => {
-    const bit = EXCHANGE_BIT[currentDataSource];
-    const all = SUPPORTED_TOKENS as unknown as Array<{ symbol: string; platform: number }>;
-    return bit === undefined ? all : all.filter(t => (t.platform & bit) !== 0);
-  }, [currentDataSource]);
-
-  // 根据弹窗搜索词二次过滤
-  const dialogTokenList = useMemo(() => {
-    const q = dialogSearch.toUpperCase();
-    if (!q) return filteredBySource;
-    return filteredBySource.filter(t => t.symbol.startsWith(q));
-  }, [filteredBySource, dialogSearch]);
+  const { symbolList: dialogTokenList } = useSymbolList({ mode, searchVal });
 
   //  通用保存逻辑
   const saveToken = async (symbol: string): Promise<boolean> => {
@@ -107,11 +106,9 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
       const oldCoins = await getCoins();
       if (oldCoins?.includes(symbol)) {
         toast('Token already exists ⚠️', { duration: 2000, id: 'token-already-exists' });
-        setSearchValue('');
         return false;
       }
       await setCoins([...oldCoins, symbol]);
-      setSearchValue('');
       setTimeout(() => {
         onTokenAdded?.();
         toast.success('Token added successfully', { duration: 2000, id: 'token-added' });
@@ -136,108 +133,42 @@ export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
   };
 
   // 弹窗内搜索框 Enter：精确匹配则直接添加
-  const handleDialogSearchEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== 'Enter' || !dialogSearch) return;
-    const exact = filteredBySource.find(t => t.symbol === dialogSearch);
+  const handleEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !searchVal) return;
+    const exact = dialogTokenList.find(t => t.symbol === searchVal.toUpperCase());
     if (exact) {
       await handleSelectToken(exact.symbol);
     } else {
-      toast.error(`${dialogSearch} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
+      toast.error(`${searchVal} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
     }
   };
 
-  const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
-    setErrorTip(null);
-    setSearchValue(event.target.value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '')?.toUpperCase());
+  // 搜索框输入变化
+  const handleChange = (val: string) => {
+    setSearchVal(sanitizeSymbolInput(val));
   };
 
   return (
     <>
       {/* 触发行：输入框聚焦 或 点 Add 均打开弹窗 */}
       <div className="search_token mt-4 flex items-center shrink-0">
-        <Input value={searchValue} errorTip={errorTip} placeholder="Search Symbol (e.g. BTC)" onFocus={openAddDialog} onChange={changeSearchValue} disabled={loading} readOnly />
+        <Input value="" placeholder={config.placeholder} onFocus={openAddDialog} disabled={loading} readOnly />
         <Button className="ml-4" variant="gradient" disabled={loading} onClick={openAddDialog}>
           Add
         </Button>
       </div>
 
       <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/8">
-          <h3 className="text-white font-semibold text-base">Add Crypto</h3>
-          <button onClick={() => setShowAddDialog(false)} className="text-gray-400 hover:text-white transition cursor-pointer">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <DialogHeader title={config.dialogTitle} onClose={() => setShowAddDialog(false)} />
 
         {/* 搜索框 */}
         <div className="px-4 pt-3 pb-2">
-          <div className="flex items-center gap-2 bg-gray-800 rounded-xl px-3 py-2.5 border border-white/10 focus-within:border-white/25 transition">
-            <Search className="w-4 h-4 text-white/35 shrink-0" />
-            <input
-              ref={dialogInputRef}
-              value={dialogSearch}
-              onChange={e => setDialogSearch(e.target.value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '')?.toUpperCase())}
-              onKeyDown={handleDialogSearchEnter}
-              placeholder="Search Symbol (e.g. BTC)"
-              className="bg-transparent text-white text-sm placeholder:text-white/25 outline-none w-full"
-            />
-            {dialogSearch && (
-              <button onClick={() => setDialogSearch('')} className="text-white/30 hover:text-white/60 transition cursor-pointer">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          <SearchInput inputRef={inputRef} value={searchVal} placeholder={config.placeholder} onChange={handleChange} onKeyDown={handleEnter} onClear={() => setSearchVal('')} />
         </div>
 
-        <div className="px-4 py-2">
-          <p className="text-[10px] font-semibold tracking-widest text-white/35 uppercase mb-2">Popular Suggestions</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {POPULAR_TOKENS.map(symbol => {
-              const added = addedSet.has(symbol);
-              return (
-                <button
-                  key={symbol}
-                  disabled={loading || added}
-                  onClick={() => handleSelectToken(symbol)}
-                  className={`text-xs font-medium py-2 rounded-xl border transition-all duration-150
-                      ${added ? 'border-white/8 text-white/20 bg-white/3 cursor-not-allowed' : 'border-white/12 text-white/65 bg-white/5 hover:bg-white/12 hover:text-white hover:border-white/25 cursor-pointer active:scale-95'}`}
-                >
-                  {symbol}/USDT
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <PopularSuggestions items={config.popularItems} addedSet={addedSet} loading={loading} onSelect={handleSelectToken} suffix={config.suffix} />
 
-        <div className="px-4 pt-2 pb-1">
-          <p className="text-[10px] font-semibold tracking-widest text-white/35 uppercase">
-            Symbols
-            <span className="ml-1.5 text-white/20 normal-case tracking-normal font-normal">({dialogTokenList.length})</span>
-          </p>
-        </div>
-        <div className="overflow-y-auto h-50 scrollbar-hide pb-3">
-          {dialogTokenList.length === 0 ? (
-            <div className="flex flex-col items-center py-6 text-white/25">
-              <p className="text-sm">No tokens found</p>
-            </div>
-          ) : (
-            dialogTokenList.map(({ symbol }) => {
-              const added = addedSet.has(symbol);
-              return (
-                <button
-                  key={symbol}
-                  disabled={loading || added}
-                  onClick={() => handleSelectToken(symbol)}
-                  className={`w-full flex items-center justify-between px-4 py-2.5 transition-all duration-100
-                    ${added ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/6 cursor-pointer active:bg-white/12'}`}
-                >
-                  <span className="text-sm font-bold text-white">{symbol} / USDT</span>
-                  <span className="text-xs text-white/35">{symbol}</span>
-                </button>
-              );
-            })
-          )}
-        </div>
+        <TokenList list={dialogTokenList} addedSet={addedSet} loading={loading} mode={mode} onSelect={handleSelectToken} />
       </Dialog>
     </>
   );

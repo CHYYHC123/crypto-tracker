@@ -49,7 +49,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
       {collapsed && displayToken ? (
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <Logo coin={displayToken} />
+            <Logo symbol={displayToken.symbol} category={displayToken.category} />
             <div className="ml-2">
               <div className="text-xs font-medium">{displayToken.symbol}</div>
               <AssetSubInfo coin={displayToken} alert={currentAlert} />
