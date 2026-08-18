@@ -10,6 +10,8 @@ import { isWsZombie } from '@/utils/ws/zombieDect';
 import { connectWS, setupWSCallbacks, disconnectWS, wsManager } from '@/background/assetWsHandler';
 import { initDefaultStorage } from '@/background/initDefaultStorage';
 
+let windowFocused = true;
+
 // 初始WS回调
 setupWSCallbacks();
 
@@ -47,6 +49,9 @@ chrome.idle.onStateChanged.addListener(async newState => {
     // 解锁：重建 alarm（可能已被锁屏时清除）
     ensureAlarm();
 
+    // 窗口无焦点时跳过，避免切换其他 App 触发 idle→active 导致误重连
+    if (!windowFocused) return;
+
     if (wsManager.isConnected() || wsManager.isConnecting()) {
       console.log('WS already alive, skip reconnect (idle → active)');
       return;
@@ -64,10 +69,28 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   const idleState = await chrome.idle.queryState(15);
   if (idleState === 'locked') return;
 
+  // 窗口无焦点时跳过，避免主动断开后被 alarm 重连
+  if (!windowFocused) return;
+
   if (!isWsZombie()) return;
 
   // 如果假死 重启连接
   await connectWS();
+});
+
+// 窗口焦点变化：切出 Chrome 时暂停 watchdog 和重试（不主动断开），切回时恢复
+chrome.windows.onFocusChanged.addListener(windowId => {
+  console.log('[onFocusChanged]', windowId, windowId === chrome.windows.WINDOW_ID_NONE ? 'NONE' : 'focused');
+  if (windowId === chrome.windows.WINDOW_ID_NONE) {
+    windowFocused = false;
+    wsManager.setActive(false);
+  } else {
+    windowFocused = true;
+    wsManager.setActive(true);
+    if (!wsManager.isConnected() && !wsManager.isConnecting()) {
+      connectWS();
+    }
+  }
 });
 
 // 监听来自 Popup / Content 的消息

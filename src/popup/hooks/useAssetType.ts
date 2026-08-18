@@ -19,6 +19,17 @@ export function useAssetType(): UseAssetType {
     });
   }, []);
 
+  // 监听 storage 变化，同步其他组件实例写入的 asset_type
+  useEffect(() => {
+    const handler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area !== 'local' || !changes.asset_type) return;
+      const newType = changes.asset_type.newValue as AssetTypes | undefined;
+      if (newType) setAssetTypeState(newType);
+    };
+    chrome.storage.onChanged.addListener(handler);
+    return () => chrome.storage.onChanged.removeListener(handler);
+  }, []);
+
   const setAssetType = (type: AssetTypes) => {
     setLoading(true);
     setAssetTypeState(type);

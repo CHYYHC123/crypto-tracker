@@ -22,7 +22,7 @@ interface Options {
 export function useSkeletonLoading({ modeType, assetTypeInitLoading, tokens, removing, mutate }: Options) {
   const [skeletonLoading, setSkeletonLoading] = useState(false);
 
-  // ─── 场景1：切换资产类型 → 开始 loading ─────────────────────────
+  // ─── 场景1：切换资产类型 → 开始 loading
   // 用 null 哨兵：assetTypeInitLoading 完成前不监测变化，
   // 防止"初始加载时默认值 → 真实值"被误判为切换
   const prevModeRef = useRef<string | null>(null);
@@ -41,12 +41,14 @@ export function useSkeletonLoading({ modeType, assetTypeInitLoading, tokens, rem
     }
   }, [modeType, assetTypeInitLoading]);
 
-  // ─── 场景1：ASSET_TYPE_SWITCHED 消息 → 轮询直到有真实价格 ────────
+  // ─── 场景1：ASSET_TYPE_SWITCHED 消息 → 先开启骨架屏，轮询直到有真实价格
   // 修复 crypto 切换后因无 REST 快照而显示全 0 的问题：
   // 轮询 mutate 直到拿到非零价格，最多重试 5 次（约 10s 保底）
   useEffect(() => {
     const handler = (msg: any) => {
       if (msg?.type !== 'ASSET_TYPE_SWITCHED') return;
+
+      setSkeletonLoading(true);
 
       let retries = 0;
       const tryLoad = async () => {
@@ -66,7 +68,7 @@ export function useSkeletonLoading({ modeType, assetTypeInitLoading, tokens, rem
     return () => chrome.runtime.onMessage.removeListener(handler);
   }, [mutate]);
 
-  // ─── 场景2：删除 token → 开始 loading；tokens 更新后结束 ─────────
+  // ─── 场景2：删除 token → 开始 loading；tokens 更新后结束
   // removing 在 finally 中被清除（比 mutate 的 1.5s 延迟更早），
   // 必须用 ref 标记"等待状态"，等 tokens 真正变化再清除 loading
   const waitingForRemoveRef = useRef(false);

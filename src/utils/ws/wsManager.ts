@@ -358,7 +358,7 @@ class WsManager {
   private startWatchdog() {
     this.stopWatchdog();
     this.watchdogTimer = setInterval(() => {
-      // if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
       const now = Date.now();
       if (now - this.lastMessageAt > 8000) {
         console.warn('[WsManager] 心跳超时，触发重连');
@@ -485,6 +485,20 @@ class WsManager {
    */
   isInCooldownMode(): boolean {
     return this.inCooldownMode;
+  }
+
+  /**
+   * 设置活跃状态
+   * - false：停止 watchdog 和待执行的重试定时器，但不断开已有连接
+   * - true：如果当前已连接则重启 watchdog；如果连接已断开则由调用方负责重连
+   */
+  setActive(active: boolean): void {
+    if (active) {
+      if (this.isConnected()) this.startWatchdog();
+    } else {
+      this.stopWatchdog();
+      this.clearRetryTimer();
+    }
   }
 }
 

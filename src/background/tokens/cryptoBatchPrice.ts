@@ -24,7 +24,7 @@ function toAssetItem(symbol: string, price: number, changePercent: number): Asse
 
 async function fetchOKXSnapshot(tokenList: string[]): Promise<AssetItem[]> {
   const symbolSet = new Set(tokenList.map(s => s.toUpperCase()));
-  const resp = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
+  const resp = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT', { signal: AbortSignal.timeout(5000) });
   const json = await resp.json();
   if (json?.code !== '0' || !Array.isArray(json.data)) return [];
 
@@ -52,7 +52,7 @@ async function fetchBNSnapshot(tokenList: string[]): Promise<AssetItem[]> {
   if (!tokenList.length) return [];
   const symbols = JSON.stringify(tokenList.map(s => `${s.toUpperCase()}USDT`));
   const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`;
-  const resp = await fetch(url);
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
   const json = await resp.json();
   if (!Array.isArray(json)) return [];
 
@@ -71,7 +71,7 @@ async function fetchBNSnapshot(tokenList: string[]): Promise<AssetItem[]> {
 
 async function fetchGateSnapshot(tokenList: string[]): Promise<AssetItem[]> {
   const symbolSet = new Set(tokenList.map(s => s.toUpperCase()));
-  const resp = await fetch('https://api.gateio.ws/api/v4/spot/tickers');
+  const resp = await fetch('https://api.gateio.ws/api/v4/spot/tickers', { signal: AbortSignal.timeout(5000) });
   const json = await resp.json();
   if (!Array.isArray(json)) return [];
 

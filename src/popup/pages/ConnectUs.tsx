@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mail } from 'lucide-react';
 import { Heart, Info } from 'lucide-react';
 import SubHeader from '@/popup/components/SubHeader';
@@ -9,13 +9,15 @@ import CopyButton from '@/components/common/copyButton';
 import { TIPPING_ADDRESS, type TippingAddress } from '@/config/tippingAddress';
 import { formatAddress } from '@/utils';
 import { getTokenString, setTokenString } from '@/utils/local';
-// import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 
 export default function ConnectUs() {
   const navigate = useNavigate();
   const [licenseKey, setLicenseKey] = useState('');
+  const licenseKeyRef = useRef(licenseKey);
 
-  // const { copy, copiedText } = useCopyToClipboard();
+  useEffect(() => {
+    licenseKeyRef.current = licenseKey;
+  }, [licenseKey]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLicenseKey(e.target.value.trim());
@@ -35,6 +37,13 @@ export default function ConnectUs() {
     getTokenString().then(token => {
       if (token) setLicenseKey(token);
     });
+
+    return () => {
+      const key = licenseKeyRef.current;
+      if (key) {
+        setTokenString(key);
+      }
+    };
   }, []);
 
   return (

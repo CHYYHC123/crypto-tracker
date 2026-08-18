@@ -1,4 +1,5 @@
 import { setCoins } from '@/background/tokens/coinsManager';
+import { setStocks } from '@/background/stocks/stocksManager';
 import { setBadge } from '@/background/badge';
 import { wsManager, connectWS } from '@/background/assetWsHandler';
 import { getAssetList, publishAssets, initAssetStore } from '@/background/assetStore';
@@ -54,7 +55,6 @@ function handleReorderTokens(msg: any, sendResponse: SendResponse): void {
     return;
   }
 
-  const newOrderSymbols = reordered.map(t => t.symbol);
   initAssetStore(reordered.map(t => ({ id: t.id, symbol: t.symbol, category: t.category })));
 
   // 回填已有价格数据
@@ -67,9 +67,20 @@ function handleReorderTokens(msg: any, sendResponse: SendResponse): void {
 
   publishAssets(freshList);
 
-  setCoins(newOrderSymbols).catch(err => {
-    console.error('[Background] REORDER_TOKENS setCoins failed:', err);
-  });
+  // 按 category 分组持久化，避免 coins / stocks_list 数据互相污染
+  const cryptoSymbols = reordered.filter(t => t.category === 'crypto').map(t => t.symbol);
+  const stockSymbols = reordered.filter(t => t.category === 'stocks').map(t => t.symbol);
+
+  if (cryptoSymbols.length) {
+    setCoins(cryptoSymbols).catch(err => {
+      console.error('[Background] REORDER_TOKENS setCoins failed:', err);
+    });
+  }
+  if (stockSymbols.length) {
+    setStocks(stockSymbols).catch(err => {
+      console.error('[Background] REORDER_TOKENS setStocks failed:', err);
+    });
+  }
 
   sendResponse({ success: true, msg: 'Reorder complete' });
 }
@@ -86,7 +97,6 @@ function handleShowNotification(msg: any, _sendResponse: SendResponse): void {
 }
 
 // ─── 路由表
-
 const router = new Map<string, Handler>([
   [
     'GET_DATA_STATUS',
@@ -110,7 +120,6 @@ const router = new Map<string, Handler>([
 ]);
 
 // ─── 主入口
-
 export function onMessage(message: any, _sender: chrome.runtime.MessageSender, sendResponse: SendResponse): boolean | void {
   const handler = router.get(message.type);
   if (!handler) return;

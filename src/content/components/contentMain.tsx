@@ -29,10 +29,12 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 export default function ContentMain() {
   const [collapsed, setCollapsed] = useState(true);
   const [tokens, setTokens] = useAssetTokens();
-  useContentResync();
+
   const priceAlerts = usePriceAlerts();
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
+
+  useContentResync();
 
   /**
    * 移动端隐藏token表

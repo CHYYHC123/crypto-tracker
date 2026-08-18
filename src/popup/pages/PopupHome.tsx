@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { usePriceFetcher } from '@/popup/hooks/usePriceFetcher';
 import toast from 'react-hot-toast';
 
@@ -41,7 +41,7 @@ export default function PopupContent() {
   });
 
   // 骨架屏 loading（切换类型 / 删除 / 新增）
-  const { skeletonLoading, setSkeletonLoading } = useSkeletonLoading({
+  const { skeletonLoading } = useSkeletonLoading({
     modeType,
     assetTypeInitLoading,
     tokens,
@@ -49,11 +49,13 @@ export default function PopupContent() {
     mutate
   });
 
+  // 添加币种后自动滚动到底部
+  const listRef = useAutoScroll(tokens);
+
   // Token 添加成功后的回调
   const handleTokenAdded = () => {
-    setSkeletonLoading(true);
     setCountdown(10);
-    mutate().then(() => setSkeletonLoading(false));
+    mutate();
   };
 
   // 手动刷新
@@ -98,10 +100,6 @@ export default function PopupContent() {
     setAlertToken(token);
     setShowPriceAlert(true);
   };
-
-  // 添加币种后自动滚动到底部
-  const listRef = useRef<HTMLDivElement>(null);
-  useAutoScroll(tokens);
 
   return (
     <>

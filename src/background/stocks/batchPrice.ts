@@ -28,7 +28,7 @@ export async function getBatchPrice(assetSet: Set<string>): Promise<DynamicData[
       return cache.data.filter((item: DynamicData) => assetSet.has(acToSymbol(item.ac).toUpperCase()));
     }
 
-    const response = await fetch(SYMBOLS_DYNAMIC_URL);
+    const response = await fetch(SYMBOLS_DYNAMIC_URL, { signal: AbortSignal.timeout(5000) });
     const result = await response.json();
     if (!result || !Array.isArray(result.data)) return [];
 
