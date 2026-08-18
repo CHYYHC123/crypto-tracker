@@ -80,7 +80,7 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
 // 窗口焦点变化：切出 Chrome 时暂停 watchdog 和重试（不主动断开），切回时恢复
 chrome.windows.onFocusChanged.addListener(windowId => {
-  console.log('[onFocusChanged]', windowId, windowId === chrome.windows.WINDOW_ID_NONE ? 'NONE' : 'focused');
+  // console.log('[onFocusChanged]', windowId, windowId === chrome.windows.WINDOW_ID_NONE ? 'NONE' : 'focused');
   if (windowId === chrome.windows.WINDOW_ID_NONE) {
     windowFocused = false;
     wsManager.setActive(false);

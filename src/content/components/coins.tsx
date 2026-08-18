@@ -66,7 +66,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
   const alert = priceAlerts.find(a => a.symbol.toUpperCase() === coin.symbol.toUpperCase());
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition ${isDragging ? 'shadow-lg' : ''}`}>
+    <div ref={setNodeRef} style={style} className={cn('flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition', isDragging ? 'shadow-lg' : '')}>
       {/* 拖拽手柄 - 阻止事件冒泡到外层 motion.div */}
       <div
         {...attributes}

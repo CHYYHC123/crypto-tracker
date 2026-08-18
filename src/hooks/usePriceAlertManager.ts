@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { showPriceUp, showPriceDown } from '@/components/CustomToaster/index';
-import type { AssetItem as BaseAssetItem, } from '@/types/asset';
+import type { AssetItem as BaseAssetItem } from '@/types/asset';
 import type { PriceAlert } from '@/types/index';
 import { useQueue } from './useQueue';
-import { getPriceAlerts } from '@/utils/local';
+import { getPriceAlerts, getStocksPriceAlerts } from '@/utils/local';
 
 export type AlertMessage = {
   id: string; // 唯一 ID
@@ -25,10 +25,11 @@ export function usePriceAlertManager(latestTokens: BaseAssetItem[]) {
 
   const lastPushTimeBySymbolRef = useRef<Record<string, number>>({});
 
-  // 初始化读取 popup 本地预警配置
+  // 初始化读取 popup 本地预警配置（crypto + stocks 合并）
   const loadAlerts = useCallback(async () => {
     try {
-      const priceAlerts = (await getPriceAlerts()) ?? [];
+      const [cryptoRaw, stocksRaw] = await Promise.all([getPriceAlerts(), getStocksPriceAlerts()]);
+      const priceAlerts = [...(cryptoRaw ?? []), ...(stocksRaw ?? [])];
       const map: Record<string, PriceAlert[]> = {};
       const newAlertIds = new Set<string>();
 
@@ -208,34 +209,37 @@ export function usePriceAlertManager(latestTokens: BaseAssetItem[]) {
 
   // 定期清理过期的未触发消息和无效引用，避免内存泄漏
   useEffect(() => {
-    const cleanupInterval = setInterval(() => {
-      const now = Date.now();
-      const oneHourAgo = now - 60 * 60 * 1000;
+    const cleanupInterval = setInterval(
+      () => {
+        const now = Date.now();
+        const oneHourAgo = now - 60 * 60 * 1000;
 
-      // 使用 useQueue 的 filter 方法清理过期消息
-      // 在 filter 回调中同步清理 processingMsgIdsRef
-      filter(msg => {
-        const isValid = msg.timestamp > oneHourAgo;
-        if (!isValid) {
-          // 同步清理 processingMsgIdsRef
-          processingMsgIdsRef.current.delete(msg.id);
-        }
-        return isValid;
-      });
+        // 使用 useQueue 的 filter 方法清理过期消息
+        // 在 filter 回调中同步清理 processingMsgIdsRef
+        filter(msg => {
+          const isValid = msg.timestamp > oneHourAgo;
+          if (!isValid) {
+            // 同步清理 processingMsgIdsRef
+            processingMsgIdsRef.current.delete(msg.id);
+          }
+          return isValid;
+        });
 
-      // 清理 lastPushTimeBySymbolRef 中不存在的 symbol
-      const validSymbols = new Set(Object.keys(alertsMap));
-      Object.keys(lastPushTimeBySymbolRef.current).forEach(symbol => {
-        if (!validSymbols.has(symbol)) {
-          delete lastPushTimeBySymbolRef.current[symbol];
-        }
-      });
+        // 清理 lastPushTimeBySymbolRef 中不存在的 symbol
+        const validSymbols = new Set(Object.keys(alertsMap));
+        Object.keys(lastPushTimeBySymbolRef.current).forEach(symbol => {
+          if (!validSymbols.has(symbol)) {
+            delete lastPushTimeBySymbolRef.current[symbol];
+          }
+        });
 
-      // 清理 triggeredAlertIdsRef 中过期的 ID（超过1小时）
-      // 注意：这里需要根据实际需求调整，如果预警被删除，对应的 ID 也应该清理
-      // 但由于我们无法直接知道哪些预警被删除了，所以保留这个清理逻辑
-      // 可以考虑在 loadAlerts 时同步清理
-    }, 5 * 60 * 1000); // 每 5 分钟清理一次
+        // 清理 triggeredAlertIdsRef 中过期的 ID（超过1小时）
+        // 注意：这里需要根据实际需求调整，如果预警被删除，对应的 ID 也应该清理
+        // 但由于我们无法直接知道哪些预警被删除了，所以保留这个清理逻辑
+        // 可以考虑在 loadAlerts 时同步清理
+      },
+      5 * 60 * 1000
+    ); // 每 5 分钟清理一次
 
     return () => clearInterval(cleanupInterval);
   }, [alertsMap, alertQueue, filter]);

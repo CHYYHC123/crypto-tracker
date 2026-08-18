@@ -17,15 +17,9 @@ const PHASE_MAP: Record<string, { label: string; className: string }> = {
 };
 
 const AssetSubInfo = memo(({ coin, alert, onAlertClick }: AssetSubInfoProps) => {
-  if (coin.category === 'stock') {
+  if (coin.category === 'stocks') {
     const phase = PHASE_MAP[coin.marketPhase ?? 'C'] ?? PHASE_MAP['C'];
-    return (
-      <div className="flex items-center gap-1">
-        <span className={`text-[10px] opacity-60 font-mono ${phase.className}`}>{phase.label}</span>
-        {/* 预留：stock alert 接入后直接传 alert prop 即可 */}
-        {alert && <AlertBadge AlertInfo={alert} onClick={onAlertClick} />}
-      </div>
-    );
+    return <div className="flex items-center gap-1">{alert ? <AlertBadge AlertInfo={alert} onClick={onAlertClick} /> : <span className={`text-[10px] opacity-60 font-mono ${phase.className}`}>{phase.label}</span>}</div>;
   }
 
   // crypto

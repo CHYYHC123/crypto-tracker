@@ -25,11 +25,12 @@ import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
 export default function PopupContent() {
-  const { assetType: modeType, loading: assetTypeInitLoading } = useAssetType();
+  const { assetType: modeType } = useAssetType();
 
   // 价格预警 hooks
-  const { priceAlerts } = usePriceAlerts();
+  const { priceAlerts } = usePriceAlerts(modeType);
 
+  // 获取资产价格数据
   const { tokens, countdown, setCountdown, isLoading, mutate } = usePriceFetcher();
 
   // 批量删除币种 hooks
@@ -42,8 +43,6 @@ export default function PopupContent() {
 
   // 骨架屏 loading（切换类型 / 删除 / 新增）
   const { skeletonLoading } = useSkeletonLoading({
-    modeType,
-    assetTypeInitLoading,
     tokens,
     removing,
     mutate

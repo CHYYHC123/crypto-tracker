@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
 import type { PriceAlert } from '@/types/index';
+import type { AssetTypes } from '@/types/asset';
 
-export function usePriceAlerts() {
+// 单个资产价格预警
+export function usePriceAlerts(mode: AssetTypes = 'crypto') {
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+
   useEffect(() => {
+    const storageKey = mode === 'stocks' ? 'stocks_price_alerts' : 'price_alerts';
+
     const loadPriceAlerts = () => {
-      chrome.storage.local.get('price_alerts', res => {
-        const alerts = (res.price_alerts as PriceAlert[]) || [];
+      chrome.storage.local.get(storageKey, res => {
+        const alerts = (res[storageKey] as PriceAlert[]) || [];
         setPriceAlerts(alerts);
       });
     };
     loadPriceAlerts();
 
     const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.price_alerts) loadPriceAlerts();
+      if (areaName === 'local' && changes[storageKey]) loadPriceAlerts();
     };
 
     const handleMessage = (msg: any) => {
@@ -26,7 +31,7 @@ export function usePriceAlerts() {
       chrome.storage.onChanged.removeListener(handleStorageChange);
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
-  }, []);
+  }, [mode]);
 
   return { priceAlerts };
 }

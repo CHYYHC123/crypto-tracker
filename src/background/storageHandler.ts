@@ -74,7 +74,7 @@ async function handleAssetListChange(changes: Record<string, chrome.storage.Stor
 export async function onStorageChanged(changes: Record<string, chrome.storage.StorageChange>, area: string): Promise<void> {
   if (area !== 'local') return;
 
-  if (changes.price_alerts) {
+  if (changes.price_alerts || changes.stocks_price_alerts) {
     handleAlertsChange();
   }
 

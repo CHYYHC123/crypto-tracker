@@ -1,5 +1,6 @@
 import type { AssetItem } from '@/types/asset';
 import type { ExchangeType } from '@/config/exchangeConfig';
+import { getAssetType } from '@/utils/local';
 
 const CACHE_TTL = 30_000;
 
@@ -18,7 +19,7 @@ function toAssetItem(symbol: string, price: number, changePercent: number): Asse
   };
 }
 
-// ─── OKX REST ────────────────────────────────────────────────────────
+// OKX REST
 // GET https://www.okx.com/api/v5/market/tickers?instType=SPOT
 // 返回所有 SPOT ticker，客户端过滤目标 symbol
 
@@ -44,7 +45,7 @@ async function fetchOKXSnapshot(tokenList: string[]): Promise<AssetItem[]> {
   return result;
 }
 
-// ─── Binance (BN) REST ───────────────────────────────────────────────
+// Binance (BN) REST
 // GET https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT"]
 // 精确拉取目标 symbol，避免拉全量（节省 weight）
 
@@ -65,7 +66,7 @@ async function fetchBNSnapshot(tokenList: string[]): Promise<AssetItem[]> {
     });
 }
 
-// ─── Gate REST ───────────────────────────────────────────────────────
+// Gate REST
 // GET https://api.gateio.ws/api/v4/spot/tickers
 // 返回所有 ticker，客户端过滤
 
@@ -89,17 +90,19 @@ async function fetchGateSnapshot(tokenList: string[]): Promise<AssetItem[]> {
   return result;
 }
 
-// ─── 主入口 ──────────────────────────────────────────────────────────
+// ─── 主入口
 
 /**
  * 按交易所拉取 crypto 批量快照价格（30s TTL 缓存）
  * 失败时返回空数组，不抛异常（由调用方降级处理）
  */
-export async function getCryptoBatchPrice(
-  exchange: ExchangeType,
-  tokenList: string[]
-): Promise<AssetItem[]> {
+export async function getCryptoBatchPrice(exchange: ExchangeType, tokenList: string[]): Promise<AssetItem[]> {
   if (!tokenList.length) return [];
+
+  const assetType = await getAssetType();
+  if (assetType === 'stocks') {
+    snapshotCache.clear();
+  }
 
   const cacheKey = `${exchange}:${tokenList.slice().sort().join(',')}`;
   const now = Date.now();
