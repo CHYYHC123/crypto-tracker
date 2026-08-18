@@ -17,6 +17,7 @@ interface LocalSchema {
   data_source: ExchangeType;
   asset_type: AssetTypes;
   price_alerts: PriceAlert[];
+  stocks_price_alerts: PriceAlert[];
   coins: string[];
   stocks_list: string[];
   token_string: string;
@@ -70,6 +71,12 @@ export const setAssetType = (v: AssetTypes): Promise<void> => setLocal('asset_ty
 export const getPriceAlerts = (): Promise<PriceAlert[] | undefined> => getLocal('price_alerts');
 
 export const setPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal('price_alerts', v);
+
+// ─── stocks_price_alerts
+
+export const getStocksPriceAlerts = (): Promise<PriceAlert[] | undefined> => getLocal('stocks_price_alerts');
+
+export const setStocksPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal('stocks_price_alerts', v);
 
 // ─── coins
 

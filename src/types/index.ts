@@ -10,10 +10,12 @@ export type TokenItem = {
 // 统一资产类型，推荐使用 AssetItem 替代 TokenItem
 export type { AssetItem, AssetTypes } from '@/types/asset';
 
+export type Direction = 'above' | 'below';
+
 export interface PriceAlert {
   symbol: string;
   targetPrice: number;
-  direction: 'above' | 'below';
+  direction: Direction;
   enabled: boolean;
   createdAt: number;
   updatedAt: number;

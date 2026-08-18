@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 
-import Big from 'big.js';
+import type { Direction } from '@/types';
 
-export type Direction = 'above' | 'below';
+import Big from 'big.js';
 
 interface PriceAlertInputProps {
   price: number;

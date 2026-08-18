@@ -5,7 +5,7 @@
  * 扩展方式：新增默认 key 只需在 APP_DEFAULTS 添加一行。
  */
 
-import type { AssetTypes } from '@/types/index';
+import type { AssetTypes, PriceAlert } from '@/types/index';
 import { defaultCoinList, defaultDataSource, defaultGlobalAlert } from '@/config/exchangeConfig';
 import { DEFAULT_TRIGGER } from '@/background/globalAlertsManager';
 
@@ -14,6 +14,8 @@ const APP_DEFAULTS = {
   asset_type: 'crypto' as AssetTypes,
   coins: defaultCoinList,
   stocks_list: [] as string[],
+  price_alerts: [] as PriceAlert[],
+  stocks_price_alerts: [] as PriceAlert[],
   global_alerts: defaultGlobalAlert,
   global_alerts_trigger: DEFAULT_TRIGGER
 };

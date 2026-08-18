@@ -69,8 +69,9 @@ export default function PopupContent() {
 
   // ActionMenu 状态
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [menuToken, setMenuToken] = useState<AssetItem | null>(null);
   const open = Boolean(anchorEl);
+
+  const [menuToken, setMenuToken] = useState<AssetItem | null>(null);
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>, tokenItme: AssetItem) => {
     if (removing) return;

@@ -1,80 +1,23 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
 import { X, Power, PowerOff } from 'lucide-react';
-
-import toast from 'react-hot-toast';
 
 import ConfirmDialog from '@/components/common/confirm-dialog';
 import Tooltip from '@/components/common/tooltip';
 import PriceAlertInput from '@/popup/components/PriceAlter';
 
 import type { AssetItem } from '@/types/asset';
-import type { PriceAlert } from '@/types';
-import type { Direction } from '@/popup/components/PriceAlter';
-import { getPriceAlerts, setPriceAlerts } from '@/utils/local';
+
+import { useAlertForm } from '@/popup/hooks/useAlertForm';
 
 interface AlertDialogProps {
   open: boolean;
   token: AssetItem | null;
   onClose: () => void;
 }
-
+// 价格预警弹窗组件
 const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
-  const [price, setPrice] = useState(0);
-  const [enabled, setEnabled] = useState(true);
-  const [direction, setDirection] = useState<Direction>('above');
-  useEffect(() => {
-    if (!open || !token) return;
-    const loadAlert = async () => {
-      const alerts = (await getPriceAlerts()) ?? [];
-      const current = alerts.find(item => item.symbol.toUpperCase() === token.symbol.toUpperCase());
-      if (current) {
-        setPrice(current.targetPrice);
-        setDirection(current.direction);
-        setEnabled(current.enabled);
-      } else {
-        setPrice(token.price ?? 0);
-        setDirection('above');
-        setEnabled(true);
-      }
-    };
-    loadAlert();
-  }, [open, token]);
-
-  // 点击保存按钮
-  const handleSave = async () => {
-    if (!token) return;
-    const newAlert: PriceAlert = {
-      symbol: token.symbol,
-      targetPrice: price,
-      direction,
-      enabled,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-    try {
-      const oldAlerts = (await getPriceAlerts()) ?? [];
-      const index = oldAlerts.findIndex(item => item.symbol.toUpperCase() === token.symbol.toUpperCase());
-      let updatedAlerts: PriceAlert[];
-      if (index > -1) {
-        updatedAlerts = [...oldAlerts];
-        updatedAlerts[index] = {
-          ...oldAlerts[index],
-          targetPrice: price,
-          direction,
-          enabled,
-          updatedAt: Date.now()
-        };
-      } else {
-        updatedAlerts = [...oldAlerts, newAlert];
-      }
-      await setPriceAlerts(updatedAlerts);
-      toast.success(`Price alert set for ${token.symbol}`);
-      onClose();
-    } catch (error) {
-      toast.error('Failed to save price alert');
-    }
-  };
+  
+  const { price, setPrice, direction, setDirection, enabled, setEnabled, handleSave } = useAlertForm(open, token, onClose);
 
   return (
     <ConfirmDialog
