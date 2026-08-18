@@ -12,13 +12,16 @@ import Loading from '@/components/common/loading';
 
 // import ImportCoins from './ImportCoins';
 
-import { ExchangeListMap, type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 import { getDataSource } from '@/utils/local';
 import { exportCryptoData } from '../utils/exportData';
+import { useAssetType } from '@/popup/hooks/useAssetType';
 // import { selectAndImportFile } from '../utils/importData';
 
 const MenuCenter = () => {
   const navigate = useNavigate();
+  const { assetType } = useAssetType();
+  const isStock = assetType === 'stocks';
   // 控制菜单弹出关闭逻辑
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
@@ -88,9 +91,12 @@ const MenuCenter = () => {
       </div>
 
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <ActionMenuItem onClick={handleDataSource}>Data source（{currentDataSource}）</ActionMenuItem>
+        <ActionMenuItem disabled={isStock} onClick={handleDataSource}>
+          Data source（{currentDataSource}）
+        </ActionMenuItem>
 
         <ActionMenuItem
+          disabled={isStock}
           onClick={() => {
             navigate('/alert-settings');
             handleClose();
@@ -98,8 +104,9 @@ const MenuCenter = () => {
         >
           Global Price Monitor
         </ActionMenuItem>
-        {/* <ActionMenuItem>Change ranking</ActionMenuItem> */}
-        <ActionMenuItem onClick={handleExport}>Export coins</ActionMenuItem>
+        <ActionMenuItem disabled={isStock} onClick={handleExport}>
+          Export coins
+        </ActionMenuItem>
         {/* <ActionMenuItem onClick={handleImportClick}>Import coins</ActionMenuItem> */}
         <ActionMenuItem
           onClick={() => {
