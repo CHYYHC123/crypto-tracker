@@ -16,6 +16,7 @@ import { defaultDataSource, ExchangeListMap, type ExchangeType, type SelectableE
 interface LocalSchema {
   data_source: ExchangeType;
   asset_type: AssetTypes;
+  asset_type_switched: boolean;
   price_alerts: PriceAlert[];
   stocks_price_alerts: PriceAlert[];
   coins: string[];
@@ -65,6 +66,13 @@ export async function getAssetType(): Promise<AssetTypes> {
 }
 
 export const setAssetType = (v: AssetTypes): Promise<void> => setLocal('asset_type', v);
+
+// ─── asset_type_switched
+
+/** 用户是否已手动切换过资产类型（用于隐藏 NEW 标志） */
+export const getAssetTypeSwitched = (): Promise<boolean | undefined> => getLocal('asset_type_switched');
+
+export const setAssetTypeSwitched = (): Promise<void> => setLocal('asset_type_switched', true);
 
 // ─── price_alerts
 
