@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/8/14 14:02:04
+// 更新时间: 2026/8/18 18:51:53
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -61,10 +61,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "ACT",
     "platform": 7
-  },
-  {
-    "symbol": "ACX",
-    "platform": 5
   },
   {
     "symbol": "ADA",
@@ -639,10 +635,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
-    "symbol": "DUCK",
-    "platform": 6
-  },
-  {
     "symbol": "DUSK",
     "platform": 5
   },
@@ -863,10 +855,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
-    "symbol": "GODS",
-    "platform": 2
-  },
-  {
     "symbol": "GOOGLB",
     "platform": 1
   },
@@ -916,10 +904,6 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "HEMI",
-    "platform": 5
-  },
-  {
-    "symbol": "HFT",
     "platform": 5
   },
   {
@@ -1491,10 +1475,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
-    "symbol": "PIVX",
-    "platform": 1
-  },
-  {
     "symbol": "PIXEL",
     "platform": 7
   },
@@ -1535,10 +1515,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "PRCL",
-    "platform": 6
-  },
-  {
     "symbol": "PROM",
     "platform": 5
   },
@@ -1569,10 +1545,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "PYPLB",
     "platform": 1
-  },
-  {
-    "symbol": "PYR",
-    "platform": 5
   },
   {
     "symbol": "PYTH",
@@ -2091,10 +2063,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "VANRY",
-    "platform": 5
-  },
-  {
     "symbol": "VELO",
     "platform": 6
   },
@@ -2104,10 +2072,6 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "VET",
-    "platform": 5
-  },
-  {
-    "symbol": "VIC",
     "platform": 5
   },
   {
@@ -2239,6 +2203,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XBOT",
+    "platform": 2
+  },
+  {
     "symbol": "XBSP",
     "platform": 2
   },
@@ -2251,6 +2219,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
+    "symbol": "XCIEN",
+    "platform": 2
+  },
+  {
     "symbol": "XCOHR",
     "platform": 2
   },
@@ -2260,6 +2232,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XCRCL",
+    "platform": 2
+  },
+  {
+    "symbol": "XCRM",
     "platform": 2
   },
   {
@@ -2276,6 +2252,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XDELL",
+    "platform": 2
+  },
+  {
+    "symbol": "XDKNG",
     "platform": 2
   },
   {
@@ -2307,6 +2287,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XHPE",
+    "platform": 2
+  },
+  {
     "symbol": "XIBM",
     "platform": 2
   },
@@ -2323,6 +2307,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XKO",
+    "platform": 2
+  },
+  {
     "symbol": "XLITE",
     "platform": 2
   },
@@ -2333,6 +2321,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "XLM",
     "platform": 7
+  },
+  {
+    "symbol": "XLRCX",
+    "platform": 2
   },
   {
     "symbol": "XMETA",
@@ -2367,6 +2359,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
+    "symbol": "XNOW",
+    "platform": 2
+  },
+  {
     "symbol": "XNVDA",
     "platform": 2
   },
@@ -2391,7 +2387,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XPOPMART",
+    "platform": 2
+  },
+  {
     "symbol": "XQQQ",
+    "platform": 2
+  },
+  {
+    "symbol": "XRDDT",
     "platform": 2
   },
   {
@@ -2415,7 +2419,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSMH",
+    "platform": 2
+  },
+  {
     "symbol": "XSNDK",
+    "platform": 2
+  },
+  {
+    "symbol": "XSNOW",
     "platform": 2
   },
   {
@@ -2451,6 +2463,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XTTWO",
+    "platform": 2
+  },
+  {
     "symbol": "XTWLO",
     "platform": 2
   },
@@ -2477,6 +2493,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "XVS",
     "platform": 5
+  },
+  {
+    "symbol": "XXIAOMI",
+    "platform": 2
   },
   {
     "symbol": "XXLE",

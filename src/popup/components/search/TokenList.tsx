@@ -39,7 +39,7 @@ const TokenItem = ({ symbol, added, loading, onSelect }: { symbol: string; added
 const StockItem = ({ symbol, desc, added, loading, onSelect }: { symbol: string; desc: string; added: boolean; loading: boolean; onSelect: (symbol: string) => void }) => (
   <CommonItem symbol={symbol} added={added} loading={loading} onSelect={onSelect}>
     <div className="flex items-center gap-2.5">
-      <Logo symbol={symbol} category="stock" size="sm" rounded="rounded-full" />
+      <Logo symbol={symbol} category="stocks" size="sm" rounded="rounded-full" />
       <div className="flex flex-col items-start">
         <span className="text-sm font-bold text-white">{symbol}</span>
         <span className="text-[11px] text-white/35 truncate max-w-44">{desc}</span>

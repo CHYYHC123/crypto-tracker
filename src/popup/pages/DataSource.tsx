@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import SubHeader from '@/popup/components/SubHeader';
-import { ExchangeListMap, type ExchangeType } from '@/config/exchangeConfig';
+import { ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
 import { setDataSource } from '@/utils/local';
 
 function DataSource() {
@@ -22,7 +22,7 @@ function DataSource() {
 
   // 处理选择数据源
   const handleSelect = async (source: ExchangeType) => {
-    const info = ExchangeListMap[source];
+    const info = ExchangeListMap[source as SelectableExchangeType];
     if (info.disabled) return; // 跳过禁用的数据源
 
     await setDataSource(source);

@@ -93,35 +93,35 @@ async function connectStockWS(): Promise<void> {
   // 1. 先用空价格初始化 Store
   initAssetStore(symbolList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'stocks' as const })));
 
-  // 2. 批量拉取快照价格，预填充 Store
+  // 2. 批量拉取快照价格，预填充 Store（失败不影响 WS 连接）
   try {
     const rawList = await getBatchPrice(symbolSet);
-    if (!rawList.length) return;
+    if (rawList.length) {
+      const items: AssetItem[] = rawList.map(d => {
+        const symbol = d.ac.replace(/^EQ_/, '').toUpperCase();
+        const price = parseFloat(d.c) || 0;
+        const prevClose = parseFloat(d.pc) || 0;
+        const change = prevClose > 0 ? parseFloat((((price - prevClose) / prevClose) * 100).toFixed(2)) : 0;
+        return {
+          id: symbol.toLowerCase(),
+          symbol,
+          category: 'stocks' as const,
+          price,
+          change,
+          lastPrice: 0,
+          prevClose,
+          marketPhase: d.mp
+        };
+      });
 
-    const items: AssetItem[] = rawList.map(d => {
-      const symbol = d.ac.replace(/^EQ_/, '').toUpperCase();
-      const price = parseFloat(d.c) || 0;
-      const prevClose = parseFloat(d.pc) || 0;
-      const change = prevClose > 0 ? parseFloat((((price - prevClose) / prevClose) * 100).toFixed(2)) : 0;
-      return {
-        id: symbol.toLowerCase(),
-        symbol,
-        category: 'stocks' as const,
-        price,
-        change,
-        lastPrice: 0,
-        prevClose,
-        marketPhase: d.mp
-      };
-    });
-
-    const updated = applyAssetUpdate(items);
-    if (updated) publishAssets(updated);
+      const updated = applyAssetUpdate(items);
+      if (updated) publishAssets(updated);
+    }
   } catch (err) {
     console.warn('[StockWS] 批量快照价格拉取失败，跳过预填充:', err);
   }
 
-  // 3. 建立 WS 连接，后续实时推送覆盖快照数据
+  // 3. 无论快照是否成功，都建立 WS 连接
   await wsManager.connect('BNStock', []);
 }
 

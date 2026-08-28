@@ -27,7 +27,7 @@ export function useSymbolList({ mode, searchVal }: UseSymbolListOptions) {
 
   const filteredBySource = useMemo(() => {
     if (mode === 'stocks') {
-      return EQUITY_SYMBOLS as Array<{ symbol: string; desc: string }>;
+      return EQUITY_SYMBOLS as unknown as Array<{ symbol: string; desc: string }>;
     }
     const bit = EXCHANGE_BIT[dataSource];
     const all = SUPPORTED_TOKENS as unknown as Array<{ symbol: string; platform: number }>;
