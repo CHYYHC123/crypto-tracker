@@ -8,12 +8,13 @@
 import type { AssetTypes, PriceAlert } from '@/types/index';
 import { defaultCoinList, defaultDataSource, defaultGlobalAlert } from '@/config/exchangeConfig';
 import { DEFAULT_TRIGGER } from '@/background/globalAlertsManager';
+import { DEFAULT_STOCKS } from '@/config/stocks';
 
 const APP_DEFAULTS = {
   data_source: defaultDataSource,
   asset_type: 'crypto' as AssetTypes,
   coins: defaultCoinList,
-  stocks_list: [] as string[],
+  stocks_list: DEFAULT_STOCKS as string[],
   price_alerts: [] as PriceAlert[],
   stocks_price_alerts: [] as PriceAlert[],
   global_alerts: defaultGlobalAlert,

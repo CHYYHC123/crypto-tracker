@@ -68,6 +68,8 @@ export function applyAssetUpdate(items: AssetItem[]): AssetItem[] | null {
     hasUpdate = true;
   }
 
+  // console.log('assetList', assetList[0].price > 100_000 ? assetList : '');
+
   return hasUpdate ? assetList : null;
 }
 
@@ -85,6 +87,7 @@ export function triggerSelfHeal(asyncInit: () => Promise<void>): void {
 
 function _publish(list: AssetItem[]): void {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    // console.log('list', list[0].price > 100_000 ? list : '');
     if (tabs.length === 0 || chrome.runtime.lastError) return;
     tabs.forEach(tab => {
       if (!tab.id) return;

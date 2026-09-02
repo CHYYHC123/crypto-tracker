@@ -5,7 +5,7 @@ import BNLOGO from '@/assets/image/logo/bn_logo.png';
 import { GlobalAlerts } from '@/types';
 /** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
-export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const;
+export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const
 
 /** 默认 全局预警配置 */
 export const defaultGlobalAlert: GlobalAlerts = { bull: '10', bear: '10', step: '1', enabled: true };

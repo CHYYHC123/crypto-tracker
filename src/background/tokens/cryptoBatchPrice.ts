@@ -31,9 +31,10 @@ async function fetchOKXSnapshot(tokenList: string[]): Promise<AssetItem[]> {
 
   const result: AssetItem[] = [];
   for (const d of json.data) {
-    // instId 格式: "BTC-USDT"
-    const sym = d.instId?.split('-')[0]?.toUpperCase();
-    if (!sym || !symbolSet.has(sym)) continue;
+    // instId 格式: "BTC-USDT"，只取 USDT 计价对
+    if (!d.instId?.endsWith('-USDT')) continue;
+    const sym = d.instId.slice(0, -5).toUpperCase();
+    if (!symbolSet.has(sym)) continue;
 
     const last = Number(d.last);
     const open24h = Number(d.open24h);
@@ -78,9 +79,10 @@ async function fetchGateSnapshot(tokenList: string[]): Promise<AssetItem[]> {
 
   const result: AssetItem[] = [];
   for (const d of json) {
-    // currency_pair 格式: "BTC_USDT"
-    const sym = d.currency_pair?.split('_')[0]?.toUpperCase();
-    if (!sym || !symbolSet.has(sym)) continue;
+    // currency_pair 格式: "BTC_USDT"，只取 USDT 计价对
+    if (!d.currency_pair?.endsWith('_USDT')) continue;
+    const sym = d.currency_pair.slice(0, -5).toUpperCase();
+    if (!symbolSet.has(sym)) continue;
 
     const last = Number(d.last);
     if (!last) continue;

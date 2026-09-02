@@ -1,7 +1,7 @@
 {
   "name": "Crypto Tracker - Real-time Price Widget",
   "type": "module",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "private": true,
   "scripts": {
     "dev": "vite",

@@ -10,6 +10,7 @@ import { isWsZombie } from '@/utils/ws/zombieDect';
 import { connectWS, setupWSCallbacks, disconnectWS, wsManager } from '@/background/assetWsHandler';
 import { initDefaultStorage } from '@/background/initDefaultStorage';
 
+
 let windowFocused = true;
 
 // 初始WS回调

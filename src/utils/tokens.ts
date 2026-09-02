@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/8/18 18:51:53
+// 更新时间: 2026/8/28 17:03:56
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -597,6 +597,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "DIA",
     "platform": 5
+  },
+  {
+    "symbol": "DJTB",
+    "platform": 1
   },
   {
     "symbol": "DODO",
@@ -2171,6 +2175,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XAPLD",
+    "platform": 2
+  },
+  {
     "symbol": "XAPP",
     "platform": 2
   },
@@ -2208,6 +2216,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XBSP",
+    "platform": 2
+  },
+  {
+    "symbol": "XBX",
     "platform": 2
   },
   {
@@ -2271,6 +2283,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XGLW",
+    "platform": 2
+  },
+  {
     "symbol": "XGME",
     "platform": 2
   },
@@ -2303,7 +2319,19 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XISRG",
+    "platform": 2
+  },
+  {
     "symbol": "XIWM",
+    "platform": 2
+  },
+  {
+    "symbol": "XJNJ",
+    "platform": 2
+  },
+  {
+    "symbol": "XKLAC",
     "platform": 2
   },
   {
@@ -2367,6 +2395,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XOKTA",
+    "platform": 2
+  },
+  {
     "symbol": "XON",
     "platform": 2
   },
@@ -2391,6 +2423,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XQCOM",
+    "platform": 2
+  },
+  {
     "symbol": "XQQQ",
     "platform": 2
   },
@@ -2399,7 +2435,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XRIVN",
+    "platform": 2
+  },
+  {
     "symbol": "XRKLB",
+    "platform": 2
+  },
+  {
+    "symbol": "XROK",
     "platform": 2
   },
   {
@@ -2443,6 +2487,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSTRC",
+    "platform": 2
+  },
+  {
     "symbol": "XTER",
     "platform": 6
   },
@@ -2475,6 +2523,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "XUNH",
+    "platform": 2
+  },
+  {
     "symbol": "XUSAR",
     "platform": 2
   },
@@ -2495,11 +2547,19 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "XWDC",
+    "platform": 2
+  },
+  {
     "symbol": "XXIAOMI",
     "platform": 2
   },
   {
     "symbol": "XXLE",
+    "platform": 2
+  },
+  {
+    "symbol": "XZM",
     "platform": 2
   },
   {

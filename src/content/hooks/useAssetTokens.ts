@@ -38,7 +38,6 @@ export function useAssetTokens(): [AssetItem[], React.Dispatch<React.SetStateAct
 
           return token;
         });
-
         return hasChanges ? newTokens : prevTokens;
       });
     }
