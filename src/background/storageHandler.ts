@@ -38,7 +38,7 @@ async function handleAssetTypeChange(_change: chrome.storage.StorageChange): Pro
   chrome.runtime.sendMessage({ type: 'ASSET_TYPE_SWITCHED' }).catch(() => {});
 }
 
-// ─── 职责 3：coins / data_source / stocks_list 变化 → 按资产类型决定是否重连
+// 职责 3：coins / data_source / stocks_list 变化 → 按资产类型决定是否重连
 async function handleAssetListChange(changes: Record<string, chrome.storage.StorageChange>): Promise<void> {
   const coinsChanged = isValueChanged(changes.coins, true);
   const dataSourceChanged = isValueChanged(changes.data_source);

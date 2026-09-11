@@ -47,6 +47,17 @@ function parseBN(msg: any): AssetItem | null {
   return toAssetItem(symbol, Number(msg.c), Number(msg.P));
 }
 
+/** Binance Futures (U本位合约) */
+function parseBNFutures(msg: any): AssetItem | null {
+  // 合约消息有 stream + data 包装，如 { stream: "btcusdt@ticker", data: { e: "24hrTicker", ... } }
+  if (!msg?.stream?.endsWith('@ticker') || !msg?.data) return null;
+  const d = msg.data;
+  if (d?.e !== '24hrTicker') return null;
+
+  const symbol = d.s.endsWith('USDT') ? d.s.slice(0, -4) + '-USDT' : d.s;
+  return toAssetItem(symbol, Number(d.c), Number(d.P));
+}
+
 /** Hyperliquid */
 function parseHL(msg: any): AssetItem | null {
   if (msg?.channel !== 'candle' || !msg?.data) return null;
@@ -96,6 +107,6 @@ export function parseWSMessage(msg: any): AssetItem[] | null {
   const stock = parseBNStock(msg);
   if (stock) return stock;
 
-  const crypto = parseGate(msg) || parseOKX(msg) || parseBN(msg) || parseHL(msg);
+  const crypto = parseGate(msg) || parseOKX(msg) || parseBN(msg) || parseBNFutures(msg) || parseHL(msg);
   return crypto ? [crypto] : null;
 }

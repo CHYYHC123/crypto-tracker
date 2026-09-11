@@ -67,7 +67,10 @@ function DataSource() {
                   {/* Info */}
                   <div className="flex-1 flex items-center justify-between">
                     <div>
-                      <span className="text-white font-medium text-sm">{info.name}</span>
+                      <span className="text-white font-medium text-sm">
+                        <span>{info.name}</span>
+                        <span className='text-[12px] ml-1'>{info.market === 'futures' ? '(合约)' : '(现货)'}</span>
+                      </span>
                       <div className="text-gray-400 text-xs mt-0.5">{info.needsVPN ? 'Need VPN' : 'No VPN'}</div>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}

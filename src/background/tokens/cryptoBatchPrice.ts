@@ -67,6 +67,26 @@ async function fetchBNSnapshot(tokenList: string[]): Promise<AssetItem[]> {
     });
 }
 
+// Binance Futures (BNFutures) REST
+// GET https://fapi.binance.com/fapi/v1/ticker/24hr?symbols=[...]
+// U本位永续合约，响应结构与现货一致
+
+async function fetchBNFuturesSnapshot(tokenList: string[]): Promise<AssetItem[]> {
+  if (!tokenList.length) return [];
+  const symbols = JSON.stringify(tokenList.map(s => `${s.toUpperCase()}USDT`));
+  const url = `https://fapi.binance.com/fapi/v1/ticker/24hr?symbols=${encodeURIComponent(symbols)}`;
+  const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const json = await resp.json();
+  if (!Array.isArray(json)) return [];
+
+  return json
+    .filter((d: any) => d.lastPrice && Number(d.lastPrice) > 0)
+    .map((d: any) => {
+      const sym = d.symbol.endsWith('USDT') ? d.symbol.slice(0, -4) : d.symbol;
+      return toAssetItem(sym, Number(d.lastPrice), Number(d.priceChangePercent));
+    });
+}
+
 // Gate REST
 // GET https://api.gateio.ws/api/v4/spot/tickers
 // 返回所有 ticker，客户端过滤
@@ -120,6 +140,8 @@ export async function getCryptoBatchPrice(exchange: ExchangeType, tokenList: str
       data = await fetchOKXSnapshot(tokenList);
     } else if (exchange === 'BN') {
       data = await fetchBNSnapshot(tokenList);
+    } else if (exchange === 'BNFutures') {
+      data = await fetchBNFuturesSnapshot(tokenList);
     } else if (exchange === 'Gate') {
       data = await fetchGateSnapshot(tokenList);
     } else {

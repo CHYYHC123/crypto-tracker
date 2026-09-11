@@ -5,13 +5,16 @@ import BNLOGO from '@/assets/image/logo/bn_logo.png';
 import { GlobalAlerts } from '@/types';
 /** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
-export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const
+export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const;
 
 /** 默认 全局预警配置 */
 export const defaultGlobalAlert: GlobalAlerts = { bull: '10', bear: '10', step: '1', enabled: true };
 
 /** 交易所类型 */
-export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL' | 'BNStock';
+export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL' | 'BNStock' | 'BNFutures';
+
+/** 交易市场类型：现货 or 合约 */
+export type MarketType = 'spot' | 'futures';
 
 /** 默认数据源 */
 export const defaultDataSource: ExchangeType = 'OKX';
@@ -23,6 +26,7 @@ export interface ExchangeInfo {
   logo: string; // 图片 URL（通过 Vite 导入的图片会被处理为字符串）
   needsVPN: boolean;
   disabled: boolean;
+  market: MarketType; // 现货 or 合约
 }
 
 /** 用户可在 UI 中切换的加密货币交易所（不含 BNStock 等内部专用类型） */
@@ -34,26 +38,38 @@ export const ExchangeListMap: Record<SelectableExchangeType, Omit<ExchangeInfo, 
     name: 'Binance',
     logo: BNLOGO,
     needsVPN: true,
-    disabled: false
+    disabled: false,
+    market: 'spot'
+  },
+  BNFutures: {
+    name: 'Binance',
+    logo: BNLOGO,
+    needsVPN: true,
+    disabled: false,
+    market: 'futures'
   },
   OKX: {
     name: 'OKX',
     logo: OKXLOGO,
     needsVPN: true,
-    disabled: false
+    disabled: false,
+    market: 'spot'
   },
   Gate: {
     name: 'Gate.io',
     logo: GATELOGO,
     needsVPN: false,
-    disabled: false
+    disabled: false,
+    market: 'spot'
   },
+
   HL: {
     name: 'Hyperliquid',
     logo: OKXLOGO, // 暂时使用 OKX logo
     needsVPN: true,
-    disabled: true
-  },
+    disabled: true,
+    market: 'spot'
+  }
 };
 
 type SubscribeBuilder = (tokenList: string[]) => any;
@@ -102,6 +118,18 @@ const BNConfig: ExchangeConfig = {
   }
 };
 
+// 币安合约（U本位永续合约）行情
+const BNFuturesConfig: ExchangeConfig = {
+  wsUrl: 'wss://fstream.binance.com/market/stream',
+  buildSubscribeMessage(tokenList) {
+    return {
+      method: 'SUBSCRIBE',
+      params: tokenList.map(token => `${token.toLowerCase()}usdt@ticker`),
+      id: 1
+    };
+  }
+};
+
 const HLConfig: ExchangeConfig = {
   wsUrl: 'wss://api.hyperliquid.xyz/ws',
 
@@ -124,12 +152,13 @@ const BNStockConfig: ExchangeConfig = {
   alwaysSubscribe: true,
   buildSubscribeMessage(_tokenList) {
     return { method: 'SUBSCRIBE', params: ['price'], id: 1 };
-  },
+  }
 };
 
 export const ExchangeConfigMap: Record<ExchangeType, ExchangeConfig> = {
   OKX: OKXConfig,
   BN: BNConfig,
+  BNFutures: BNFuturesConfig,
   Gate: GateConfig,
   HL: HLConfig,
   BNStock: BNStockConfig

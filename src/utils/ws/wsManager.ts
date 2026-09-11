@@ -86,13 +86,6 @@ class WsManager {
       return;
     }
 
-    // 预取开盘价（Gate 和 BN 需要从 REST API 获取）
-    // try {
-    //   await prefetchOpenPrices(exchange, tokenList);
-    // } catch (err) {
-    //   console.log('[WsManager] 预取开盘价失败:', err);
-    // }
-
     // 创建 WebSocket 连接
     console.log(`[WsManager] 正在连接 ${exchange}...`);
     this.ws = new WebSocket(config.wsUrl);
