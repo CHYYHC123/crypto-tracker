@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/8/28 17:03:56
+// 更新时间: 2026/9/2 17:58:14
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -517,6 +517,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "COW",
     "platform": 5
+  },
+  {
+    "symbol": "CP",
+    "platform": 2
   },
   {
     "symbol": "CRCLB",

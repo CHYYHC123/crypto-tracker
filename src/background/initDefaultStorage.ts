@@ -1,7 +1,7 @@
 /**
  * @fileoverview [Storage 默认值初始化]
  * 职责：在 extension 首次安装/更新时，统一检查并写入所有缺失的默认值。
- *
+ * 
  * 扩展方式：新增默认 key 只需在 APP_DEFAULTS 添加一行。
  */
 
