@@ -1,4 +1,10 @@
-import { SUPPORTEDTOKEN, TokenSymbol } from './tokens';
+import { SUPPORTED_TOKENS } from './tokens';
+
+// platform 位运算常量: BN=1, OKX=2, Gate=4
+export const PLATFORM = { BN: 1, OKX: 2, GATE: 4 } as const;
+
+// 模块加载时构建一次 Map，查询 O(1)
+const TOKEN_MAP = new Map<string, number>(SUPPORTED_TOKENS.map(t => [t.symbol, t.platform]));
 /**
  * 保留小数点位数
  */
@@ -68,7 +74,7 @@ export function throttle<T extends (...args: any[]) => void>(fn: T, limit: numbe
  * @param decimalPlaces 保留的小数位数（默认2位）
  * @returns 格式化后的字符串，例如 12345.678 -> "12,345.68"
  */
-export function formatNumberWithCommas(number: number, decimalPlaces = 2): string {
+export function formatNumWithCommas(number: number, decimalPlaces = 2): string {
   if (isNaN(number) || number === null || !number) return '0';
   // 对非常小的数值做特殊处理
   if (Math.abs(number) > 1) {
@@ -109,10 +115,63 @@ export function formatNumberNoRound(number: number, decimalPlaces = 8): string {
   return parts.join('.');
 }
 /**
- * @description 查询本地token
- * @param symbol 要查询的 token
+ * 查询本地 token 是否存在
+ * @param symbol  币种名称，大小写不敏感
+ * @param platform 可选，平台位掩码（PLATFORM.BN / PLATFORM.OKX / PLATFORM.GATE 或组合）
+ *                 不传时只要在任意平台存在即返回 true
  */
+export function queryTokenLocal(symbol: string, platform?: number): boolean {
+  const bits = TOKEN_MAP.get(symbol.toUpperCase());
+  if (bits === undefined) return false;
+  if (platform === undefined) return true;
+  return (bits & platform) !== 0;
+}
 
-export function queryTokenLocal(symbol: string): boolean {
-  return SUPPORTEDTOKEN?.includes(symbol as TokenSymbol);
+/**
+ * 获取 token 的平台位掩码，token 不存在时返回 0
+ */
+export function getTokenPlatform(symbol: string): number {
+  return TOKEN_MAP.get(symbol.toUpperCase()) ?? 0;
+}
+
+/**
+ * 根据涨跌幅返回对应的 Tailwind 文字颜色 class
+ * @example getChangeColorClass(2.5) → 'text-emerald-400'
+ */
+export function getChangeColorClass(change?: number | null): string {
+  if (change == null) return 'text-gray-400';
+  return change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+}
+
+/**
+ * 格式化涨跌幅百分比，null/undefined 时返回 '—'
+ * @example formatChange(2.5) → '+2.5%'  formatChange(-1.2) → '-1.2%'
+ */
+export function formatChange(change?: number | null): string {
+  if (change == null) return '—';
+  const prefix = change >= 0 ? '+' : '';
+  return `${prefix}${change}%`;
+}
+
+/**
+ * 过滤输入值：只保留字母、数字、中文，并转为大写
+ * 适用于 symbol 搜索框的 onChange 处理
+ */
+export function sanitizeSymbolInput(value: string): string {
+  return value.replace(/[^a-zA-Z0-9\u4e00-\u9fff\u3400-\u4dbf]/g, '').toUpperCase();
+}
+
+/**
+ * 格式化钱包地址
+ * @param address 地址
+ * @param start 保留前面字符数量（包含0x）
+ * @param end 保留后面字符数量
+ */
+export function formatAddress(address: string, start = 12, end = 12): string {
+  // return address;
+  if (!address) return '';
+  if (address.length <= start + end) {
+    return address;
+  }
+  return `${address.slice(0, start)}...${address.slice(-end)}`;
 }

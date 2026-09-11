@@ -1,14 +1,21 @@
 import OKXLOGO from '@/assets/image/logo/okx_logo.png';
 import GATELOGO from '@/assets/image/logo/gate_logo.png';
 import BNLOGO from '@/assets/image/logo/bn_logo.png';
+
+import { GlobalAlerts } from '@/types';
 /** 默认展示币种 */
 export const defaultCoinList = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL'];
+export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as const
+
+/** 默认 全局预警配置 */
+export const defaultGlobalAlert: GlobalAlerts = { bull: '10', bear: '10', step: '1', enabled: true };
+
+/** 交易所类型 */
+export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL' | 'BNStock';
 
 /** 默认数据源 */
 export const defaultDataSource: ExchangeType = 'OKX';
 
-/** 交易所类型 */
-export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL';
 /** 交易所 UI 信息接口 */
 export interface ExchangeInfo {
   type: ExchangeType;
@@ -18,13 +25,16 @@ export interface ExchangeInfo {
   disabled: boolean;
 }
 
+/** 用户可在 UI 中切换的加密货币交易所（不含 BNStock 等内部专用类型） */
+export type SelectableExchangeType = Exclude<ExchangeType, 'BNStock'>;
+
 /** 交易所 UI 信息配置 */
-export const ExchangeListMap: Record<ExchangeType, Omit<ExchangeInfo, 'type'>> = {
+export const ExchangeListMap: Record<SelectableExchangeType, Omit<ExchangeInfo, 'type'>> = {
   BN: {
     name: 'Binance',
     logo: BNLOGO,
     needsVPN: true,
-    disabled: true
+    disabled: false
   },
   OKX: {
     name: 'OKX',
@@ -36,25 +46,26 @@ export const ExchangeListMap: Record<ExchangeType, Omit<ExchangeInfo, 'type'>> =
     name: 'Gate.io',
     logo: GATELOGO,
     needsVPN: false,
-    disabled: true
+    disabled: false
   },
   HL: {
     name: 'Hyperliquid',
     logo: OKXLOGO, // 暂时使用 OKX logo
     needsVPN: true,
     disabled: true
-  }
+  },
 };
-/** 交易所类型 */
-export type displayCurrency = 'USD' | 'CNY' | 'EUR' | 'JPY';
 
 type SubscribeBuilder = (tokenList: string[]) => any;
 
 interface ExchangeConfig {
   wsUrl: string;
   buildSubscribeMessage: SubscribeBuilder;
+  /** 无论 tokenList 是否为空，都发送订阅消息（适用于订阅全局流的交易所，如 BNStock） */
+  alwaysSubscribe?: boolean;
 }
 
+// 订阅交易所信息构建器
 const OKXConfig: ExchangeConfig = {
   wsUrl: 'wss://wspri.okx.com:8443/ws/v5/ipublic',
   buildSubscribeMessage(tokenList) {
@@ -107,9 +118,19 @@ const HLConfig: ExchangeConfig = {
   }
 };
 
+// 交易所配置映射
+const BNStockConfig: ExchangeConfig = {
+  wsUrl: 'wss://nbstream.binance.com/equity/stream',
+  alwaysSubscribe: true,
+  buildSubscribeMessage(_tokenList) {
+    return { method: 'SUBSCRIBE', params: ['price'], id: 1 };
+  },
+};
+
 export const ExchangeConfigMap: Record<ExchangeType, ExchangeConfig> = {
   OKX: OKXConfig,
   BN: BNConfig,
   Gate: GateConfig,
-  HL: HLConfig
+  HL: HLConfig,
+  BNStock: BNStockConfig
 };

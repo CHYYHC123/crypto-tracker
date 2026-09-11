@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -13,9 +13,13 @@ import { CoinsHeader } from '@/content/components/coinsHeader';
 import { usePriceAlertManager } from '@/hooks/usePriceAlertManager';
 import { useDataStatus } from '@/hooks/useDataStatus';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { usePriceAlerts } from '@/content/hooks/usePriceAlerts';
+import { useGlobalAlerts } from '@/content/hooks/useGlobalAlerts';
+import { useAssetTokens } from '@/content/hooks/useAssetTokens';
+import { useContentResync } from '@/content/hooks/useContentResync';
 
 // type
-import { TokenItem, PriceAlert } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
 
 // dnd-kit
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -24,10 +28,13 @@ import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifi
 
 export default function ContentMain() {
   const [collapsed, setCollapsed] = useState(true);
-  const [tokens, setTokens] = useState<TokenItem[]>([]);
-  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const [tokens, setTokens] = useAssetTokens();
+
+  const priceAlerts = usePriceAlerts();
 
   const contentRef = useRef<HTMLDivElement | null>(null); // 绑定到 motion.div
+
+  useContentResync();
 
   /**
    * 移动端隐藏token表
@@ -39,6 +46,7 @@ export default function ContentMain() {
 
   // 管理预警消息
   usePriceAlertManager(tokens);
+  useGlobalAlerts(tokens);
 
   // 是否正在排序拖拽（用于禁用外层拖拽）
   const [isSorting, setIsSorting] = useState(false);
@@ -53,107 +61,6 @@ export default function ContentMain() {
       }
     })
   );
-
-  // 读取 price_alerts
-  useEffect(() => {
-    const loadPriceAlerts = () => {
-      chrome.storage.local.get('price_alerts', res => {
-        const alerts = (res.price_alerts as PriceAlert[]) || [];
-        setPriceAlerts(alerts);
-      });
-    };
-
-    loadPriceAlerts();
-
-    // 监听 storage 变化
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.price_alerts) {
-        loadPriceAlerts();
-      }
-    };
-
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    // 监听消息通知
-    const handleMessage = (msg: any) => {
-      if (msg.type === 'PRICE_ALERTS_UPDATED') loadPriceAlerts();
-    };
-
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-      chrome.runtime.onMessage.removeListener(handleMessage);
-    };
-  }, []);
-
-  // 监听价格更新
-  useEffect(() => {
-    // 监听 background.js 发来的消息
-    function handleMessage(msg: any) {
-      if (msg.type === 'UPDATE_PRICE' && msg.data) {
-        setTokens(prevTokens => {
-          // 如果是首次加载或数量变化，直接使用新数据
-          if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
-
-          // 优化：使用 Map 将查找复杂度从 O(n*m) 降为 O(n)
-          const updatedMap = new Map<string, TokenItem>();
-          msg.data.forEach((token: TokenItem) => {
-            updatedMap.set(token.symbol.toUpperCase(), token);
-          });
-
-          // 保持当前顺序，只更新价格
-          let hasChanges = false;
-          const newTokens = prevTokens.map(token => {
-            const updated = updatedMap.get(token.symbol.toUpperCase());
-            if (!updated) return token; // 找不到对应 token，保持原样
-
-            // 优化：只有价格、涨跌幅或 lastPrice 真正变化时才创建新对象
-            const priceChanged = updated.price !== token.price;
-            const changeChanged = updated.change !== token.change;
-            const lastPriceChanged = updated.lastPrice !== token.lastPrice;
-
-            if (priceChanged || changeChanged || lastPriceChanged) {
-              hasChanges = true;
-              return { ...token, price: updated.price, change: updated.change, lastPrice: updated.lastPrice };
-            }
-
-            // 数据没有变化，保持原对象引用（有利于 React.memo）
-            return token;
-          });
-
-          // 优化：如果所有 token 都无变化，直接返回 prevTokens，避免触发 setState
-          return hasChanges ? newTokens : prevTokens;
-        });
-      }
-    }
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    // 卸载组件时移除监听
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleMessage);
-    };
-  }, []);
-
-  /**
-   * 1、监听页面可见性变化，当页面从隐藏变为可见时，通知 background 主动推送数据
-   * 2、初次渲染后，3s后查看是否有数据推送如果没有就重新拉取一次
-   */
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    setTimeout(() => {
-      chrome.runtime.sendMessage({ type: 'CONTENT_RESYNC' });
-    }, 3000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
   // 排序开始
   const handleSortStart = () => {
@@ -184,15 +91,8 @@ export default function ContentMain() {
   // 手动刷新
   const refreshData = () => {
     chrome.runtime.sendMessage({ type: 'REFRESH', payload: { falg: true } }, response => {
-      if (response.success) {
-        toast.success(response?.msg, {
-          duration: 2000
-        });
-      } else {
-        toast.error(response?.msg, {
-          duration: 2000
-        });
-      }
+      const toastType = response.success ? 'success' : 'error';
+      toast[toastType](response?.msg, { duration: 2000 });
     });
   };
 
@@ -203,7 +103,7 @@ export default function ContentMain() {
           <CustomToaster />
           <CoinsContent layout className="w-60 max-h-100 flex flex-col overflow-hidden">
             {/* 固定在顶部的 Header */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <CoinsHeader status={status} collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} displayToken={tokens?.length > 0 ? tokens[0] : null} priceAlerts={priceAlerts} onRefresh={refreshData} />
             </div>
 
@@ -226,7 +126,7 @@ export default function ContentMain() {
                   <div className="space-y-2">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleSortStart} onDragEnd={handleSortEnd}>
                       <SortableContext items={tokens.map(t => t.symbol)} strategy={verticalListSortingStrategy}>
-                        {tokens?.map((coin: TokenItem) => (
+                        {tokens?.map((coin: AssetItem) => (
                           <SortableCoinItem key={coin.symbol} coin={coin} priceAlerts={priceAlerts} />
                         ))}
                       </SortableContext>
@@ -238,7 +138,7 @@ export default function ContentMain() {
 
             {/* 固定在底部的 Footer */}
             {!collapsed && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 <CoinsFooter status={status} onRefresh={refreshData} />
               </div>
             )}

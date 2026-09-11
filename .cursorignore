@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Chrome extension packages
+dist.crx
+dist.pem
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Large doc / archive files
+full_project_code.md
+Crypto_Tracker_项目架构评价报告.docx
+
+# Release snapshots & screenshots
+release1/
+screenshot1/
+blog/
+
+# OS metadata
+.DS_Store
+
+# Git internals
+.git/

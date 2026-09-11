@@ -1,184 +1,126 @@
-import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useState, useMemo } from 'react';
+import type { KeyboardEvent } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+
+import SearchInput from '@/components/common/SearchInput';
+import PopularSuggestions from '@/popup/components/search/PopularSuggestions';
+import DialogHeader from '@/popup/components/search/DialogHeader';
+import { TokenList } from '@/popup/components/search/TokenList';
+
+import { useSymbolList } from '@/popup/hooks/useSymbolList';
 
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
-import ConfirmDialog from '@/components/common/confirm-dialog';
+import Dialog from '@/components/common/dialog';
 
-import type { TokenItem } from '@/types/index';
-import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
-import { validateToken } from '@/popup/utils/validateToken';
+import type { AssetItem } from '@/types/asset';
+import { POPULAR_TOKENS } from '@/config/exchangeConfig';
+import { POPULAR_STOCKS } from '@/config/stocks';
+import type { AssetTypes } from '@/types/asset';
+import { sanitizeSymbolInput } from '@/utils/index';
+import { validateCount } from '@/popup/utils/validateCount';
+import { useAddAsset } from '@/popup/hooks/useAddAsset';
 
-// 通过消息传递访问 background 的 coinsManager
-async function getCoins(): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'GET_COINS' }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve(response.data);
-      } else {
-        reject(new Error(response?.error || 'Failed to get coins'));
-      }
-    });
-  });
-}
-
-async function setCoins(coins: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'SET_COINS', payload: { coins } }, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (response?.success) {
-        resolve();
-      } else {
-        reject(new Error(response?.error || 'Failed to set coins'));
-      }
-    });
-  });
-}
+const MODE_CONFIG: Record<AssetTypes, { dialogTitle: string; placeholder: string; popularItems: readonly string[] | string[]; suffix: string }> = {
+  crypto: {
+    dialogTitle: 'Add Crypto',
+    placeholder: 'Search Symbol (e.g. BTC)',
+    popularItems: POPULAR_TOKENS,
+    suffix: '/USDT'
+  },
+  stocks: {
+    dialogTitle: 'Add Stock',
+    placeholder: 'Search Symbol (e.g. AAPL)',
+    popularItems: POPULAR_STOCKS,
+    suffix: ''
+  }
+};
 
 interface TokenSearchProps {
-  /** 当前 token 列表，用于检查是否已存在 */
-  tokens: TokenItem[];
-  /** 添加成功后的回调，用于刷新数据 */
+  tokens: AssetItem[];
   onTokenAdded?: () => void;
+  mode?: AssetTypes;
 }
 
-export const TokenSearch = ({ tokens, onTokenAdded }: TokenSearchProps) => {
-  // 搜索输入框
-  const [searchValue, setSearchValue] = useState<string>('');
-  const [errorTip, setErrorTip] = useState<string | null>(null);
+// TokenSearch
+export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSearchProps) => {
+  const config = MODE_CONFIG[mode];
+  const { saveAsset, loading } = useAddAsset(mode, onTokenAdded);
 
-  // 强制添加弹窗
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingToken, setPendingToken] = useState<string>('');
+  // "Add crypto" 弹窗
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [searchVal, setSearchVal] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Loading 状态
-  const [loading, setLoading] = useState(false);
+  // 已添加的 symbol 集合（O(1) 查找）
+  const addedSet = useMemo(() => new Set(tokens?.map(t => t.symbol) ?? []), [tokens]);
 
-  const changeSearchValue = (event: ChangeEvent<HTMLInputElement>) => {
-    setErrorTip(null); // 清除错误样式
-    const rawValue = event.target.value;
-    // 1. 仅保留英文字母
-    const onlyLetters = rawValue.replace(/[^a-zA-Z0-9]/g, '');
-    // 2. 转为大写
-    const uppercased = onlyLetters.toUpperCase();
-    setSearchValue(uppercased);
-  };
-
-  // Token是否已经存在
-  const alreadyExistToken = useMemo(() => {
-    const alreadyExist = tokens?.some((token: TokenItem) => token.symbol === searchValue);
-    return alreadyExist;
-  }, [searchValue, tokens]);
-
-  // 添加 token 按下回车键触发
-  const handleKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') await addToken();
-  };
-
-  /**
-   * 保存 token 到 storage.local 中
-   */
-  const saveToken = async (symbol: string): Promise<void> => {
-    try {
-      const oldCoins = await getCoins();
-      if (oldCoins?.includes(symbol)) {
-        toast('Token already exists ⚠️', { duration: 2000 });
-        setSearchValue('');
-        return;
-      }
-      const newCoins = [...oldCoins, symbol];
-      await setCoins(newCoins);
-      setSearchValue('');
-
-      setTimeout(() => {
-        onTokenAdded?.();
-        toast.success('Token added successfully', {
-          duration: 2000
-        });
-      }, 1500);
-    } catch (error) {
-      toast.error('Token addition failed', {
-        duration: 2000
-      });
-    }
-  };
-
-  const addToken = async () => {
-    if (!searchValue) return;
-    if (alreadyExistToken) {
-      setErrorTip(`${searchValue} already exists`);
+  // 打开弹窗
+  const openAddDialog = async () => {
+    const canAdd = await validateCount(tokens);
+    if (!canAdd) {
+      toast.error('Max tracked cryptos reached. Contact admin to unlock.');
       return;
     }
-
-    // 获取当前数据源
-    const { data_source } = await chrome.storage.local.get('data_source');
-    const currentDataSource = (data_source as ExchangeType) || defaultDataSource;
-
-    // 使用提取的验证方法
-    setLoading(true);
-    try {
-      const effectiveToken = await validateToken(searchValue, currentDataSource);
-
-      if (!effectiveToken) {
-        // 验证失败，显示确认弹窗让用户选择是否强制添加
-        setPendingToken(searchValue);
-        setShowConfirm(true);
-        setErrorTip(`Invalid token`);
-        return;
-      }
-      await saveToken(searchValue);
-    } finally {
-      setLoading(false);
-    }
+    setSearchVal('');
+    setShowAddDialog(true);
   };
 
-  // 强制添加 token
-  const handleForceAdd = async () => {
-    if (pendingToken) {
-      await saveToken(pendingToken);
-      setPendingToken('');
-      setErrorTip(null);
-      setShowConfirm(false);
+  // 弹窗打开后聚焦搜索框
+  useEffect(() => {
+    if (showAddDialog) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 120);
+      return () => clearTimeout(timer);
     }
+  }, [showAddDialog]);
+
+  const { symbolList: dialogTokenList } = useSymbolList({ mode, searchVal });
+
+  //  弹窗内点击 token（已知合法币种，跳过验证）
+  const handleSelectToken = async (symbol: string) => {
+    if (loading || addedSet.has(symbol)) return;
+    const ok = await saveAsset(symbol);
+    if (ok) setShowAddDialog(false);
+  };
+
+  // 弹窗内搜索框 Enter：精确匹配则直接添加
+  const handleEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter' || !searchVal) return;
+    const exact = dialogTokenList.find(t => t.symbol === searchVal.toUpperCase());
+    if (!exact) {
+      toast.error(`${searchVal} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
+      return;
+    }
+    await handleSelectToken(exact.symbol);
+  };
+
+  // 搜索框输入变化
+  const handleChange = (val: string) => {
+    setSearchVal(sanitizeSymbolInput(val));
   };
 
   return (
     <>
-      <div className="search_token mt-4 flex items-center flex-shrink-0">
-        <Input value={searchValue} errorTip={errorTip} placeholder="Search symbol(e.g. BTC)" onKeyDown={handleKeyDown} onChange={changeSearchValue} disabled={loading} />
-        <Button className="ml-4" variant="gradient" disabled={loading} onClick={addToken}>
+      {/* 触发行：输入框聚焦 或 点 Add 均打开弹窗 */}
+      <div className="search_token mt-4 flex items-center shrink-0">
+        <Input value="" placeholder={config.placeholder} onFocus={openAddDialog} disabled={loading} readOnly />
+        <Button className="ml-4" variant="gradient" disabled={loading} onClick={openAddDialog}>
           Add
         </Button>
       </div>
 
-      {/* 强制添加确认弹窗 */}
-      <ConfirmDialog
-        open={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handleForceAdd}
-        type="danger"
-        title="Invalid Token"
-        description={
-          <>
-            <div className="px-4 py-2 text-gray-300 text-sm leading-relaxed">
-              The token '{pendingToken}' was not found.
-              <br />
-              It may not display price data. Please remove '{pendingToken}' if no data appears.
-            </div>
-          </>
-        }
-        confirmText="Force Add"
-        cancelText="Cancel"
-      />
+      <Dialog open={showAddDialog} onClose={() => setShowAddDialog(false)} maxWidth="sm">
+        <DialogHeader title={config.dialogTitle} onClose={() => setShowAddDialog(false)} />
+
+        {/* 搜索框 */}
+        <div className="px-4 pt-3 pb-2">
+          <SearchInput inputRef={inputRef} value={searchVal} placeholder={config.placeholder} onChange={handleChange} onKeyDown={handleEnter} onClear={() => setSearchVal('')} />
+        </div>
+
+        <PopularSuggestions items={config.popularItems} addedSet={addedSet} loading={loading} onSelect={handleSelectToken} suffix={config.suffix} />
+
+        <TokenList list={dialogTokenList} addedSet={addedSet} loading={loading} mode={mode} onSelect={handleSelectToken} />
+      </Dialog>
     </>
   );
 };
-

@@ -13,7 +13,7 @@ export function useDataStatus() {
 
   useEffect(() => {
     const handler = (msg: any) => {
-      if (msg?.type === 'DATA_STATUS_CHANGE') {
+      if (msg?.type === 'ASSET_STATUS_CHANGE') {
         const nextStatus = msg.data as DataStatus;
 
         // 防御式校验（很重要）

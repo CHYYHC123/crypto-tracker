@@ -1,14 +1,16 @@
 import { memo } from 'react';
-import { motion } from 'framer-motion';
 import type { ComponentProps } from 'react';
+import Logo from '@/components/common/logo';
+import { motion } from 'framer-motion';
+
 import { GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { formatNumberWithCommas } from '@/utils/index';
-import { TokenItem, PriceAlert } from '@/types/index';
-import AlertBadge from '@/popup/components/AlertBadge';
-
+import { formatNumWithCommas, formatChange, getChangeColorClass } from '@/utils/index';
+import { PriceAlert } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
+import AssetSubInfo from '@/components/common/AssetSubInfo';
 
 export type CoinsContentProps = ComponentProps<typeof motion.div>;
 
@@ -16,7 +18,7 @@ export const CoinsContent = ({ className, ...props }: CoinsContentProps) => <mot
 
 // 可排序的币种卡片组件
 interface SortableCoinItemProps {
-  coin: TokenItem;
+  coin: AssetItem;
   priceAlerts: PriceAlert[];
 }
 
@@ -45,7 +47,7 @@ function arePropsEqual(prevProps: SortableCoinItemProps, nextProps: SortableCoin
     if (prevAlert.direction !== nextAlert.direction) return false;
   }
 
-  // 其他属性（symbol, icon 等）变化不影响渲染，因为它们在组件生命周期内不会改变
+  // 其他属性（symbol 等）变化不影响渲染，因为它们在组件生命周期内不会改变
   return true;
 }
 
@@ -64,7 +66,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
   const alert = priceAlerts.find(a => a.symbol.toUpperCase() === coin.symbol.toUpperCase());
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition ${isDragging ? 'shadow-lg' : ''}`}>
+    <div ref={setNodeRef} style={style} className={cn('flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition', isDragging ? 'shadow-lg' : '')}>
       {/* 拖拽手柄 - 阻止事件冒泡到外层 motion.div */}
       <div
         {...attributes}
@@ -80,18 +82,16 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
       </div>
 
       <div className="flex items-center gap-2 flex-1">
-        <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{coin.icon}</div>
+        <Logo symbol={coin.symbol} category={coin.category} />
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
-          {alert ? <AlertBadge AlertInfo={alert} /> : <div className="text-[10px] opacity-60">{coin.symbol}</div>}
+          <AssetSubInfo coin={coin} alert={alert} />
         </div>
       </div>
       <div className="text-right mr-1">
-        <div className="text-xs font-semibold">{formatNumberWithCommas(coin.price ?? 0)}</div>
-        <div className={`text-[10px] ${coin.change === null ? 'text-gray-400' : coin.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{coin.change === null ? '—' : coin.change >= 0 ? '+' + coin.change + '%' : coin.change + '%'}</div>
+        <div className="text-xs font-semibold">{formatNumWithCommas(coin.price ?? 0)}</div>
+        <div className={`text-[10px] ${getChangeColorClass(coin.change)}`}>{formatChange(coin.change)}</div>
       </div>
     </div>
   );
 }, arePropsEqual);
-
-

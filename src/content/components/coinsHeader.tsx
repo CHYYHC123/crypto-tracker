@@ -2,10 +2,11 @@ import { memo, useMemo } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { DataStatus } from '@/types/index';
 import NetworkState from '@/content/components/networkState';
-import { formatNumberWithCommas } from '@/utils/index';
-import { PriceAlert, TokenItem } from '@/types/index';
-import AlertBadge from '@/popup/components/AlertBadge';
-
+import { formatNumWithCommas } from '@/utils/index';
+import { PriceAlert } from '@/types/index';
+import type { AssetItem } from '@/types/asset';
+import Logo from '@/components/common/logo';
+import AssetSubInfo from '@/components/common/AssetSubInfo';
 // 头部组件
 interface CoinsHeaderProps {
   /** 网络状态 */
@@ -16,7 +17,7 @@ interface CoinsHeaderProps {
   onToggle: () => void;
 
   /** 显示的 token  */
-  displayToken: TokenItem | null;
+  displayToken: AssetItem | null;
 
   /** 价格预警 */
   priceAlerts: PriceAlert[];
@@ -48,10 +49,10 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
       {collapsed && displayToken ? (
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-base font-medium">{displayToken.icon}</div>
+            <Logo symbol={displayToken.symbol} category={displayToken.category} />
             <div className="ml-2">
               <div className="text-xs font-medium">{displayToken.symbol}</div>
-              {currentAlert ? <AlertBadge AlertInfo={currentAlert} /> : <div className="text-[10px] opacity-60">{displayToken.id}</div>}
+              <AssetSubInfo coin={displayToken} alert={currentAlert} />
             </div>
           </div>
 
@@ -61,7 +62,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
             </div>
           ) : (
             <div className="mr-3 text-right">
-              {displayToken.price && <div className="text-xs font-semibold">{formatNumberWithCommas(displayToken.price)}</div>}
+              {displayToken.price && <div className="text-xs font-semibold">{formatNumWithCommas(displayToken.price)}</div>}
               <div className={`text-[10px] ${changeDisplay?.className}`}>{changeDisplay?.text ?? '0%'}</div>
             </div>
           )}

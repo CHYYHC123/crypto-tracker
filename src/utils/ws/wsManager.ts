@@ -1,11 +1,9 @@
 import { ExchangeConfigMap, ExchangeType } from '@/config/exchangeConfig';
-import { prefetchOpenPrices } from './sodUtc8';
+// import { prefetchOpenPrices } from './sodUtc8';
 import { DataStatus } from '@/types/index';
 
 // Re-export DataStatus for convenience
 export { DataStatus };
-
-// ============ 类型定义 ============
 
 export interface WsManagerConfig {
   maxRetries?: number; // 最大重试次数，默认 5
@@ -39,7 +37,7 @@ class WsManager {
   // 重试相关状态
   private retryCount = 0;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
-  // 是否手动断开连接
+  // 是否手动断开连接 -- 手动断开不触发重新连接
   private isManualDisconnect = false;
 
   // 当前连接信息（用于重连）
@@ -89,11 +87,11 @@ class WsManager {
     }
 
     // 预取开盘价（Gate 和 BN 需要从 REST API 获取）
-    try {
-      await prefetchOpenPrices(exchange, tokenList);
-    } catch (err) {
-      console.log('[WsManager] 预取开盘价失败:', err);
-    }
+    // try {
+    //   await prefetchOpenPrices(exchange, tokenList);
+    // } catch (err) {
+    //   console.log('[WsManager] 预取开盘价失败:', err);
+    // }
 
     // 创建 WebSocket 连接
     console.log(`[WsManager] 正在连接 ${exchange}...`);
@@ -112,16 +110,15 @@ class WsManager {
       this.lastMessageAt = Date.now();
       this.startWatchdog();
 
-      // 发送订阅消息
-      if (tokenList.length > 0) {
+      // 发送订阅消息（alwaysSubscribe 为 true 时忽略 tokenList 是否为空，如 BNStock）
+      if (tokenList.length > 0 || config.alwaysSubscribe) {
         const msg = config.buildSubscribeMessage(tokenList);
-        // this.ws?.send(JSON.stringify(msg));
         if (Array.isArray(msg)) {
           msg.forEach(m => this.ws?.send(JSON.stringify(m)));
         } else {
           this.ws?.send(JSON.stringify(msg));
         }
-        console.log(`[WsManager] 已订阅 ${tokenList.length} 个币种`);
+        console.log(`[WsManager] 已发送订阅消息`);
       }
 
       // 触发回调
@@ -488,6 +485,20 @@ class WsManager {
    */
   isInCooldownMode(): boolean {
     return this.inCooldownMode;
+  }
+
+  /**
+   * 设置活跃状态
+   * - false：停止 watchdog 和待执行的重试定时器，但不断开已有连接
+   * - true：如果当前已连接则重启 watchdog；如果连接已断开则由调用方负责重连
+   */
+  setActive(active: boolean): void {
+    if (active) {
+      if (this.isConnected()) this.startWatchdog();
+    } else {
+      this.stopWatchdog();
+      this.clearRetryTimer();
+    }
   }
 }
 

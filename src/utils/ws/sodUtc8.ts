@@ -1,6 +1,6 @@
-import { Ticker } from './parseTicker';
+// import { Ticker } from './parseTicker';
 import { ExchangeType } from '@/config/exchangeConfig';
-
+import type { CryptoTicker } from '@/types/messages';
 // 开盘价缓存：key = "交易所_币种-USDT"，value = 开盘价
 const cache = new Map<string, number>();
 let currentDate = getUtc8Date();
@@ -122,7 +122,7 @@ async function fetchOpenPrice(exchange: ExchangeType, token: string): Promise<vo
  * - OKX: 直接使用 WebSocket 返回的 sodUtc8
  * - Gate/BN: 从缓存获取预取的开盘价
  */
-export function fillSodUtc8(ticker: Ticker): Ticker {
+export function fillSodUtc8(ticker: CryptoTicker): CryptoTicker {
   checkAndClearExpiredCache();
 
   const key = `${ticker.exchange}_${ticker.symbol}`;
