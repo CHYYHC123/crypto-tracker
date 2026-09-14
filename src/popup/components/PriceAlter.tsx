@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import type { Direction } from '@/types';
 
@@ -13,6 +14,7 @@ interface PriceAlertInputProps {
 }
 
 const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onPriceChange, onDirectionChange }) => {
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.priceAlert' });
   // 使用本地状态保存输入字符串，保留小数位数
   const [inputValue, setInputValue] = useState<string>('');
 
@@ -142,17 +144,17 @@ const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onP
 
   return (
     <div className="w-full border border-gray-800 p-3 rounded-xl">
-      <h2 className="text-white/90 font-normal text-sm mb-2">Alert Price</h2>
+      <h2 className="text-white/90 font-normal text-sm mb-2">{t('alertPrice')}</h2>
 
       {/* 价格输入/调节器 */}
       <div className="flex items-center rounded-xl border border-gray-700 mb-4 overflow-hidden">
-        <button onClick={handleDecrement} className="p-3 transition-colors text-gray-400 border-r border-gray-700 cursor-pointer transition-all transition-discrete duration-300 hover:bg-gray-600">
+        <button onClick={handleDecrement} className="p-3 text-gray-400 border-r border-gray-700 cursor-pointer transition-all transition-discrete duration-300 hover:bg-gray-600">
           <Minus size={16} />
         </button>
 
         <input type="text" inputMode="decimal" value={inputValue} onChange={handleInputChange} onBlur={handleBlur} className="flex-1 bg-transparent text-center text-white text-base font-semibold outline-none w-full" />
 
-        <button onClick={handleIncrement} className="p-3 transition-colors text-indigo-400 border-l border-gray-700 cursor-pointer transition-all transition-discrete duration-300  hover:bg-gray-600">
+        <button onClick={handleIncrement} className="p-3 text-indigo-400 border-l border-gray-700 cursor-pointer transition-all transition-discrete duration-300  hover:bg-gray-600">
           <Plus size={16} />
         </button>
       </div>
@@ -164,7 +166,7 @@ const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onP
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'above' ? 'bg-[#1e3a32] border-[#2d5a4c] text-[#4ade80]' : 'bg-[#131425] border-transparent text-gray-500 hover:border-gray-700'}`}
         >
           <ArrowUp size={18} className={direction === 'above' ? 'text-green-400' : ''} />
-          <span className="font-semibold">Above</span>
+          <span className="font-semibold">{t('above')}</span>
         </button>
 
         <button
@@ -172,11 +174,11 @@ const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onP
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'below' ? 'bg-[#441d24] border-[#6b252f] text-[#f87171]' : 'bg-[#131425] border-transparent text-gray-500 hover:border-gray-700'}`}
         >
           <ArrowDown size={18} className={direction === 'below' ? 'text-red-400' : ''} />
-          <span className="font-semibold">Below</span>
+          <span className="font-semibold">{t('below')}</span>
         </button>
       </div>
 
-      <p className="text-gray-500 text-sm text-left">Notify on price crossing. Set 0 to disable.</p>
+      <p className="text-gray-500 text-sm text-left">{t('hint')}</p>
     </div>
   );
 };

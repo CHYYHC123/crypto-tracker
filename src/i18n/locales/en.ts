@@ -37,12 +37,19 @@ export default {
         remove: 'Remove'
       },
       alertDialog: {
-        title: 'Set alert for {{symbol}}',
+        titlePrefix: '',
+        titleSuffix: 'Price Alert',
         alertEnabled: 'Price alert enabled',
         alertDisabled: 'Price alert disabled',
         current: 'Current: {{price}}',
         save: 'Save',
         cancel: 'Cancel'
+      },
+      priceAlert: {
+        alertPrice: 'Price',
+        above: 'Above',
+        below: 'Below',
+        hint: 'Notify on price crossing. Set 0 to disable.'
       },
       tokenSearch: {
         addCrypto: 'Add Crypto',
@@ -63,7 +70,51 @@ export default {
     },
     switched: 'Language switched to {{language}}'
   },
+  dataSource: {
+    title: 'Data Source',
+    switched: 'Data source switched to {{name}}',
+    spot: '(Spot)',
+    futures: '(Futures)',
+    needVpn: 'Need VPN',
+    noVpn: 'No VPN'
+  },
+  connectUs: {
+    title: 'Contact Us',
+    email: {
+      hint: 'If you have any questions or need help, feel free to contact us.'
+    },
+    license: {
+      label: 'License Key',
+      placeholder: 'Enter your license key',
+      hint: 'Enter your license key to activate premium features.',
+      saved: 'License key saved successfully'
+    },
+    support: {
+      title: 'Support the Project',
+      desc: 'If you enjoy using Crypto Tracker, consider supporting the project. Your support helps keep the project running and growing.',
+      networkAddress: 'Network / Address',
+      usdtNotice: 'Only supports',
+      networkNotice: 'Please ensure you select the correct network when sending.'
+    }
+  },
+  alertSettings: {
+    title: 'Price Alerts',
+    globalMonitor: 'Global Price Monitor',
+    status: 'Status',
+    enabled: 'ENABLED',
+    disabled: 'DISABLED',
+    bullishLabel: 'BULLISH ALERT (Upward Surge) (%)',
+    bearishLabel: 'BEARISH ALERT (Downward Drop) (%)',
+    trailingLabel: 'TRAILING MODE(%)',
+    trailingTooltip: 'Trailing mode active: After first alert, threshold will increase by {{step}}% each time.',
+    alertSummaryBoth: 'Alert me when any coin moves >= {{bull}}% or <= -{{bear}}%.',
+    alertSummaryBull: 'Alert me when any coin moves >= {{bull}}%.',
+    alertSummaryBear: 'Alert me when any coin moves <= -{{bear}}%.',
+    saved: 'Global alerts setting saved',
+    saveFailed: 'Failed to save settings',
+    cancel: 'Cancel',
+    save: 'Save Settings'
+  },
   content: {
-    home: {}
   }
 } as const;

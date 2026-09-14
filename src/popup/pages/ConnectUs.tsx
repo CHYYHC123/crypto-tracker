@@ -9,8 +9,10 @@ import CopyButton from '@/components/common/copyButton';
 import { TIPPING_ADDRESS, type TippingAddress } from '@/config/tippingAddress';
 import { formatAddress } from '@/utils';
 import { getTokenString, setTokenString } from '@/utils/local';
+import { useTranslation } from 'react-i18next';
 
 export default function ConnectUs() {
+  const { t } = useTranslation('translation', { keyPrefix: 'connectUs' });
   const navigate = useNavigate();
   const [licenseKey, setLicenseKey] = useState('');
   const licenseKeyRef = useRef(licenseKey);
@@ -28,7 +30,7 @@ export default function ConnectUs() {
       const key = e.currentTarget.value.trim();
       setLicenseKey(key);
       await setTokenString(key);
-      toast.success('License key saved successfully');
+      toast.success(t('license.saved'));
       navigate('/');
     }
   };
@@ -48,7 +50,7 @@ export default function ConnectUs() {
 
   return (
     <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
-      <SubHeader title="Connect Us" />
+      <SubHeader title={t('title')} />
       <div className="overflow-y-auto">
         <section className="p-4">
           <div className="rounded-xl border border-white/10 bg-white/3 p-3">
@@ -62,15 +64,15 @@ export default function ConnectUs() {
                   henrychen0620@gmail.com
                 </a>
 
-                <p className="text-[11px] text-white/50">If you have any questions or need help, feel free to contact us.</p>
+                <p className="text-[11px] text-white/50">{t('email.hint')}</p>
               </div>
             </div>
           </div>
 
           <div className=" rounded-xl border border-white/10 bg-white/3 p-3 mt-4">
-            <label className="mb-2 block text-sm font-medium text-white/80">License Key</label>
-            <Input type="text" value={licenseKey} placeholder="Enter your license key" onChange={handleChange} onKeyDown={handleKeyDown} className="h-11 w-full rounded-lg border border-white/10 bg-[#111827] px-4 text-sm text-white  placeholder:text-white/30" />
-            <p className="mt-1 text-[11px] text-white/40">Enter your license key to activate premium features.</p>
+            <label className="mb-2 block text-sm font-medium text-white/80">{t('license.label')}</label>
+            <Input type="text" value={licenseKey} placeholder={t('license.placeholder')} onChange={handleChange} onKeyDown={handleKeyDown} className="h-11 w-full rounded-lg border border-white/10 bg-[#111827] px-4 text-sm text-white  placeholder:text-white/30" />
+            <p className="mt-1 text-[11px] text-white/40">{t('license.hint')}</p>
           </div>
         </section>
 
@@ -80,10 +82,10 @@ export default function ConnectUs() {
               <div>
                 <div className="flex items-center gap-2">
                   <Heart size={20} className="text-purple-400" />
-                  <h2 className="text-sm font-mediumtext-white/80">Support the Project</h2>
+                  <h2 className="text-sm font-mediumtext-white/80">{t('support.title')}</h2>
                 </div>
 
-                <p className="mt-3 max-w-full text-[11px] text-white/50">If you enjoy using Crypto Tracker, consider supporting the project. Your support helps keep the project running and growing.</p>
+                <p className="mt-3 max-w-full text-[11px] text-white/50">{t('support.desc')}</p>
               </div>
             </div>
 
@@ -91,7 +93,7 @@ export default function ConnectUs() {
             <div className="mt-4 overflow-hidden rounded-xl border border-white/10">
               {/* Header */}
               <div className="bg-white/5 px-4 py-2 text-xs text-white/50">
-                <span>Network / Address</span>
+                <span>{t('support.networkAddress')}</span>
               </div>
 
               {TIPPING_ADDRESS.map((item: TippingAddress) => (
@@ -108,10 +110,6 @@ export default function ConnectUs() {
                       <span className="truncate text-xs text-white/50 font-mono">{formatAddress(item.address)}</span>
                     </div>
                   </div>
-                  {/* Copy */}
-                  {/* <button className="shrink-0 text-white/50 hover:text-white cursor-pointer" onClick={() => navigator.clipboard.writeText(item.address)}>
-                    {copiedText === item.address ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
-                  </button> */}
                   <CopyButton text={item.address} />
                 </div>
               ))}
@@ -121,9 +119,9 @@ export default function ConnectUs() {
             <div className="mt-4 flex gap-3 rounded-xl border border-blue-400/20 bg-blue-400/5 p-3">
               <Info size={16} className="text-blue-400 shrink-0" />
               <p className="text-[10px] leading-relaxed text-white/50">
-                All addresses above support <span className="text-green-400 font-medium">USDT</span>.
+                {t('support.usdtNotice')} <span className="text-green-400 font-medium">USDT</span>.
                 <br />
-                Please ensure you select the correct network when sending.
+                {t('support.networkNotice')}
               </p>
             </div>
           </div>

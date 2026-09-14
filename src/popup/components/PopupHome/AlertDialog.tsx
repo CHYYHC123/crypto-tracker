@@ -31,7 +31,9 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
           <div className="p-3 border-b border-gray-600">
             <div className="flex justify-between gap-2">
               <h3 className="text-white/90 font-semibold text-base flex items-center">
-                <span>{t('title', { symbol: token?.symbol })}</span>
+                <span>
+                  {t('titlePrefix')} <strong className="text-white">{token?.symbol}</strong>{t('titleSuffix') ? ` ${t('titleSuffix')}` : ''}
+                </span>
 
                 <Tooltip content={enabled ? t('alertEnabled') : t('alertDisabled')} side="bottom">
                   {enabled ? <Power size={16} onClick={() => setEnabled(false)} className="ml-4 cursor-pointer text-green-500" /> : <PowerOff size={16} onClick={() => setEnabled(true)} className="ml-4 cursor-pointer text-red-500" />}

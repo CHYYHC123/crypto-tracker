@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Power, PowerOff, CircleAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import toast from 'react-hot-toast';
 import type { GlobalAlerts } from '@/types/index';
@@ -101,6 +102,7 @@ const ThresholdInput: React.FC<ThresholdInputProps> = ({ label, value, onChange,
 };
 
 export default function AlertSettings() {
+  const { t } = useTranslation('translation', { keyPrefix: 'alertSettings' });
   const navigate = useNavigate();
   const [limitEnabled, setLimitEnabled] = useState(true);
 
@@ -129,27 +131,27 @@ export default function AlertSettings() {
 
     try {
       await saveGlobalAlerts(globalAlerts);
-      toast.success('Global alerts setting saved');
+      toast.success(t('saved'));
       setTimeout(() => {
         navigate('/');
       }, 1000);
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error(t('saveFailed'));
       setSaving(false);
     }
   };
 
   return (
     <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
-      <SubHeader title="Price Alerts" />
+      <SubHeader title={t('title')} />
 
       <div className="flex-1 overflow-auto p-4 space-y-6 scrollbar-hide">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-bold text-white/90 uppercase tracking-wider">Global Price Monitor</h4>
+              <h4 className="text-sm font-bold text-white/90 uppercase tracking-wider">{t('globalMonitor')}</h4>
               <p className="text-[11px] text-white/50 mt-0.5">
-                Status: <span className={limitEnabled ? 'text-green-500' : 'text-red-500'}>{limitEnabled ? 'ENABLED' : 'DISABLED'}</span>
+                {t('status')}: <span className={limitEnabled ? 'text-green-500' : 'text-red-500'}>{limitEnabled ? t('enabled') : t('disabled')}</span>
               </p>
             </div>
             <button onClick={() => setLimitEnabled(!limitEnabled)} className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${limitEnabled ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-white/5 text-white/30 border border-white/10'}`}>
@@ -158,14 +160,14 @@ export default function AlertSettings() {
           </div>
 
           <div className="space-y-4">
-            <ThresholdInput label="BULLISH ALERT (Upward Surge) (%)" value={bullLimit} onChange={setBullLimit} />
-            <ThresholdInput label="BEARISH ALERT (Downward Drop) (%)" value={bearLimit} onChange={setBearLimit} />
+            <ThresholdInput label={t('bullishLabel')} value={bullLimit} onChange={setBullLimit} />
+            <ThresholdInput label={t('bearishLabel')} value={bearLimit} onChange={setBearLimit} />
 
             <div className="">
               <div className="flex items-center text-[11px] font-medium text-white/50 tracking-tight uppercase">
-                <span>TRAILING MODE(%)</span>
+                <span>{t('trailingLabel')}</span>
                 {Number(stepLimit) > 0 && (
-                  <Tooltip sideOffset={1} content={<span style={{ display: 'block', maxWidth: '200px', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>{`Trailing mode active: After first alert, threshold will increase by ${stepLimit}% each time.`}</span>}>
+                  <Tooltip sideOffset={1} content={<span style={{ display: 'block', maxWidth: '200px', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>{t('trailingTooltip', { step: stepLimit })}</span>}>
                     <CircleAlert className="cursor-pointer ml-1" size={14} />
                   </Tooltip>
                 )}
@@ -175,7 +177,11 @@ export default function AlertSettings() {
 
             {(bullLimit || bearLimit) && (
               <p className="text-[11px] text-white/40 leading-relaxed italic">
-                Alert me when any coin moves {bullLimit ? `>= ${bullLimit}%` : ''} {bullLimit && bearLimit ? 'or' : ''} {bearLimit ? `<= -${bearLimit}%` : ''}.
+                {bullLimit && bearLimit
+                  ? t('alertSummaryBoth', { bull: bullLimit, bear: bearLimit })
+                  : bullLimit
+                    ? t('alertSummaryBull', { bull: bullLimit })
+                    : t('alertSummaryBear', { bear: bearLimit })}
               </p>
             )}
           </div>
@@ -185,11 +191,11 @@ export default function AlertSettings() {
       <div className="p-4 pb-6  backdrop-blur-md">
         <div className="flex gap-2">
           <Button className="flex-1 border border-white/10  hover:bg-white/5 transition-colors" size="lg" onClick={() => navigate(-1)}>
-            Cancel
+            {t('cancel')}
           </Button>
 
           <Button className="ml-2 bg-blue-600 hover:bg-blue-700" size="lg" loading={saving} onClick={saveGlobalSettings}>
-            Save Settings
+            {t('save')}
           </Button>
         </div>
       </div>

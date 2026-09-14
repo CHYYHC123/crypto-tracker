@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 import SubHeader from '@/popup/components/SubHeader';
@@ -10,6 +11,7 @@ import { ExchangeListMap, type ExchangeType, type SelectableExchangeType } from 
 import { setDataSource } from '@/utils/local';
 
 function DataSource() {
+  const { t } = useTranslation('translation', { keyPrefix: 'dataSource' });
   const navigate = useNavigate();
   const { dataSource } = useLocation().state;
 
@@ -27,13 +29,13 @@ function DataSource() {
 
     await setDataSource(source);
 
-    toast.success(`Data source switched to ${info.name}`, { duration: 2000 });
+    toast.success(t('switched', { name: info.name }), { duration: 2000 });
     navigate('/');
   };
 
   return (
     <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
-      <SubHeader title="Data Source" />
+      <SubHeader title={t('title')} />
       <div className="p-4 space-y-2 max-h-100 overflow-y-auto">
         {Object.entries(ExchangeListMap)
           .filter(([_, info]) => !info.disabled)
@@ -69,9 +71,9 @@ function DataSource() {
                     <div>
                       <span className="text-white font-medium text-sm">
                         <span>{info.name}</span>
-                        <span className='text-[12px] ml-1'>{info.market === 'futures' ? '(合约)' : '(现货)'}</span>
+                        <span className='text-[12px] ml-1'>{info.market === 'futures' ? t('futures') : t('spot')}</span>
                       </span>
-                      <div className="text-gray-400 text-xs mt-0.5">{info.needsVPN ? 'Need VPN' : 'No VPN'}</div>
+                      <div className="text-gray-400 text-xs mt-0.5">{info.needsVPN ? t('needVpn') : t('noVpn')}</div>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
                   </div>
