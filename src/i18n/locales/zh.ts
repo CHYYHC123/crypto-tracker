@@ -59,6 +59,13 @@ export default {
         addBtn: '添加',
         maxReached: '已达到追踪上限，请联系管理员解锁。',
         notSupported: '{{symbol}} 不在支持的列表中'
+      },
+      addAsset: {
+        tokenAlreadyExists: '代币已存在 ⚠️',
+        tokenAdded: '代币添加成功',
+        stockAlreadyExists: '股票已存在 ⚠️',
+        stockAdded: '股票添加成功',
+        failed: '添加资产失败'
       }
     }
   },

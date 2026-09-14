@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/9/2 17:58:14
+// 更新时间: 2026/9/14 15:11:19
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -520,7 +520,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "CP",
-    "platform": 2
+    "platform": 6
   },
   {
     "symbol": "CRCLB",
@@ -531,12 +531,20 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
+    "symbol": "CRMB",
+    "platform": 1
+  },
+  {
     "symbol": "CRO",
     "platform": 6
   },
   {
     "symbol": "CRV",
     "platform": 7
+  },
+  {
+    "symbol": "CRWDB",
+    "platform": 1
   },
   {
     "symbol": "CRWVB",
@@ -915,6 +923,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "HIMSB",
+    "platform": 1
+  },
+  {
     "symbol": "HIVE",
     "platform": 5
   },
@@ -960,7 +972,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "ICX",
-    "platform": 7
+    "platform": 6
   },
   {
     "symbol": "ID",
@@ -1183,6 +1195,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "MARSCOIN",
+    "platform": 5
+  },
+  {
     "symbol": "MASK",
     "platform": 7
   },
@@ -1265,6 +1281,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "MOVR",
     "platform": 5
+  },
+  {
+    "symbol": "MRNAB",
+    "platform": 1
   },
   {
     "symbol": "MRVLB",
@@ -1719,10 +1739,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
-    "symbol": "SCRT",
-    "platform": 5
-  },
-  {
     "symbol": "SD",
     "platform": 6
   },
@@ -1847,6 +1863,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
+    "symbol": "SQQQB",
+    "platform": 1
+  },
+  {
     "symbol": "SSV",
     "platform": 7
   },
@@ -1868,7 +1888,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "STORJ",
-    "platform": 7
+    "platform": 6
   },
   {
     "symbol": "STRAX",
@@ -1881,6 +1901,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "STX",
     "platform": 7
+  },
+  {
+    "symbol": "STXB",
+    "platform": 1
   },
   {
     "symbol": "SUI",
@@ -2275,6 +2299,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XDRAM",
+    "platform": 2
+  },
+  {
     "symbol": "XEC",
     "platform": 5
   },
@@ -2319,6 +2347,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XINTW",
+    "platform": 2
+  },
+  {
     "symbol": "XIREN",
     "platform": 2
   },
@@ -2340,6 +2372,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XKO",
+    "platform": 2
+  },
+  {
+    "symbol": "XKORU",
     "platform": 2
   },
   {
@@ -2376,6 +2412,14 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XMU",
+    "platform": 2
+  },
+  {
+    "symbol": "XMUU",
+    "platform": 2
+  },
+  {
+    "symbol": "XMVLL",
     "platform": 2
   },
   {
@@ -2459,6 +2503,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSHEIN",
+    "platform": 2
+  },
+  {
     "symbol": "XSKHY",
     "platform": 2
   },
@@ -2479,7 +2527,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSNXX",
+    "platform": 2
+  },
+  {
     "symbol": "XSOXL",
+    "platform": 2
+  },
+  {
+    "symbol": "XSOXS",
     "platform": 2
   },
   {
@@ -2645,6 +2701,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "币安人生",
     "platform": 1
+  },
+  {
+    "symbol": "牛来",
+    "platform": 5
   }
 ] as const;
 

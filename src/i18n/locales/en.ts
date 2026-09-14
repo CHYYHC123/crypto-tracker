@@ -59,6 +59,13 @@ export default {
         addBtn: 'Add',
         maxReached: 'Max tracked cryptos reached. Contact admin to unlock.',
         notSupported: '{{symbol}} is not in the supported list'
+      },
+      addAsset: {
+        tokenAlreadyExists: 'Token already exists ⚠️',
+        tokenAdded: 'Token added successfully',
+        stockAlreadyExists: 'Stock already exists ⚠️',
+        stockAdded: 'Stock added successfully',
+        failed: 'Failed to add asset'
       }
     }
   },

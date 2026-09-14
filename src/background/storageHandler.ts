@@ -58,6 +58,7 @@ async function handleAssetListChange(changes: Record<string, chrome.storage.Stor
 
   const assetType = await getAssetType();
 
+  // 股票模式：stocks_list 变化
   if (assetType === 'stocks') {
     if (!stocksListChanged) return;
     const old = changes.stocks_list?.oldValue as string[] | undefined;

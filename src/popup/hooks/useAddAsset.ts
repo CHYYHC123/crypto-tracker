@@ -1,36 +1,9 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import type { AssetTypes } from '@/types/asset';
 import { getCoinsFromStorage, setCoinsToStorage, getStocksList, setStocksList } from '@/utils/local';
-
-async function addCrypto(symbol: string, onAdded?: () => void): Promise<boolean> {
-  const old = (await getCoinsFromStorage()) ?? [];
-  if (old.some(c => c.symbol === symbol)) {
-    toast('Token already exists ⚠️', { duration: 2000, id: 'asset-already-exists' });
-    return false;
-  }
-  await setCoinsToStorage([...old, { symbol }]);
-  setTimeout(() => {
-    onAdded?.();
-    toast.success('Token added successfully', { duration: 2000, id: 'asset-added' });
-  }, 1500);
-  return true;
-}
-
-async function addStock(symbol: string, onAdded?: () => void): Promise<boolean> {
-  const old = (await getStocksList()) ?? [];
-  if (old.includes(symbol)) {
-    toast('Stock already exists ⚠️', { duration: 2000, id: 'asset-already-exists' });
-    return false;
-  }
-  await setStocksList([...old, symbol]);
-  setTimeout(() => {
-    onAdded?.();
-    toast.success('Stock added successfully', { duration: 2000, id: 'asset-added' });
-  }, 1500);
-  return true;
-}
 
 /**
  * 添加资产
@@ -39,13 +12,43 @@ async function addStock(symbol: string, onAdded?: () => void): Promise<boolean> 
 */
 export function useAddAsset(mode: AssetTypes, onAdded?: () => void) {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.addAsset' });
+
+  const addCrypto = async (symbol: string): Promise<boolean> => {
+    // getCoinsFromStorage 已归一化，所有元素均为 CoinRecord 对象
+    const old = (await getCoinsFromStorage()) ?? [];
+    if (old.some(c => c.symbol === symbol)) {
+      toast(t('tokenAlreadyExists'), { duration: 2000, id: 'asset-already-exists' });
+      return false;
+    }
+    await setCoinsToStorage([...old, { symbol }]);
+    setTimeout(() => {
+      onAdded?.();
+      toast.success(t('tokenAdded'), { duration: 2000, id: 'asset-added' });
+    }, 1500);
+    return true;
+  };
+
+  const addStock = async (symbol: string): Promise<boolean> => {
+    const old = (await getStocksList()) ?? [];
+    if (old.includes(symbol)) {
+      toast(t('stockAlreadyExists'), { duration: 2000, id: 'asset-already-exists' });
+      return false;
+    }
+    await setStocksList([...old, symbol]);
+    setTimeout(() => {
+      onAdded?.();
+      toast.success(t('stockAdded'), { duration: 2000, id: 'asset-added' });
+    }, 1500);
+    return true;
+  };
 
   const saveAsset = async (symbol: string): Promise<boolean> => {
     setLoading(true);
     try {
-      return mode === 'crypto' ? await addCrypto(symbol, onAdded) : await addStock(symbol, onAdded);
+      return mode === 'crypto' ? await addCrypto(symbol) : await addStock(symbol);
     } catch {
-      toast.error('Failed to add asset', { duration: 2000, id: 'asset-add-failed' });
+      toast.error(t('failed'), { duration: 2000, id: 'asset-add-failed' });
       return false;
     } finally {
       setLoading(false);

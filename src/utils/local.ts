@@ -89,7 +89,16 @@ export const setStocksPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal
 
 // ─── coins
 
-export const getCoinsFromStorage = (): Promise<CoinRecord[] | undefined> => getLocal('coins');
+/**
+ * 读取 coins 列表，并自动归一化混合格式（兼容旧版 string[] 及混合数组）。
+ * 旧版存储可能为纯字符串 "BTC" 或混合格式 ["BTC", {symbol:"ETH"}]，
+ * 统一转为 CoinRecord[] 后返回，避免上层调用方各自处理。
+ */
+export async function getCoinsFromStorage(): Promise<CoinRecord[] | undefined> {
+  const raw = await getLocal('coins');
+  if (!raw) return undefined;
+  return raw.map(c => (typeof c === 'string' ? { symbol: c } : c)) as CoinRecord[];
+}
 
 export const setCoinsToStorage = (v: CoinRecord[]): Promise<void> => setLocal('coins', v);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 
 import type { AssetTypes } from '@/types/index';
-import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { type ExchangeType } from '@/config/exchangeConfig';
 import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { EQUITY_SYMBOLS } from '@/config/stocks_symbols';
 import { PLATFORM } from '@/utils/index';
@@ -39,7 +39,8 @@ interface UseSyncAssetListOptions {
 
 // 同步拉取支持的币种列表
 export function useSyncAssetList({ mode, searchVal }: UseSyncAssetListOptions) {
-  const [dataSource, setDataSource] = useState<ExchangeType>(defaultDataSource);
+  // null 表示尚未从 storage 读取，避免用 defaultDataSource 触发错误的首次 fetch
+  const [dataSource, setDataSource] = useState<ExchangeType | null>(null);
   const [equitySymbols, setEquitySymbols] = useState<EquitySymbol[] | null>(null);
   const [cryptoSymbols, setCryptoSymbols] = useState<ExchangeSymbol[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,15 +65,18 @@ export function useSyncAssetList({ mode, searchVal }: UseSyncAssetListOptions) {
   }, [mode]);
 
   // 加密货币：按 dataSource 从对应交易所拉取标的
+  // 用 cancelled 标志防止竞态：dataSource 切换时丢弃旧请求的回调结果
   useEffect(() => {
-    if (mode !== 'crypto') return;
+    if (mode !== 'crypto' || dataSource === null) return;
+    let cancelled = false;
     setLoading(true);
     setCryptoSymbols(null);
     fetchCryptoSymbols(dataSource).then(result => {
-      // console.log('result', result);
+      if (cancelled) return;
       setCryptoSymbols(result);
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [mode, dataSource]);
 
   /** 按数据源过滤后的完整列表（未经搜索词过滤） */
@@ -86,7 +90,8 @@ export function useSyncAssetList({ mode, searchVal }: UseSyncAssetListOptions) {
       return cryptoSymbols;
     }
 
-    // fallback：使用本地 SUPPORTED_TOKENS 位运算过滤
+    // fallback：使用本地 SUPPORTED_TOKENS 位运算过滤（dataSource 未初始化时返回空列表，避免展示错误数据）
+    if (dataSource === null) return [];
     const bit = EXCHANGE_BIT[dataSource];
     const all = SUPPORTED_TOKENS as unknown as Array<{ symbol: string; platform: number }>;
     return bit === undefined ? all : all.filter(t => (t.platform & bit) !== 0);

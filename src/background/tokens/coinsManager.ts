@@ -21,17 +21,14 @@ let initPromise: Promise<CoinRecord[]> | null = null;
 /**
  * 检测并迁移旧格式（string[]）→ 新格式（CoinRecord[]）
  * 旧格式的每条数据 unsupportedExchanges 缺省，语义上等同于全部支持
+ * 逐元素检查，兼容混合格式数组（如 ["BTC", {symbol:"ETH"}]）
  */
 function normalizeCoins(raw: unknown): CoinRecord[] {
   if (!Array.isArray(raw) || raw.length === 0) return [];
 
-  // 旧格式：数组元素是 string
-  if (typeof raw[0] === 'string') {
-    return (raw as string[]).map(symbol => ({ symbol }));
-  }
-
-  // 新格式：数组元素是 CoinRecord
-  return raw as CoinRecord[];
+  return raw.map(item =>
+    typeof item === 'string' ? { symbol: item } : (item as CoinRecord)
+  );
 }
 
 // ─── 初始化
@@ -44,9 +41,10 @@ async function initializeCoins(): Promise<CoinRecord[]> {
     if (raw && Array.isArray(raw) && raw.length > 0) {
       const records = normalizeCoins(raw);
 
-      // 如果检测到旧格式，立即写回新格式
-      if (typeof raw[0] === 'string') {
-        console.log('[CoinsManager] 检测到旧格式 string[]，已迁移为 CoinRecord[]');
+      // 如果检测到旧格式（任意元素为 string），立即写回新格式完成迁移
+      const needsMigration = raw.some(item => typeof item === 'string');
+      if (needsMigration) {
+        console.log('[CoinsManager] 检测到旧格式或混合格式，已迁移为 CoinRecord[]');
         await chrome.storage.local.set({ coins: records });
       }
 
