@@ -7,7 +7,7 @@ import PopularSuggestions from '@/popup/components/search/PopularSuggestions';
 import DialogHeader from '@/popup/components/search/DialogHeader';
 import { TokenList } from '@/popup/components/search/TokenList';
 
-import { useSymbolList } from '@/popup/hooks/useSymbolList';
+import { useSyncAssetList } from '@/popup/hooks/useSyncAssetList';
 
 import Input from '@/components/common/input';
 import Button from '@/components/common/button';
@@ -51,6 +51,7 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchVal, setSearchVal] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const isComposing = useRef(false);
 
   // 已添加的 symbol 集合（O(1) 查找）
   const addedSet = useMemo(() => new Set(tokens?.map(t => t.symbol) ?? []), [tokens]);
@@ -74,7 +75,7 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
     }
   }, [showAddDialog]);
 
-  const { symbolList: dialogTokenList } = useSymbolList({ mode, searchVal });
+  const { symbolList: dialogTokenList } = useSyncAssetList({ mode, searchVal });
 
   //  弹窗内点击 token（已知合法币种，跳过验证）
   const handleSelectToken = async (symbol: string) => {
@@ -96,6 +97,10 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
 
   // 搜索框输入变化
   const handleChange = (val: string) => {
+    if (isComposing.current) {
+      setSearchVal(val);
+      return;
+    }
     setSearchVal(sanitizeSymbolInput(val));
   };
 
@@ -114,7 +119,7 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
 
         {/* 搜索框 */}
         <div className="px-4 pt-3 pb-2">
-          <SearchInput inputRef={inputRef} value={searchVal} placeholder={config.placeholder} onChange={handleChange} onKeyDown={handleEnter} onClear={() => setSearchVal('')} />
+          <SearchInput inputRef={inputRef} value={searchVal} placeholder={config.placeholder} onChange={handleChange} onKeyDown={handleEnter} onClear={() => setSearchVal('')} onCompositionStart={() => { isComposing.current = true; }} onCompositionEnd={e => { isComposing.current = false; setSearchVal(sanitizeSymbolInput(e.currentTarget.value)); }} />
         </div>
 
         <PopularSuggestions items={config.popularItems} addedSet={addedSet} loading={loading} onSelect={handleSelectToken} suffix={config.suffix} />

@@ -38,5 +38,17 @@ export function usePriceFetcher() {
     return () => clearInterval(timer);
   }, [tokens?.length]);
 
+  // 监听后台数据源切换完成，立刻拉取新数据
+  useEffect(() => {
+    const listener = (msg: { type: string }) => {
+      if (msg.type === 'DATA_SOURCE_SWITCHED') {
+        setCountdown(10);
+        mutate();
+      }
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => chrome.runtime.onMessage.removeListener(listener);
+  }, [mutate]);
+
   return { tokens, setTokens, countdown, setCountdown, isLoading, mutate };
 }

@@ -1,4 +1,4 @@
-import type { KeyboardEvent, Ref, RefObject } from 'react';
+import type { CompositionEvent, KeyboardEvent, Ref, RefObject } from 'react';
 import { Search, X } from 'lucide-react';
 
 interface SearchInputProps {
@@ -9,9 +9,11 @@ interface SearchInputProps {
   placeholder?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   className?: string;
+  onCompositionStart?: () => void;
+  onCompositionEnd?: (e: CompositionEvent<HTMLInputElement>) => void;
 }
 
-export default function SearchInput({ value, onChange, onKeyDown, onClear, placeholder = 'Search...', inputRef, className }: SearchInputProps) {
+export default function SearchInput({ value, onChange, onKeyDown, onClear, placeholder = 'Search...', inputRef, className, onCompositionStart, onCompositionEnd }: SearchInputProps) {
   const handleClear = () => {
     if (onClear) {
       onClear();
@@ -28,6 +30,8 @@ export default function SearchInput({ value, onChange, onKeyDown, onClear, place
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={onKeyDown}
+        onCompositionStart={onCompositionStart}
+        onCompositionEnd={onCompositionEnd}
         placeholder={placeholder}
         className="bg-transparent text-white text-sm placeholder:text-white/25 outline-none w-full"
       />

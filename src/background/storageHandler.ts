@@ -67,6 +67,10 @@ async function handleAssetListChange(changes: Record<string, chrome.storage.Stor
   }
 
   await connectWS();
+
+  if (dataSourceChanged) {
+    chrome.runtime.sendMessage({ type: 'DATA_SOURCE_SWITCHED' }).catch(() => {});
+  }
 }
 
 // ─── 主入口
