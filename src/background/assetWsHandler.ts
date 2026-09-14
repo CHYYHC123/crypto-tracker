@@ -3,7 +3,8 @@ import { parseWSMessage } from '@/background/tokens/parseTicker';
 import { applyAssetUpdate, throttledPublishAssets, publishAssets, initAssetStore, triggerSelfHeal, getAssetList } from '@/background/assetStore';
 
 import { getAssetType, getDataSource } from '@/utils/local';
-import { getCoins } from '@/background/tokens/coinsManager';
+import { getCoins, markUnsupported } from '@/background/tokens/coinsManager';
+import { filterForGate } from '@/background/tokens/gateFilter';
 import { getStocks } from '@/background/stocks/stocksManager';
 import { getBatchPrice } from '@/background/stocks/batchPrice';
 import { getCryptoBatchPrice } from '@/background/tokens/cryptoBatchPrice';
@@ -66,7 +67,18 @@ export async function connectWS(): Promise<void> {
  */
 async function connectCryptoWS(): Promise<void> {
   const exchange = await getDataSource();
-  const tokenList = await getCoins();
+  let tokenList = await getCoins();
+
+  // Gate 整批订阅策略：一个无效代币会导致所有代币订阅失败
+  // 必须在连接前主动过滤不支持的代币，并写入黑名单
+  if (exchange === 'Gate') {
+    const { supported, unsupported } = await filterForGate(tokenList);
+    if (unsupported.length) {
+      await markUnsupported(unsupported, 'Gate');
+    }
+    tokenList = supported;
+  }
+
   initAssetStore(tokenList.map(s => ({ id: s.toLowerCase(), symbol: s.toUpperCase(), category: 'crypto' as const })));
 
   try {

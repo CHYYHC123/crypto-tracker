@@ -9,6 +9,7 @@
  */
 
 import type { PriceAlert, GlobalAlerts, GlobalAlertsTrigger, AssetTypes } from '@/types/index';
+import type { CoinRecord } from '@/types/asset';
 import { defaultDataSource, ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
 
 // ─── Schema：所有 key 与其值类型的唯一映射
@@ -19,7 +20,7 @@ interface LocalSchema {
   asset_type_switched: boolean;
   price_alerts: PriceAlert[];
   stocks_price_alerts: PriceAlert[];
-  coins: string[];
+  coins: CoinRecord[];
   stocks_list: string[];
   token_string: string;
   ga_client_id: string;
@@ -88,9 +89,9 @@ export const setStocksPriceAlerts = (v: PriceAlert[]): Promise<void> => setLocal
 
 // ─── coins
 
-export const getCoinsFromStorage = (): Promise<string[] | undefined> => getLocal('coins');
+export const getCoinsFromStorage = (): Promise<CoinRecord[] | undefined> => getLocal('coins');
 
-export const setCoinsToStorage = (v: string[]): Promise<void> => setLocal('coins', v);
+export const setCoinsToStorage = (v: CoinRecord[]): Promise<void> => setLocal('coins', v);
 
 // ─── stocks_list
 

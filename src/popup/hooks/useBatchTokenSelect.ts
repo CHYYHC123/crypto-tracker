@@ -17,13 +17,22 @@ export interface BatchSelectProps {
 }
 
 async function fetchList(mode: AssetTypes): Promise<string[]> {
-  return mode === 'crypto'
-    ? (await getCoinsFromStorage()) ?? []
-    : (await getStocksList()) ?? [];
+  if (mode === 'crypto') {
+    const records = (await getCoinsFromStorage()) ?? [];
+    return records.map(r => r.symbol);
+  }
+  return (await getStocksList()) ?? [];
 }
 
-async function saveList(mode: AssetTypes, list: string[]): Promise<void> {
-  return mode === 'crypto' ? setCoinsToStorage(list) : setStocksList(list);
+async function saveList(mode: AssetTypes, symbols: string[]): Promise<void> {
+  if (mode === 'crypto') {
+    // 按 symbol 过滤，保留 unsupportedExchanges 等已有字段
+    const allRecords = (await getCoinsFromStorage()) ?? [];
+    const symbolSet = new Set(symbols);
+    const filtered = allRecords.filter(r => symbolSet.has(r.symbol));
+    return setCoinsToStorage(filtered);
+  }
+  return setStocksList(symbols);
 }
 
 interface Options {

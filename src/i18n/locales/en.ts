@@ -12,8 +12,8 @@ export default {
         language: 'Language ({{language}})',
         exportingData: 'Exporting data...',
         exchange: {
-          BN: 'Binance Spot',
-          BNFutures: 'Binance Futures',
+          BN: 'BN Spot',
+          BNFutures: 'BN Futures',
           OKX: 'OKX',
           Gate: 'Gate.io',
           HL: 'Hyperliquid',

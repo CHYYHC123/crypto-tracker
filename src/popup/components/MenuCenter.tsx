@@ -5,8 +5,8 @@ import { Menu } from 'lucide-react';
 import ActionMenu from '@/components/common/ActionMenu';
 import ActionMenuItem from '@/components/common/ActionMenuItem';
 
-import Dialog from '@/components/common/dialog';
-import Loading from '@/components/common/loading';
+// import Dialog from '@/components/common/dialog';
+// import Loading from '@/components/common/loading';
 // import ConfirmDialog from '@/components/common/confirm-dialog';
 // import Tooltip from '@/components/common/tooltip';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 import { getDataSource } from '@/utils/local';
-import { exportCryptoData } from '../utils/exportData';
+// import { exportCryptoData } from '../utils/exportData';
 import { useAssetType } from '@/popup/hooks/useAssetType';
 // import { selectAndImportFile } from '../utils/importData';
 
@@ -56,7 +56,7 @@ const MenuCenter = () => {
   };
 
   // 导出币种功能
-  const [showExportLoading, setShowExportLoading] = useState(false);
+  // const [showExportLoading, setShowExportLoading] = useState(false);
   // const handleExport = async () => {
   //   setShowExportLoading(true);
   //   handleClose(); // 关闭主菜单
@@ -109,12 +109,12 @@ const MenuCenter = () => {
       </ActionMenu>
 
       {/*导出币种 Loading 弹窗*/}
-      <Dialog open={showExportLoading} onClose={() => {}} closeOnBackdropClick={false}>
+      {/* <Dialog open={showExportLoading} onClose={() => {}} closeOnBackdropClick={false}>
         <div className="p-6 flex flex-col items-center justify-center min-h-30">
           <Loading size={32} />
           <p className="mt-4 text-white/70 text-sm">{t('exportingData')}</p>
         </div>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 };

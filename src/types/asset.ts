@@ -1,5 +1,16 @@
+import type { ExchangeType } from '@/config/exchangeConfig';
+
 /** 统一资产类型（UI mode 与运行时 category 共用） */
 export type AssetTypes = 'crypto' | 'stocks';
+
+/**
+ * 持久化的单条 coin 记录
+ * unsupportedExchanges 为黑名单：缺省（undefined）= 所有交易所均支持
+ */
+export interface CoinRecord {
+  symbol: string;
+  unsupportedExchanges?: ExchangeType[];
+}
 
 /**
  * 统一资产运行时展示模型（替换 TokenItem 与 StockItem）

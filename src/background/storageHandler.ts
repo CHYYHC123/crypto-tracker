@@ -9,16 +9,26 @@ function isValueChanged(change: chrome.storage.StorageChange | undefined, deep =
   return deep ? JSON.stringify(change.oldValue) !== JSON.stringify(change.newValue) : change.oldValue !== change.newValue;
 }
 
-function isOnlyOrderChanged(oldList: string[] | undefined, newList: string[] | undefined): boolean {
+/**
+ * 判断两个列表（string[] 或 CoinRecord[]）是否仅顺序不同、内容相同
+ * coins 字段已升级为 CoinRecord[]，通过提取 symbol 来比较
+ */
+function isOnlyOrderChanged(oldList: any[] | undefined, newList: any[] | undefined): boolean {
   if (!oldList || !newList) return false;
   if (oldList.length !== newList.length) return false;
 
-  const oldSet = new Set(oldList);
-  for (const item of newList) {
-    if (!oldSet.has(item)) return false;
+  // 兼容 string[] 和 CoinRecord[]：统一提取 symbol
+  const toSymbol = (item: any): string => (typeof item === 'string' ? item : item.symbol);
+
+  const oldSymbols = oldList.map(toSymbol);
+  const newSymbols = newList.map(toSymbol);
+
+  const oldSet = new Set(oldSymbols);
+  for (const sym of newSymbols) {
+    if (!oldSet.has(sym)) return false;
   }
 
-  return JSON.stringify(oldList) !== JSON.stringify(newList);
+  return JSON.stringify(oldSymbols) !== JSON.stringify(newSymbols);
 }
 
 // ─── 职责 1：price_alerts 变化 → 广播给所有 content script
@@ -61,8 +71,8 @@ async function handleAssetListChange(changes: Record<string, chrome.storage.Stor
   if (!coinsChanged && !dataSourceChanged) return;
 
   if (coinsChanged && !dataSourceChanged) {
-    const old = changes.coins?.oldValue as string[] | undefined;
-    const next = changes.coins?.newValue as string[] | undefined;
+    const old = changes.coins?.oldValue as any[] | undefined;
+    const next = changes.coins?.newValue as any[] | undefined;
     if (isOnlyOrderChanged(old, next)) return;
   }
 

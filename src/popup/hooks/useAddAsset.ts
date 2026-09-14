@@ -6,11 +6,11 @@ import { getCoinsFromStorage, setCoinsToStorage, getStocksList, setStocksList } 
 
 async function addCrypto(symbol: string, onAdded?: () => void): Promise<boolean> {
   const old = (await getCoinsFromStorage()) ?? [];
-  if (old.includes(symbol)) {
+  if (old.some(c => c.symbol === symbol)) {
     toast('Token already exists ⚠️', { duration: 2000, id: 'asset-already-exists' });
     return false;
   }
-  await setCoinsToStorage([...old, symbol]);
+  await setCoinsToStorage([...old, { symbol }]);
   setTimeout(() => {
     onAdded?.();
     toast.success('Token added successfully', { duration: 2000, id: 'asset-added' });
