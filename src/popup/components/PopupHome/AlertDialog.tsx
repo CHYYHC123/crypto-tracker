@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Power, PowerOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import ConfirmDialog from '@/components/common/confirm-dialog';
 import Tooltip from '@/components/common/tooltip';
@@ -16,7 +17,7 @@ interface AlertDialogProps {
 }
 // 价格预警弹窗组件
 const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
-  
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.alertDialog' });
   const { price, setPrice, direction, setDirection, enabled, setEnabled, handleSave } = useAlertForm(open, token, onClose);
 
   return (
@@ -30,9 +31,9 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
           <div className="p-3 border-b border-gray-600">
             <div className="flex justify-between gap-2">
               <h3 className="text-white/90 font-semibold text-base flex items-center">
-                <span>Set alert for {token?.symbol}</span>
+                <span>{t('title', { symbol: token?.symbol })}</span>
 
-                <Tooltip content={enabled ? 'Price alert enabled' : 'Price alert disabled'} side="bottom">
+                <Tooltip content={enabled ? t('alertEnabled') : t('alertDisabled')} side="bottom">
                   {enabled ? <Power size={16} onClick={() => setEnabled(false)} className="ml-4 cursor-pointer text-green-500" /> : <PowerOff size={16} onClick={() => setEnabled(true)} className="ml-4 cursor-pointer text-red-500" />}
                 </Tooltip>
               </h3>
@@ -40,13 +41,13 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-white/70 font-normal text-xs">Current: {token?.price}</p>
+            <p className="text-white/70 font-normal text-xs">{t('current', { price: token?.price })}</p>
           </div>
         </>
       }
       description={<PriceAlertInput price={price} direction={direction} onPriceChange={setPrice} onDirectionChange={setDirection} />}
-      confirmText="Save"
-      cancelText="Cancel"
+      confirmText={t('save')}
+      cancelText={t('cancel')}
     />
   );
 };

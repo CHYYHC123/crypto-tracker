@@ -35,9 +35,12 @@ export default defineManifest({
     'https://ipapi.co/*',
     'wss://wspri.okx.com/*',
     'wss://api.gateio.ws/*',
+    'https://api.gateio.ws/*',
     'wss://stream.binance.com/*',
     'https://www.google-analytics.com/*',
     'https://bin.bnbstatic.com/*',
-    'https://www.binance.com/*'
+    'https://www.binance.com/*',
+    'https://api.binance.com/*',
+    'https://fapi.binance.com/*'
   ]
 });

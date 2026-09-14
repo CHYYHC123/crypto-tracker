@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePriceFetcher } from '@/popup/hooks/usePriceFetcher';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // @ts-ignore
 import ActionMenu from '@/components/common/ActionMenu';
@@ -25,6 +26,7 @@ import AlertDialog from '@/popup/components/PopupHome/AlertDialog';
 import AssetListSkeleton from '@/popup/components/AssetListSkeleton';
 
 export default function PopupContent() {
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.actionMenu' });
   const { assetType: modeType } = useAssetType();
 
   // 价格预警 hooks
@@ -135,7 +137,7 @@ export default function PopupContent() {
 
       {/* ActionMenu - 移到最外层 div 外面，避免影响父容器布局 */}
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <ActionMenuItem onClick={setPriceAlert}>Price Alert</ActionMenuItem>
+        <ActionMenuItem onClick={setPriceAlert}>{t('priceAlert')}</ActionMenuItem>
         <ActionMenuItem
           danger
           onClick={() => {
@@ -143,7 +145,7 @@ export default function PopupContent() {
             handleClose();
           }}
         >
-          Remove
+          {t('remove')}
         </ActionMenuItem>
       </ActionMenu>
 

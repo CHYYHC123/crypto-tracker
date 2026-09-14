@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import SearchInput from '@/components/common/SearchInput';
 import PopularSuggestions from '@/popup/components/search/PopularSuggestions';
@@ -21,19 +22,9 @@ import { sanitizeSymbolInput } from '@/utils/index';
 import { validateCount } from '@/popup/utils/validateCount';
 import { useAddAsset } from '@/popup/hooks/useAddAsset';
 
-const MODE_CONFIG: Record<AssetTypes, { dialogTitle: string; placeholder: string; popularItems: readonly string[] | string[]; suffix: string }> = {
-  crypto: {
-    dialogTitle: 'Add Crypto',
-    placeholder: 'Search Symbol (e.g. BTC)',
-    popularItems: POPULAR_TOKENS,
-    suffix: '/USDT'
-  },
-  stocks: {
-    dialogTitle: 'Add Stock',
-    placeholder: 'Search Symbol (e.g. AAPL)',
-    popularItems: POPULAR_STOCKS,
-    suffix: ''
-  }
+const MODE_STATIC: Record<AssetTypes, { popularItems: readonly string[] | string[]; suffix: string }> = {
+  crypto: { popularItems: POPULAR_TOKENS, suffix: '/USDT' },
+  stocks: { popularItems: POPULAR_STOCKS, suffix: '' }
 };
 
 interface TokenSearchProps {
@@ -44,7 +35,13 @@ interface TokenSearchProps {
 
 // TokenSearch
 export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSearchProps) => {
-  const config = MODE_CONFIG[mode];
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.tokenSearch' });
+  const staticConfig = MODE_STATIC[mode];
+  const config = {
+    ...staticConfig,
+    dialogTitle: mode === 'crypto' ? t('addCrypto') : t('addStock'),
+    placeholder: mode === 'crypto' ? t('searchCryptoPlaceholder') : t('searchStockPlaceholder'),
+  };
   const { saveAsset, loading } = useAddAsset(mode, onTokenAdded);
 
   // "Add crypto" 弹窗
@@ -54,13 +51,13 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
   const isComposing = useRef(false);
 
   // 已添加的 symbol 集合（O(1) 查找）
-  const addedSet = useMemo(() => new Set(tokens?.map(t => t.symbol) ?? []), [tokens]);
+  const addedSet = useMemo(() => new Set(tokens?.map(tk => tk.symbol) ?? []), [tokens]);
 
   // 打开弹窗
   const openAddDialog = async () => {
     const canAdd = await validateCount(tokens);
     if (!canAdd) {
-      toast.error('Max tracked cryptos reached. Contact admin to unlock.');
+      toast.error(t('maxReached'));
       return;
     }
     setSearchVal('');
@@ -87,9 +84,9 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
   // 弹窗内搜索框 Enter：精确匹配则直接添加
   const handleEnter = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' || !searchVal) return;
-    const exact = dialogTokenList.find(t => t.symbol === searchVal.toUpperCase());
+    const exact = dialogTokenList.find(tk => tk.symbol === searchVal.toUpperCase());
     if (!exact) {
-      toast.error(`${searchVal} is not in the supported list`, { duration: 2000, id: 'token-not-supported' });
+      toast.error(t('notSupported', { symbol: searchVal }), { duration: 2000, id: 'token-not-supported' });
       return;
     }
     await handleSelectToken(exact.symbol);
@@ -110,7 +107,7 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
       <div className="search_token mt-4 flex items-center shrink-0">
         <Input value="" placeholder={config.placeholder} onFocus={openAddDialog} disabled={loading} readOnly />
         <Button className="ml-4" variant="gradient" disabled={loading} onClick={openAddDialog}>
-          Add
+          {t('addBtn')}
         </Button>
       </div>
 

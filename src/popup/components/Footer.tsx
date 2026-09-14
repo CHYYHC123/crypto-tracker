@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Checkbox from '@/components/common/checkbox';
 import { useEffect, useRef } from 'react';
 import type { BatchSelectProps } from '@/popup/hooks/useBatchTokenSelect';
+import { useTranslation } from 'react-i18next';
 
 interface RefreshFooterProps {
   isLoading: boolean;
@@ -12,6 +13,7 @@ interface RefreshFooterProps {
 }
 
 export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: RefreshFooterProps) => {
+  const { t } = useTranslation('translation', { keyPrefix: 'popup.home.footer' });
   const { showCheckboxes, enterSelectMode, isAllSelected, isIndeterminate, handleToggleSelectAll, selectedCount, handleCancelBatch, handleBatchDelete } = batchSelect;
 
   const checkboxRef = useRef<HTMLInputElement>(null);
@@ -31,7 +33,7 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
             <motion.div key="select-all" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="flex items-center">
               <Checkbox ref={checkboxRef} checked={isAllSelected && !isIndeterminate} onChange={e => handleToggleSelectAll(e.target.checked)} />
               <span className="ml-2 text-xs text-gray-100 cursor-pointer select-none whitespace-nowrap" onClick={() => handleToggleSelectAll(!isAllSelected)}>
-                {isAllSelected ? '取消全选' : '全选'}
+                {isAllSelected ? t('cancelSelectAll') : t('selectAll')}
               </span>
             </motion.div>
           ) : (
@@ -48,10 +50,10 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
           {showCheckboxes ? (
             <motion.div key="batch-actions" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="flex items-center gap-2">
               <button onClick={handleCancelBatch} className="px-3 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs text-gray-100 whitespace-nowrap">
-                Cancel
+                {t('cancel')}
               </button>
               <button onClick={handleBatchDelete} disabled={selectedCount === 0} className={`px-3 py-1 rounded-md transition cursor-pointer text-xs text-white whitespace-nowrap ${selectedCount === 0 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}>
-                Delete ({selectedCount})
+                {t('delete', { count: selectedCount })}
               </button>
             </motion.div>
           ) : (
@@ -64,7 +66,7 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
                 className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs whitespace-nowrap"
                 onClick={enterSelectMode}
               >
-                Select
+                {t('select')}
               </motion.button>
 
               <motion.button
@@ -75,7 +77,7 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
                 className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs whitespace-nowrap"
                 onClick={onRefresh}
               >
-                Refresh
+                {t('refresh')}
               </motion.button>
             </motion.div>
           )}
