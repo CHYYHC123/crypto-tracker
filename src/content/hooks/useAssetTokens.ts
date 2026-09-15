@@ -17,6 +17,11 @@ export function useAssetTokens(): [AssetItem[], React.Dispatch<React.SetStateAct
       setTokens(prevTokens => {
         if (!prevTokens.length || prevTokens.length !== msg.data.length) return msg.data;
 
+        // 资产类型切换时，symbol 集合会发生变化，需直接替换，否则长度相同时旧引用不会更新
+        const prevSymbols = prevTokens.map(t => t.symbol.toUpperCase()).join(',');
+        const newSymbols = msg.data.map((t: AssetItem) => t.symbol.toUpperCase()).join(',');
+        if (prevSymbols !== newSymbols) return msg.data;
+
         const updatedMap = new Map<string, AssetItem>();
         msg.data.forEach((token: AssetItem) => {
           updatedMap.set(token.symbol.toUpperCase(), token);
