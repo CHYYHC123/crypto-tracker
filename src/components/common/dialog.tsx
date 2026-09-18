@@ -35,7 +35,7 @@ const Dialog: React.FC<DialogProps> = ({ children, open, onClose, maxWidth = 'md
           {/* Dialog */}
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div
-              className={cn('bg-gray-900 rounded-xl shadow-2xl w-full overflow-hidden border border-white/10', maxWidthClasses[maxWidth], className)}
+              className={cn('bg-background rounded-xl shadow-2xl w-full overflow-hidden border border-border', maxWidthClasses[maxWidth], className)}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

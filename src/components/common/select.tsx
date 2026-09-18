@@ -68,16 +68,16 @@ const Select: React.FC<SelectProps> = ({ value, onChange, options, placeholder =
         tabIndex={0}
         onClick={() => setOpen(o => !o)}
         onKeyDown={onKeyDown}
-        className={cn('min-w-[100px] h-9 px-3 flex items-center justify-between bg-gray-800 rounded-md text-sm text-gray-100 outline-none focus:ring-2 focus:ring-gray-600 cursor-pointer', errorTip && 'ring-1 ring-red-500', className)}
+        className={cn('min-w-[100px] h-9 px-3 flex items-center justify-between bg-input rounded-md text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer', errorTip && 'ring-1 ring-danger', className)}
       >
-        <span className={cn(!selected && 'text-gray-500')}>{selected?.label ?? placeholder}</span>
-        <ChevronDown className="ml-2 text-gray-500" size={14} />
+        <span className={cn(!selected && 'text-muted')}>{selected?.label ?? placeholder}</span>
+        <ChevronDown className="ml-2 text-muted" size={14} />
       </div>
 
       {/* dropdown */}
       <AnimatePresence>
         {open && (
-          <motion.ul initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute z-50 mt-1 w-full rounded-md bg-gray-800 shadow-lg overflow-hidden p-1">
+          <motion.ul initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }} className="absolute z-50 mt-1 w-full rounded-md bg-input shadow-lg overflow-hidden p-1">
             {options.map((opt, i) => (
               <li
                 key={opt.value}
@@ -86,11 +86,11 @@ const Select: React.FC<SelectProps> = ({ value, onChange, options, placeholder =
                   onChange?.(opt.value);
                   setOpen(false);
                 }}
-                className={cn('rounded-md px-3 py-1.5 cursor-pointer', 'flex flex-col gap-0.5', i === highlighted && 'bg-gray-700')}
+                className={cn('rounded-md px-3 py-1.5 cursor-pointer', 'flex flex-col gap-0.5', i === highlighted && 'bg-surface-hover')}
               >
                 <span className="text-xs leading-tight">{opt.label}</span>
 
-                {opt?.desc && <span className="text-[10px] leading-tight mt-[2px] text-gray-400">{opt.desc}</span>}
+                {opt?.desc && <span className="text-[10px] leading-tight mt-[2px] text-muted">{opt.desc}</span>}
               </li>
             ))}
           </motion.ul>
@@ -100,7 +100,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange, options, placeholder =
       {/* error */}
       <AnimatePresence>
         {errorTip && (
-          <motion.div className="absolute text-[#ef4444] text-xs mt-[2px]" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }}>
+          <motion.div className="absolute text-danger text-xs mt-[2px]" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }}>
             {errorTip}
           </motion.div>
         )}

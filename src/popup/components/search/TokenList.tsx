@@ -15,14 +15,14 @@ interface TokenListProps {
 
 // 空状态
 const EmptyState = () => (
-  <div className="flex flex-col items-center py-6 text-white/25">
+  <div className="flex flex-col items-center py-6 text-muted">
     <p className="text-sm">No tokens found</p>
   </div>
 );
 
 // 外层包裹样式
 const CommonItem = ({ symbol, added, loading, onSelect, children }: { symbol: string; added: boolean; loading: boolean; onSelect: (symbol: string) => void; children: ReactNode }) => (
-  <button disabled={loading || added} onClick={() => onSelect(symbol)} className={cn('w-full flex items-center justify-between px-4 py-2.5 transition-all duration-100', added ? 'opacity-25 cursor-not-allowed' : 'hover:bg-white/6 cursor-pointer active:bg-white/12')}>
+  <button disabled={loading || added} onClick={() => onSelect(symbol)} className={cn('w-full flex items-center justify-between px-4 py-2.5 transition-all duration-100', added ? 'opacity-25 cursor-not-allowed' : 'hover:bg-surface-hover cursor-pointer active:bg-surface')}>
     {children}
   </button>
 );
@@ -30,8 +30,8 @@ const CommonItem = ({ symbol, added, loading, onSelect, children }: { symbol: st
 // 加密货币项组件
 const TokenItem = ({ symbol, added, loading, onSelect }: { symbol: string; added: boolean; loading: boolean; onSelect: (symbol: string) => void }) => (
   <CommonItem symbol={symbol} added={added} loading={loading} onSelect={onSelect}>
-    <span className="text-sm font-bold text-white">{symbol} / USDT</span>
-    <span className="text-xs text-white/35">{symbol}</span>
+    <span className="text-sm font-bold text-foreground-bold">{symbol} / USDT</span>
+    <span className="text-xs text-muted">{symbol}</span>
   </CommonItem>
 );
 
@@ -41,8 +41,8 @@ const StockItem = ({ symbol, desc, added, loading, onSelect }: { symbol: string;
     <div className="flex items-center gap-2.5">
       <Logo symbol={symbol} category="stocks" size="sm" rounded="rounded-full" />
       <div className="flex flex-col items-start">
-        <span className="text-sm font-bold text-white">{symbol}</span>
-        <span className="text-[11px] text-white/35 truncate max-w-44">{desc}</span>
+        <span className="text-sm font-bold text-foreground-bold">{symbol}</span>
+        <span className="text-[11px] text-muted truncate max-w-44">{desc}</span>
       </div>
     </div>
   </CommonItem>
@@ -63,9 +63,9 @@ export const TokenList = ({ list, addedSet, loading, mode, onSelect }: TokenList
   return (
     <>
       <div className="px-4 pt-2 pb-1">
-        <p className="text-[10px] font-semibold tracking-widest text-white/35 uppercase">
+        <p className="text-[10px] font-semibold tracking-widest text-muted uppercase">
           Symbols
-          <span className="ml-1.5 text-white/20 normal-case tracking-normal font-normal">({list.length})</span>
+          <span className="ml-1.5 text-muted/70 normal-case tracking-normal font-normal">({list.length})</span>
         </p>
       </div>
       <div ref={parentRef} className="overflow-y-auto h-50 scrollbar-hide pb-3">

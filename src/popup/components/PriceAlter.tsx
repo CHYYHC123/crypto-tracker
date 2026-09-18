@@ -143,18 +143,18 @@ const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onP
   const handleIncrement = () => handleAdjust(true);
 
   return (
-    <div className="w-full border border-gray-800 p-3 rounded-xl">
-      <h2 className="text-white/90 font-normal text-sm mb-2">{t('alertPrice')}</h2>
+    <div className="w-full border border-border p-3 rounded-xl">
+      <h2 className="text-foreground font-normal text-sm mb-2">{t('alertPrice')}</h2>
 
       {/* 价格输入/调节器 */}
-      <div className="flex items-center rounded-xl border border-gray-700 mb-4 overflow-hidden">
-        <button onClick={handleDecrement} className="p-3 text-gray-400 border-r border-gray-700 cursor-pointer transition-all transition-discrete duration-300 hover:bg-gray-600">
+      <div className="flex items-center rounded-xl border border-border mb-4 overflow-hidden">
+        <button onClick={handleDecrement} className="p-3 text-muted border-r border-border cursor-pointer transition-all duration-300 hover:bg-surface-hover">
           <Minus size={16} />
         </button>
 
-        <input type="text" inputMode="decimal" value={inputValue} onChange={handleInputChange} onBlur={handleBlur} className="flex-1 bg-transparent text-center text-white text-base font-semibold outline-none w-full" />
+        <input type="text" inputMode="decimal" value={inputValue} onChange={handleInputChange} onBlur={handleBlur} className="flex-1 bg-transparent text-center text-foreground-bold text-base font-semibold outline-none w-full" />
 
-        <button onClick={handleIncrement} className="p-3 text-indigo-400 border-l border-gray-700 cursor-pointer transition-all transition-discrete duration-300  hover:bg-gray-600">
+        <button onClick={handleIncrement} className="p-3 text-primary border-l border-border cursor-pointer transition-all duration-300 hover:bg-surface-hover">
           <Plus size={16} />
         </button>
       </div>
@@ -163,22 +163,22 @@ const PriceAlertInput: React.FC<PriceAlertInputProps> = ({ price, direction, onP
       <div className="flex gap-3 mb-3">
         <button
           onClick={() => onDirectionChange('above')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'above' ? 'bg-[#1e3a32] border-[#2d5a4c] text-[#4ade80]' : 'bg-[#131425] border-transparent text-gray-500 hover:border-gray-700'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'above' ? 'bg-success/15 border-success/40 text-success' : 'bg-surface border-transparent text-muted hover:border-border'}`}
         >
-          <ArrowUp size={18} className={direction === 'above' ? 'text-green-400' : ''} />
+          <ArrowUp size={18} className={direction === 'above' ? 'text-success' : ''} />
           <span className="font-semibold">{t('above')}</span>
         </button>
 
         <button
           onClick={() => onDirectionChange('below')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'below' ? 'bg-[#441d24] border-[#6b252f] text-[#f87171]' : 'bg-[#131425] border-transparent text-gray-500 hover:border-gray-700'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl transition-all border cursor-pointer ${direction === 'below' ? 'bg-danger/15 border-danger/40 text-danger' : 'bg-surface border-transparent text-muted hover:border-border'}`}
         >
-          <ArrowDown size={18} className={direction === 'below' ? 'text-red-400' : ''} />
+          <ArrowDown size={18} className={direction === 'below' ? 'text-danger' : ''} />
           <span className="font-semibold">{t('below')}</span>
         </button>
       </div>
 
-      <p className="text-gray-500 text-sm text-left">{t('hint')}</p>
+      <p className="text-muted text-sm text-left">{t('hint')}</p>
     </div>
   );
 };

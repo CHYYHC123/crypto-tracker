@@ -106,7 +106,7 @@ export const TokenSearch = ({ tokens, onTokenAdded, mode = 'crypto' }: TokenSear
       {/* 触发行：输入框聚焦 或 点 Add 均打开弹窗 */}
       <div className="search_token mt-4 flex items-center shrink-0">
         <Input value="" placeholder={config.placeholder} onFocus={openAddDialog} disabled={loading} readOnly />
-        <Button className="ml-4" variant="gradient" disabled={loading} onClick={openAddDialog}>
+        <Button className="ml-4 rounded-[10px]" variant="gradient" disabled={loading} onClick={openAddDialog}>
           {t('addBtn')}
         </Button>
       </div>

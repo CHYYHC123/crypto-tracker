@@ -5,14 +5,14 @@
   :host {
     /* 设置基础字体大小 */
     font-size: 16px !important;
-    font-family: -apple-system, BlinkMacSystemFont, Pretendard, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, Pretendard, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
     line-height: 1.5 !important;
     /* 确保颜色不被继承 */
     color: inherit !important;
     background-color: transparent !important;
     box-sizing: border-box !important;
   }
-  
+
   /* 定义 Tailwind CSS 变量，确保在 Shadow DOM 中正常工作 */
   :host {
     --tw-border-style: solid;
@@ -21,16 +21,109 @@
 }
 
 @theme {
-  /* 在这里定义你的自定义配置 */
-  /* --color-brand: #ff0000;
-  
+  --color-background: var(--app-bg);
+  --color-foreground: var(--app-fg);
+  --color-foreground-bold: var(--app-fg-bold);
+  --color-muted: var(--app-muted);
 
-  
-  /* 扩展默认主题 */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, Pretendard, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --color-surface: var(--app-surface);
+  --color-surface-hover: var(--app-surface-hover);
+  --color-input: var(--app-input);
+  --color-border: var(--app-border);
+
+  --color-primary: var(--app-primary);
+  --color-primary-hover: var(--app-primary-hover);
+  --color-primary-foreground: var(--app-primary-fg);
+
+  --color-success: var(--app-success);
+  --color-success-bg: var(--app-success-bg);
+  --color-danger: var(--app-danger);
+  --color-warning: var(--app-warning);
+
+  /* 渐变按钮（gradient variant）的起止色 */
+  --color-gradient-from: var(--app-gradient-from);
+  --color-gradient-to: var(--app-gradient-to);
+  --color-gradient-from-hover: var(--app-gradient-from-hover);
+  --color-gradient-to-hover: var(--app-gradient-to-hover);
+
+  --font-family-sans: -apple-system, BlinkMacSystemFont, Pretendard, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+:root,
+:host {
+  /* 基础页面与文本 */
+  --app-bg: #111827; /* gray-900，现有页面底 */
+  --app-fg: #e2e8f0; /* slate-200，正文 */
+  --app-fg-bold: #ffffff; /* 标题 / 主文字 */
+  --app-muted: #94a3b8; /* slate-400 */
 
+  /* 卡片与组件表面 */
+  --app-surface: #1c2433; /* 贴近 bg-white/5 卡片 */
+  --app-surface-hover: #252d3a; /* 贴近 hover:bg-white/10 */
+  --app-input: #1f2937; /* gray-800 */
+  --app-border: rgb(255 255 255 / 0.1);
+
+  /* 主主题色 */
+  --app-primary: #a855f7; /* purple-500 */
+  --app-primary-hover: #9333ea; /* purple-600 */
+  --app-primary-fg: #ffffff;
+
+  /* 业务状态 */
+  --app-success: #34d399; /* emerald-400 */
+  --app-success-bg: rgb(52 211 153 / 0.15);
+  --app-danger: #fb7185; /* rose-400 */
+  --app-warning: #fbbf24; /* amber-400 */
+
+  /* 渐变按钮：pink-500 → purple-500，hover 提亮一档 */
+  --app-gradient-from: #ec4899;
+  --app-gradient-to: #a855f7;
+  --app-gradient-from-hover: #f472b6;
+  --app-gradient-to-hover: #c084fc;
+}
+
+:root[data-theme='ct-ocean'],
+:host([data-theme='ct-ocean']) {
+  --app-primary: #2563eb;
+  --app-primary-hover: #1d4ed8;
+
+  /* 渐变按钮：blue-500 → indigo-500 */
+  --app-gradient-from: #3b82f6;
+  --app-gradient-to: #6366f1;
+  --app-gradient-from-hover: #60a5fa;
+  --app-gradient-to-hover: #818cf8;
+}
+
+:root[data-theme='ct-light'],
+:host([data-theme='ct-light']) {
+  /* 基础页面与文本 */
+  --app-bg: #eff2f7; /* 应用容器主背景 */
+  --app-fg: #1e293b; /* 全局默认文本 (slate-800) */
+  --app-fg-bold: #0f172a; /* 标题与主要文字 (slate-900) */
+  --app-muted: #94a3b8; /* 次要文本与占位符 (slate-400) */
+
+  /* 卡片与组件表面 */
+  --app-surface: #f8fafd; /* 资产卡片背景 */
+  --app-surface-hover: #ffffff; /* 卡片 Hover */
+  --app-input: #e3e8f0; /* 输入框背景 */
+  --app-border: #e2e8f0; /* 边框分割线 */
+
+  /* 主主题色 */
+  --app-primary: #7c3aed;
+  --app-primary-hover: #6d28d9;
+  --app-primary-fg: #ffffff;
+
+  /* 业务状态 */
+  --app-success: #16a34a;
+  --app-success-bg: #dcfce7;
+  --app-danger: #dc2626;
+  --app-warning: #f59e0b;
+
+  /* 渐变按钮：purple-600 → indigo-600，hover 加深一档 */
+  --app-gradient-from: #9333ea;
+  --app-gradient-to: #4f46e5;
+  --app-gradient-from-hover: #7e22ce;
+  --app-gradient-to-hover: #4338ca;
+}
 
 /* 隐藏 Chrome, Safari, Edge, Opera 的调节箭头 */
 input::-webkit-outer-spin-button,
@@ -41,5 +134,12 @@ input::-webkit-inner-spin-button {
 
 /* 隐藏 Firefox 的调节箭头 */
 input[type='number'] {
-  -moz-appearance: textfield;
+  /* 兼容旧版 WebKit (Chrome, Safari, iOS) */
+  -webkit-appearance: none;
+
+  /* 兼容旧版 Gecko (Firefox) */
+  -moz-appearance: none;
+
+  /* W3C 标准属性 */
+  appearance: none;
 }

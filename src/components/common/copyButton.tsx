@@ -17,8 +17,8 @@ function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button onClick={handleCopy} className="shrink-0 text-white/50 hover:text-white cursor-pointer">
-      {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+    <button onClick={handleCopy} className="shrink-0 text-muted hover:text-foreground-bold cursor-pointer">
+      {copied ? <Check size={16} className="text-success" /> : <Copy size={16} />}
     </button>
   );
 }

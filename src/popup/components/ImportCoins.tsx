@@ -18,8 +18,8 @@ const exampleJSON = `{
 const ImportCoins: React.FC = () => {
   return (
     <div className="px-4 pb-2">
-      <p className="text-white/70 text-xs mb-3">Please select a valid JSON file.</p>
-      <div className="bg-gray-700/50 rounded-lg p-3 text-xs font-mono text-white/80 overflow-x-auto">
+      <p className="text-muted text-xs mb-3">Please select a valid JSON file.</p>
+      <div className="bg-input rounded-lg p-3 text-xs font-mono text-foreground overflow-x-auto">
         <pre className="whitespace-pre-wrap">{exampleJSON}</pre>
       </div>
     </div>

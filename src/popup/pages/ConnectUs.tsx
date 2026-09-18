@@ -49,55 +49,55 @@ export default function ConnectUs() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
+    <div className="w-full h-full bg-background text-foreground flex flex-col font-mono">
       <SubHeader title={t('title')} />
       <div className="overflow-y-auto">
         <section className="p-4">
-          <div className="rounded-xl border border-white/10 bg-white/3 p-3">
+          <div className="rounded-xl border border-border bg-surface p-3">
             <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/20">
-                <Mail size={20} className="text-purple-400" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 border border-primary/20">
+                <Mail size={20} className="text-primary" />
               </div>
 
               <div className="flex flex-col gap-1">
-                <a href="mailto:henrychen0620@gmail.com" className="mt-1 w-fit text-[14px] font-medium text-purple-400 transition-colors hover:text-purple-300">
+                <a href="mailto:henrychen0620@gmail.com" className="mt-1 w-fit text-[14px] font-medium text-primary transition-colors hover:text-primary-hover">
                   henrychen0620@gmail.com
                 </a>
 
-                <p className="text-[11px] text-white/50">{t('email.hint')}</p>
+                <p className="text-[11px] text-muted">{t('email.hint')}</p>
               </div>
             </div>
           </div>
 
-          <div className=" rounded-xl border border-white/10 bg-white/3 p-3 mt-4">
-            <label className="mb-2 block text-sm font-medium text-white/80">{t('license.label')}</label>
-            <Input type="text" value={licenseKey} placeholder={t('license.placeholder')} onChange={handleChange} onKeyDown={handleKeyDown} className="h-11 w-full rounded-lg border border-white/10 bg-[#111827] px-4 text-sm text-white  placeholder:text-white/30" />
-            <p className="mt-1 text-[11px] text-white/40">{t('license.hint')}</p>
+          <div className=" rounded-xl border border-border bg-surface p-3 mt-4">
+            <label className="mb-2 block text-sm font-medium text-foreground">{t('license.label')}</label>
+            <Input type="text" value={licenseKey} placeholder={t('license.placeholder')} onChange={handleChange} onKeyDown={handleKeyDown} className="h-11 w-full rounded-lg border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted" />
+            <p className="mt-1 text-[11px] text-muted">{t('license.hint')}</p>
           </div>
         </section>
 
         <section className="p-4">
-          <div className="rounded-2xl border border-white/10 bg-white/3 p-3">
+          <div className="rounded-2xl border border-border bg-surface p-3">
             <div className="flex justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Heart size={20} className="text-purple-400" />
-                  <h2 className="text-sm font-mediumtext-white/80">{t('support.title')}</h2>
+                  <Heart size={20} className="text-primary" />
+                  <h2 className="text-sm font-medium text-foreground">{t('support.title')}</h2>
                 </div>
 
-                <p className="mt-3 max-w-full text-[11px] text-white/50">{t('support.desc')}</p>
+                <p className="mt-3 max-w-full text-[11px] text-muted">{t('support.desc')}</p>
               </div>
             </div>
 
             {/* Address Table */}
-            <div className="mt-4 overflow-hidden rounded-xl border border-white/10">
+            <div className="mt-4 overflow-hidden rounded-xl border border-border">
               {/* Header */}
-              <div className="bg-white/5 px-4 py-2 text-xs text-white/50">
+              <div className="bg-surface-hover px-4 py-2 text-xs text-muted">
                 <span>{t('support.networkAddress')}</span>
               </div>
 
               {TIPPING_ADDRESS.map((item: TippingAddress) => (
-                <div key={item.name} className="flex items-center justify-between gap-3 border-t border-white/10 p-2 transition hover:bg-white/3">
+                <div key={item.name} className="flex items-center justify-between gap-3 border-t border-border p-2 transition hover:bg-surface-hover">
                   {/* 图标 + 名称 + 地址（竖排） */}
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black/40">
@@ -107,7 +107,7 @@ export default function ConnectUs() {
                       <span className="text-xs font-medium" style={{ color: item.color }}>
                         {item.name}
                       </span>
-                      <span className="truncate text-xs text-white/50 font-mono">{formatAddress(item.address)}</span>
+                      <span className="truncate text-xs text-muted font-mono">{formatAddress(item.address)}</span>
                     </div>
                   </div>
                   <CopyButton text={item.address} />
@@ -116,10 +116,10 @@ export default function ConnectUs() {
             </div>
 
             {/* Notice */}
-            <div className="mt-4 flex gap-3 rounded-xl border border-blue-400/20 bg-blue-400/5 p-3">
-              <Info size={16} className="text-blue-400 shrink-0" />
-              <p className="text-[10px] leading-relaxed text-white/50">
-                {t('support.usdtNotice')} <span className="text-green-400 font-medium">USDT</span>.
+            <div className="mt-4 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+              <Info size={16} className="text-primary shrink-0" />
+              <p className="text-[10px] leading-relaxed text-muted">
+                {t('support.usdtNotice')} <span className="text-success font-medium">USDT</span>.
                 <br />
                 {t('support.networkNotice')}
               </p>

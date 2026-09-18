@@ -26,12 +26,12 @@ const formatPrice = (price?: number | null): string => {
 
 const AssetItem: React.FC<AssetItemProps> = ({ removing, dataInfo, alertInfo, onAlertClick, onMenuClick }) => {
   return (
-    <motion.div layout whileHover={{ scale: 1 }} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-white/5 hover:bg-white/10 cursor-pointer transition flex-1 min-w-0" transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], layout: { duration: 0.3 } }}>
+    <motion.div layout whileHover={{ scale: 1 }} className="grid grid-cols-[auto_1fr_auto] items-center p-2 box-border rounded-xl mb-1.5 bg-surface hover:bg-surface-hover cursor-pointer transition flex-1 min-w-0" transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], layout: { duration: 0.3 } }}>
       <div className="flex items-center">
         <Logo size="w-9 h-9 text-sm" symbol={dataInfo.symbol} category={dataInfo.category} />
 
         <div className="ml-2 min-w-15">
-          <div className="text-[13px] font-bold">{dataInfo?.symbol}</div>
+          <div className="text-[13px] font-bold text-foreground-bold">{dataInfo?.symbol}</div>
           <AssetSubInfo coin={dataInfo} alert={alertInfo} onAlertClick={() => onAlertClick?.(dataInfo)} />
         </div>
       </div>
@@ -41,7 +41,7 @@ const AssetItem: React.FC<AssetItemProps> = ({ removing, dataInfo, alertInfo, on
       </div>
 
       <div className="justify-self-end">
-        <button disabled={removing} onClick={e => onMenuClick(e, dataInfo)} className="px-2 py-1 rounded-md hover:bg-white/10 transition cursor-pointer disabled:opacity-50">
+        <button disabled={removing} onClick={e => onMenuClick(e, dataInfo)} className="px-2 py-1 rounded-md hover:bg-surface-hover transition cursor-pointer disabled:opacity-50">
           <Ellipsis size={16} />
         </button>
       </div>

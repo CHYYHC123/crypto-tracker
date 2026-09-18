@@ -136,11 +136,11 @@ export function getTokenPlatform(symbol: string): number {
 
 /**
  * 根据涨跌幅返回对应的 Tailwind 文字颜色 class
- * @example getChangeColorClass(2.5) → 'text-emerald-400'
+ * @example getChangeColorClass(2.5) → 'text-success'
  */
 export function getChangeColorClass(change?: number | null): string {
-  if (change == null) return 'text-gray-400';
-  return change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  if (change == null) return 'text-muted';
+  return change >= 0 ? 'text-success' : 'text-danger';
 }
 
 /**

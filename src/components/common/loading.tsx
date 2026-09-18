@@ -10,7 +10,7 @@ export interface LoadingProps {
 const Loading: React.FC<LoadingProps> = ({ size = 24, className }) => {
   return (
     <div className={cn('flex items-center justify-center', className)}>
-      <Loader className="animate-spin text-white/70" size={size} />
+      <Loader className="animate-spin text-muted" size={size} />
     </div>
   );
 };

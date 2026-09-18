@@ -105,7 +105,7 @@ export default function PopupContent() {
 
   return (
     <>
-      <div className="w-full h-full font-mono bg-gray-900 text-white shadow-2xl backdrop-blur-lg p-3 flex flex-col">
+      <div className="w-full h-full font-mono bg-background text-foreground shadow-2xl backdrop-blur-lg p-3 flex flex-col">
         <Header />
 
         <TokenSearch mode={modeType} tokens={tokens} onTokenAdded={handleTokenAdded} />

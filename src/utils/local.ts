@@ -11,12 +11,14 @@
 import type { PriceAlert, GlobalAlerts, GlobalAlertsTrigger, AssetTypes } from '@/types/index';
 import type { CoinRecord } from '@/types/asset';
 import { defaultDataSource, ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
+import { DEFAULT_THEME, type ThemeId } from '@/utils/theme';
 
 // ─── Schema：所有 key 与其值类型的唯一映射
 
 interface LocalSchema {
   data_source: ExchangeType;
   asset_type: AssetTypes;
+  theme: ThemeId;
   asset_type_switched: boolean;
   price_alerts: PriceAlert[];
   stocks_price_alerts: PriceAlert[];
@@ -67,6 +69,15 @@ export async function getAssetType(): Promise<AssetTypes> {
 }
 
 export const setAssetType = (v: AssetTypes): Promise<void> => setLocal('asset_type', v);
+
+// ─── theme
+
+/** 读取主题，未设置时返回默认主题 */
+export async function getTheme(): Promise<ThemeId> {
+  return (await getLocal('theme')) ?? DEFAULT_THEME;
+}
+
+export const setTheme = (v: ThemeId): Promise<void> => setLocal('theme', v);
 
 // ─── asset_type_switched
 

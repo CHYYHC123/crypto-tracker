@@ -25,19 +25,19 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
   }, [isIndeterminate, isAllSelected]);
 
   return (
-    <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 shrink-0">
+    <div className="mt-2 flex items-center justify-between border-t border-border pt-2 shrink-0">
       {/* 左侧：倒计时 或 全选 */}
       <div className="flex items-center min-w-0 flex-1">
         <AnimatePresence mode="wait">
           {showCheckboxes ? (
             <motion.div key="select-all" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="flex items-center">
               <Checkbox ref={checkboxRef} checked={isAllSelected && !isIndeterminate} onChange={e => handleToggleSelectAll(e.target.checked)} />
-              <span className="ml-2 text-xs text-gray-100 cursor-pointer select-none whitespace-nowrap" onClick={() => handleToggleSelectAll(!isAllSelected)}>
+              <span className="ml-2 text-xs text-foreground cursor-pointer select-none whitespace-nowrap" onClick={() => handleToggleSelectAll(!isAllSelected)}>
                 {isAllSelected ? t('cancelSelectAll') : t('selectAll')}
               </span>
             </motion.div>
           ) : (
-            <motion.div key="countdown" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="text-xs text-white/50">
+            <motion.div key="countdown" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="text-xs text-muted">
               {isLoading ? <Loader className="animate-spin" size={12} /> : `${countdown}s`}
             </motion.div>
           )}
@@ -49,10 +49,10 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
         <AnimatePresence mode="wait">
           {showCheckboxes ? (
             <motion.div key="batch-actions" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }} className="flex items-center gap-2">
-              <button onClick={handleCancelBatch} className="px-3 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs text-gray-100 whitespace-nowrap">
+              <button onClick={handleCancelBatch} className="px-3 py-1 bg-surface rounded-md hover:bg-surface-hover transition cursor-pointer text-xs text-foreground whitespace-nowrap">
                 {t('cancel')}
               </button>
-              <button onClick={handleBatchDelete} disabled={selectedCount === 0} className={`px-3 py-1 rounded-md transition cursor-pointer text-xs text-white whitespace-nowrap ${selectedCount === 0 ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}>
+              <button onClick={handleBatchDelete} disabled={selectedCount === 0} className={`px-3 py-1 rounded-md transition cursor-pointer text-xs text-primary-foreground whitespace-nowrap ${selectedCount === 0 ? 'bg-input text-muted cursor-not-allowed' : 'bg-danger hover:opacity-90'}`}>
                 {t('delete', { count: selectedCount })}
               </button>
             </motion.div>
@@ -63,7 +63,7 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs whitespace-nowrap"
+                className="px-2 py-1 bg-surface rounded-md hover:bg-surface-hover transition cursor-pointer text-xs whitespace-nowrap"
                 onClick={enterSelectMode}
               >
                 {t('select')}
@@ -74,7 +74,7 @@ export const Footer = ({ isLoading, countdown, onRefresh, batchSelect }: Refresh
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer text-xs whitespace-nowrap"
+                className="px-2 py-1 bg-surface rounded-md hover:bg-surface-hover transition cursor-pointer text-xs whitespace-nowrap"
                 onClick={onRefresh}
               >
                 {t('refresh')}

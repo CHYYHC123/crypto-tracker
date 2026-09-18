@@ -6,7 +6,7 @@ interface AssetListSkeletonProps {
 }
 
 const SkeletonBlock = ({ className }: { className?: string }) => {
-  return <div className={cn(`animate-pulse  rounded-md bg-white/10`, className)} />;
+  return <div className={cn(`animate-pulse  rounded-md bg-surface-hover`, className)} />;
 };
 
 export default function AssetListSkeleton({ count = 5, className }: AssetListSkeletonProps) {
@@ -15,7 +15,7 @@ export default function AssetListSkeleton({ count = 5, className }: AssetListSke
       {Array.from({
         length: count
       }).map((_, index) => (
-        <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center p-2 mb-1.5 rounded-xl  bg-white/5">
+        <div key={index} className="grid grid-cols-[auto_1fr_auto] items-center p-2 mb-1.5 rounded-xl  bg-surface">
           <SkeletonBlock className="w-9 h-9 rounded-lg" />
 
           <div className="ml-2 space-y-2">

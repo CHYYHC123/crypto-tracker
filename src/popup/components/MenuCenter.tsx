@@ -72,7 +72,7 @@ const MenuCenter = () => {
   return (
     <>
       <div className="cursor-pointer w-6 h-6 flex items-center justify-center rounded-md transition-all duration-200" onClick={handleOpen}>
-        <Menu size={24} aria-haspopup="true" className="text-white/70 transition-colors duration-200 hover:text-white" />
+        <Menu size={24} aria-haspopup="true" className="text-muted transition-colors duration-200 hover:text-foreground-bold" />
       </div>
 
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose}>
@@ -112,7 +112,7 @@ const MenuCenter = () => {
       {/* <Dialog open={showExportLoading} onClose={() => {}} closeOnBackdropClick={false}>
         <div className="p-6 flex flex-col items-center justify-center min-h-30">
           <Loading size={32} />
-          <p className="mt-4 text-white/70 text-sm">{t('exportingData')}</p>
+          <p className="mt-4 text-muted text-sm">{t('exportingData')}</p>
         </div>
       </Dialog> */}
     </>

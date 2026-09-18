@@ -40,12 +40,12 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
     const isPositive = change >= 0;
     return {
       text: `${isPositive ? '+' : ''}${change}%`,
-      className: isPositive ? 'text-emerald-400' : 'text-rose-400'
+      className: isPositive ? 'text-success' : 'text-danger'
     };
   }, [displayToken?.change]);
 
   return (
-    <div className="flex justify-between items-center p-3 cursor-move bg-gray-900 backdrop-blur-lg z-10">
+    <div className="flex justify-between items-center p-3 cursor-move bg-background backdrop-blur-lg z-10">
       {collapsed && displayToken ? (
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
@@ -68,11 +68,11 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
           )}
         </div>
       ) : (
-        <h2 className="text-sm font-semibold text-sans">Crypto Prices</h2>
+        <h2 className="text-sm font-semibold text-foreground-bold">Crypto Prices</h2>
       )}
 
       <div className="flex gap-2 items-center ml-2">
-        <button onClick={onToggle} className="text-xs px-1 py-1 bg-white/10 rounded-md hover:bg-white/20 transition cursor-pointer" aria-label={collapsed ? '展开' : '收起'}>
+        <button onClick={onToggle} className="text-xs px-1 py-1 bg-surface rounded-md hover:bg-surface-hover transition cursor-pointer" aria-label={collapsed ? '展开' : '收起'}>
           {collapsed ? <Plus size={12} /> : <Minus size={12} />}
         </button>
       </div>

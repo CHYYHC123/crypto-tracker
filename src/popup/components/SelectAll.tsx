@@ -38,7 +38,7 @@ export const SelectAll: React.FC<SelectAllProps> = ({ visible, checked, indeterm
               checked={checked && !indeterminate}
               onChange={e => onChange(e.target.checked)}
             />
-            <span className="ml-2 text-sm text-gray-100 cursor-pointer select-none" onClick={() => onChange(!checked)}>
+            <span className="ml-2 text-sm text-foreground cursor-pointer select-none" onClick={() => onChange(!checked)}>
               {checked ? '取消全选' : '全选'}
             </span>
           </div>

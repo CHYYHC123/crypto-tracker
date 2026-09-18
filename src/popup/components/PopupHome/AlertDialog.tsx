@@ -28,22 +28,22 @@ const AlertDialog: React.FC<AlertDialogProps> = ({ open, token, onClose }) => {
       type="custom"
       header={
         <>
-          <div className="p-3 border-b border-gray-600">
+          <div className="p-3 border-b border-border">
             <div className="flex justify-between gap-2">
-              <h3 className="text-white/90 font-semibold text-base flex items-center">
+              <h3 className="text-foreground font-semibold text-base flex items-center">
                 <span>
-                  {t('titlePrefix')} <strong className="text-white">{token?.symbol}</strong>{t('titleSuffix') ? ` ${t('titleSuffix')}` : ''}
+                  {t('titlePrefix')} <strong className="text-foreground-bold">{token?.symbol}</strong>{t('titleSuffix') ? ` ${t('titleSuffix')}` : ''}
                 </span>
 
                 <Tooltip content={enabled ? t('alertEnabled') : t('alertDisabled')} side="bottom">
-                  {enabled ? <Power size={16} onClick={() => setEnabled(false)} className="ml-4 cursor-pointer text-green-500" /> : <PowerOff size={16} onClick={() => setEnabled(true)} className="ml-4 cursor-pointer text-red-500" />}
+                  {enabled ? <Power size={16} onClick={() => setEnabled(false)} className="ml-4 cursor-pointer text-success" /> : <PowerOff size={16} onClick={() => setEnabled(true)} className="ml-4 cursor-pointer text-danger" />}
                 </Tooltip>
               </h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-white transition cursor-pointer">
+              <button onClick={onClose} className="text-muted hover:text-foreground-bold transition cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-white/70 font-normal text-xs">{t('current', { price: token?.price })}</p>
+            <p className="text-muted font-normal text-xs">{t('current', { price: token?.price })}</p>
           </div>
         </>
       }

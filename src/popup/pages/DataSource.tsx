@@ -34,7 +34,7 @@ function DataSource() {
   };
 
   return (
-    <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
+    <div className="w-full h-full bg-background text-foreground flex flex-col font-mono">
       <SubHeader title={t('title')} />
       <div className="p-4 space-y-2 max-h-100 overflow-y-auto">
         {Object.entries(ExchangeListMap)
@@ -47,7 +47,7 @@ function DataSource() {
               <motion.button
                 key={source}
                 onClick={() => handleSelect(exchangeType)}
-                className={cn('w-full px-3 py-3 rounded-xl border transition-all cursor-pointer text-left', isSelected ? 'bg-purple-500/30 border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-gray-800/50 border-white/10 hover:bg-gray-800 hover:border-white/20')}
+                className={cn('w-full px-3 py-3 rounded-xl border transition-all cursor-pointer text-left', isSelected ? 'bg-primary/30 border-primary shadow-lg shadow-primary/20' : 'bg-input/50 border-border hover:bg-input hover:border-foreground/20')}
                 whileHover={{
                   scale: 1.02,
                   boxShadow: '0 0 12px rgba(255, 255, 255, 0.15)'
@@ -69,13 +69,13 @@ function DataSource() {
                   {/* Info */}
                   <div className="flex-1 flex items-center justify-between">
                     <div>
-                      <span className="text-white font-medium text-sm">
+                      <span className="text-foreground-bold font-medium text-sm">
                         <span>{info.name}</span>
                         <span className='text-[12px] ml-1'>{info.market === 'futures' ? t('futures') : t('spot')}</span>
                       </span>
-                      <div className="text-gray-400 text-xs mt-0.5">{info.needsVPN ? t('needVpn') : t('noVpn')}</div>
+                      <div className="text-muted text-xs mt-0.5">{info.needsVPN ? t('needVpn') : t('noVpn')}</div>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
                   </div>
                 </div>
               </motion.button>

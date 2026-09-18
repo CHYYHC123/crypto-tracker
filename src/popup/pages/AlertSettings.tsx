@@ -92,10 +92,10 @@ const ThresholdInput: React.FC<ThresholdInputProps> = ({ label, value, onChange,
 
   return (
     <div className="space-y-2">
-      <div className="text-[11px] font-medium text-white/50 tracking-tight uppercase">{label}</div>
+      <div className="text-[11px] font-medium text-muted tracking-tight uppercase">{label}</div>
       <div className="relative group">
         <Input type="text" inputMode="decimal" value={value} placeholder={placeholder} onChange={handleChange} onKeyDown={handleKeyDown} className="w-full text-sm" />
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">%</span>
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-sm">%</span>
       </div>
     </div>
   );
@@ -142,19 +142,19 @@ export default function AlertSettings() {
   };
 
   return (
-    <div className="w-full h-full bg-gray-900 text-white flex flex-col font-mono">
+    <div className="w-full h-full bg-background text-foreground flex flex-col font-mono">
       <SubHeader title={t('title')} />
 
       <div className="flex-1 overflow-auto p-4 space-y-6 scrollbar-hide">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-bold text-white/90 uppercase tracking-wider">{t('globalMonitor')}</h4>
-              <p className="text-[11px] text-white/50 mt-0.5">
-                {t('status')}: <span className={limitEnabled ? 'text-green-500' : 'text-red-500'}>{limitEnabled ? t('enabled') : t('disabled')}</span>
+              <h4 className="text-sm font-bold text-foreground-bold uppercase tracking-wider">{t('globalMonitor')}</h4>
+              <p className="text-[11px] text-muted mt-0.5">
+                {t('status')}: <span className={limitEnabled ? 'text-success' : 'text-danger'}>{limitEnabled ? t('enabled') : t('disabled')}</span>
               </p>
             </div>
-            <button onClick={() => setLimitEnabled(!limitEnabled)} className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${limitEnabled ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-white/5 text-white/30 border border-white/10'}`}>
+            <button onClick={() => setLimitEnabled(!limitEnabled)} className={`p-2 rounded-xl transition-all duration-200 cursor-pointer ${limitEnabled ? 'bg-success/10 text-success border border-success/20' : 'bg-surface text-muted border border-border'}`}>
               {limitEnabled ? <Power size={18} /> : <PowerOff size={18} />}
             </button>
           </div>
@@ -164,7 +164,7 @@ export default function AlertSettings() {
             <ThresholdInput label={t('bearishLabel')} value={bearLimit} onChange={setBearLimit} />
 
             <div className="">
-              <div className="flex items-center text-[11px] font-medium text-white/50 tracking-tight uppercase">
+              <div className="flex items-center text-[11px] font-medium text-muted tracking-tight uppercase">
                 <span>{t('trailingLabel')}</span>
                 {Number(stepLimit) > 0 && (
                   <Tooltip sideOffset={1} content={<span style={{ display: 'block', maxWidth: '200px', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>{t('trailingTooltip', { step: stepLimit })}</span>}>
@@ -176,7 +176,7 @@ export default function AlertSettings() {
             </div>
 
             {(bullLimit || bearLimit) && (
-              <p className="text-[11px] text-white/40 leading-relaxed italic">
+              <p className="text-[11px] text-muted leading-relaxed italic">
                 {bullLimit && bearLimit
                   ? t('alertSummaryBoth', { bull: bullLimit, bear: bearLimit })
                   : bullLimit
@@ -190,11 +190,11 @@ export default function AlertSettings() {
 
       <div className="p-4 pb-6  backdrop-blur-md">
         <div className="flex gap-2">
-          <Button className="flex-1 border border-white/10  hover:bg-white/5 transition-colors" size="lg" onClick={() => navigate(-1)}>
+          <Button className="flex-1 border border-border hover:bg-surface transition-colors" size="lg" onClick={() => navigate(-1)}>
             {t('cancel')}
           </Button>
 
-          <Button className="ml-2 bg-blue-600 hover:bg-blue-700" size="lg" loading={saving} onClick={saveGlobalSettings}>
+          <Button className="ml-2 bg-primary hover:bg-primary-hover" size="lg" loading={saving} onClick={saveGlobalSettings}>
             {t('save')}
           </Button>
         </div>

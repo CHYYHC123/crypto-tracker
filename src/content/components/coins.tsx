@@ -14,7 +14,7 @@ import AssetSubInfo from '@/components/common/AssetSubInfo';
 
 export type CoinsContentProps = ComponentProps<typeof motion.div>;
 
-export const CoinsContent = ({ className, ...props }: CoinsContentProps) => <motion.div className={cn('relative bg-gray-900 text-white rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scrollbar-hide', className)} {...props} />;
+export const CoinsContent = ({ className, ...props }: CoinsContentProps) => <motion.div className={cn('relative bg-background text-foreground rounded-2xl shadow-2xl backdrop-blur-lg scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent scrollbar-hide', className)} {...props} />;
 
 // 可排序的币种卡片组件
 interface SortableCoinItemProps {
@@ -66,7 +66,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
   const alert = priceAlerts.find(a => a.symbol.toUpperCase() === coin.symbol.toUpperCase());
 
   return (
-    <div ref={setNodeRef} style={style} className={cn('flex justify-between items-center bg-white/5 hover:bg-white/10 p-2 rounded-lg transition', isDragging ? 'shadow-lg' : '')}>
+    <div ref={setNodeRef} style={style} className={cn('flex justify-between items-center bg-surface hover:bg-surface-hover p-2 rounded-lg transition', isDragging ? 'shadow-lg' : '')}>
       {/* 拖拽手柄 - 阻止事件冒泡到外层 motion.div */}
       <div
         {...attributes}
@@ -76,7 +76,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
           // 调用原始的 onPointerDown
           listeners?.onPointerDown?.(e as any);
         }}
-        className="cursor-grab active:cursor-grabbing p-1 -ml-1 mr-1 text-white/30 hover:text-white/60 transition touch-none"
+        className="cursor-grab active:cursor-grabbing p-1 -ml-1 mr-1 text-muted hover:text-foreground transition touch-none"
       >
         <GripVertical size={14} />
       </div>

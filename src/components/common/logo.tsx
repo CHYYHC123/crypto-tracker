@@ -24,7 +24,7 @@ function resolveSizeClass(size: LogoPreset | string = 'md'): string {
 }
 
 const LetterLogo = memo(({ symbol, sizeClass, rounded }: { symbol: string; sizeClass: string; rounded: string }) => (
-  <div className={cn(sizeClass, rounded, 'flex items-center justify-center bg-white/10 font-medium')}>
+  <div className={cn(sizeClass, rounded, 'flex items-center justify-center bg-muted/20 font-medium')}>
     {symbol.charAt(0)}
   </div>
 ));

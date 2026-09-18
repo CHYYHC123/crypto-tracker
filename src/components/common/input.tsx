@@ -50,7 +50,7 @@ const Input: React.FC<InputProps> = ({ type = 'text', className, onKeyDown, onCo
       <input
         type={type}
         data-slot="input"
-        className={cn('text-sm w-full max-w-sm h-9 px-3 bg-gray-800 ring-1 ring-gray-700 rounded-md text-gray-100 placeholder:text-gray-600 outline-none focus:ring-1 focus:ring-gray-600 transition', className)}
+        className={cn('text-sm w-full max-w-sm h-9 px-3 bg-input ring-1 ring-border rounded-md text-foreground placeholder:text-muted outline-none focus:ring-1 focus:ring-primary/40 transition', className)}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
         onKeyDown={handleKeyDown}
@@ -58,7 +58,7 @@ const Input: React.FC<InputProps> = ({ type = 'text', className, onKeyDown, onCo
       />
       <AnimatePresence>
         {errorTip && (
-          <motion.div key={errorTip} className="absolute text-[#ef4444] text-xs mt-0.5" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.18 }}>
+          <motion.div key={errorTip} className="absolute text-danger text-xs mt-0.5" initial={{ opacity: 0, y: -2 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -2 }} transition={{ duration: 0.18 }}>
             {errorTip}
           </motion.div>
         )}

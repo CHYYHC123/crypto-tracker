@@ -9,7 +9,7 @@ type ActionMenuItemProps = {
 
 function ActionMenuItem({ children, onClick, danger, disabled }: ActionMenuItemProps) {
   return (
-    <div role="menuitem" onClick={() => !disabled && onClick?.()} className={cn('px-3 py-2 text-xs select-none rounded-lg mb-1 transition-all duration-200 text-white', disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/10', danger && 'text-red-400')}>
+    <div role="menuitem" onClick={() => !disabled && onClick?.()} className={cn('px-3 py-2 text-xs select-none rounded-lg mb-1 transition-all duration-200 text-foreground', disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-surface-hover', danger && 'text-danger')}>
       {children}
     </div>
   );

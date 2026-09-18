@@ -94,8 +94,8 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ label, className
           <motion.div
             className={cn(
               'relative w-4 h-4 rounded border-2 transition-colors',
-              isChecked || isIndeterminate ? 'bg-gray-600 border-gray-600' : 'bg-gray-800 border-gray-600',
-              isFocused && 'ring-2 ring-gray-600 ring-offset-2 ring-offset-gray-900',
+              isChecked || isIndeterminate ? 'bg-primary border-primary' : 'bg-input border-border',
+              isFocused && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-background',
               disabled && 'opacity-50 cursor-not-allowed'
             )}
             animate={{
@@ -106,17 +106,17 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({ label, className
             <AnimatePresence mode="wait">
               {isIndeterminate ? (
                 <motion.div key="indeterminate" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                  <Minus size={12} className="text-white" strokeWidth={3} />
+                  <Minus size={12} className="text-primary-foreground" strokeWidth={3} />
                 </motion.div>
               ) : isChecked ? (
                 <motion.div key="checked" initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                  <Check size={12} className="text-white" strokeWidth={3} />
+                  <Check size={12} className="text-primary-foreground" strokeWidth={3} />
                 </motion.div>
               ) : null}
             </AnimatePresence>
           </motion.div>
         </div>
-        {label && <span className={cn('text-sm text-gray-100', disabled && 'opacity-50')}>{label}</span>}
+        {label && <span className={cn('text-sm text-foreground', disabled && 'opacity-50')}>{label}</span>}
       </label>
     </div>
   );

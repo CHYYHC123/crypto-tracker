@@ -5,12 +5,12 @@ import { cn } from '@/lib/utils';
 const badgeVariants = cva('inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2', {
   variants: {
     color: {
-      default: 'bg-gray-600 text-white',
-      secondary: 'bg-gray-500 text-white',
-      critical: 'bg-red-500 text-white',
-      success: 'bg-green-500 text-white',
-      warning: 'bg-yellow-500 text-white',
-      info: 'bg-blue-500 text-white'
+      default: 'bg-input text-foreground',
+      secondary: 'bg-surface text-muted',
+      critical: 'bg-danger text-primary-foreground',
+      success: 'bg-success text-primary-foreground',
+      warning: 'bg-warning text-primary-foreground',
+      info: 'bg-primary text-primary-foreground'
     },
     radius: {
       none: 'rounded-none',

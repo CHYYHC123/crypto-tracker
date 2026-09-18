@@ -1,6 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import ContentMain from './components/contentMain.tsx';
+import { initTheme } from '@/utils/theme';
+import { getTheme } from '@/utils/local';
 import tailwindStyles from '@/assets/css/tailwindcss.css?inline';
 
 const container = document.createElement('div');
@@ -8,6 +10,8 @@ container.id = 'shadow-content-container';
 // 禁止翻译：在容器元素上添加 translate="no" 属性
 container.setAttribute('translate', 'no');
 container.setAttribute('data-notranslate', 'true');
+// 主题挂在 container 上：它才是 Shadow DOM 的 :host
+const stopWatchTheme = initTheme(container, getTheme);
 document.body.appendChild(container);
 
 const shadowRoot = container.attachShadow({ mode: 'open' });
@@ -56,6 +60,7 @@ function cleanup() {
       root.unmount();
       root = null;
     }
+    stopWatchTheme();
     // 移除容器元素
     const existingContainer = document.getElementById('shadow-content-container');
     if (existingContainer) existingContainer.remove();
@@ -69,9 +74,7 @@ function checkExtensionAvailable(): boolean {
   try {
     // 检查 chrome.runtime.id 是否存在
     // console.log('chrome.runtime?.id', chrome.runtime?.id);
-    if (!chrome.runtime?.id) {
-      return false;
-    }
+    if (!chrome.runtime?.id) return false;
     return true;
   } catch (e) {
     return false;
