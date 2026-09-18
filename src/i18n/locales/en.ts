@@ -10,6 +10,7 @@ export default {
         exportCoins: 'Export Coins',
         connectUs: 'Contact Us',
         language: 'Language ({{language}})',
+        theme:"Theme",
         exportingData: 'Exporting data...',
         exchange: {
           BN: 'BN Spot',
@@ -76,6 +77,18 @@ export default {
       zh: 'Simplified Chinese'
     },
     switched: 'Language switched to {{language}}'
+  },
+  theme: {
+    title: 'Theme',
+    switched: 'Theme switched to {{theme}}',
+    options: {
+      ctLight: 'Light',
+      ctLightDesc: 'Light Mode',
+      ctDefault: 'Dark',
+      ctDefaultDesc: 'Dark Mode',
+      ctOcean: 'System',
+      ctOceanDesc: 'System Setting',
+    }
   },
   dataSource: {
     title: 'Data Source',

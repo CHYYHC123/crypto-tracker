@@ -25,6 +25,10 @@ export const router = createHashRouter([
       {
         path: '/language',
         lazy: () => import('@/popup/pages/Language').then(m => ({ Component: m.default }))
+      },
+      {
+        path: '/theme',
+        lazy: () => import('@/popup/pages/Theme').then(m => ({ Component: m.default }))
       }
     ]
   }

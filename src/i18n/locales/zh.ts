@@ -10,6 +10,7 @@ export default {
         exportCoins: '导出代币',
         connectUs: '联系我们',
         language: '语言 ({{language}})',
+        theme: '主题',
         exportingData: '正在导出数据...',
         exchange: {
           BN: '币安现货',
@@ -52,7 +53,7 @@ export default {
         hint: '价格突破时通知。设为 0 则禁用。'
       },
       tokenSearch: {
-        addCrypto: '添加加密货币',
+        addCrypto: '添加代币',
         addStock: '添加股票',
         searchCryptoPlaceholder: '搜索代币（如 BTC）',
         searchStockPlaceholder: '搜索股票代码（如 AAPL）',
@@ -76,6 +77,18 @@ export default {
       zh: '简体中文'
     },
     switched: '语言已切换为 {{language}}'
+  },
+  theme: {
+    title: '主题',
+    switched: '主题已切换为 {{theme}}',
+    options: {
+      ctLight: '浅色',
+      ctLightDesc: '开启浅色模式',
+      ctDefault: '深色',
+      ctDefaultDesc: '开启深色模式',
+      ctOcean: '系统',
+      ctOceanDesc: '跟随系统设置'
+    }
   },
   dataSource: {
     title: '数据源',

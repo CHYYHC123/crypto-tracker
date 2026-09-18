@@ -16,8 +16,8 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
-        gradient:
-          'text-sm font-medium text-primary-foreground transition disabled:opacity-50 shadow-lg bg-linear-to-r from-gradient-from to-gradient-to hover:from-gradient-from-hover hover:to-gradient-to-hover active:scale-95'
+        gradient: cn('text-sm font-medium text-primary-foreground', 'transition disabled:opacity-50 shadow-lg', 'shadow-lg bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 active:scale-95'),
+        gradient1: cn('text-sm font-medium text-primary-foreground', 'transition disabled:opacity-50 shadow-lg', 'bg-linear-to-r from-gradient-from to-gradient-to hover:from-gradient-from-hover hover:to-gradient-to-hover active:scale-95')
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

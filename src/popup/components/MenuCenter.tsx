@@ -5,18 +5,12 @@ import { Menu } from 'lucide-react';
 import ActionMenu from '@/components/common/ActionMenu';
 import ActionMenuItem from '@/components/common/ActionMenuItem';
 
-// import Dialog from '@/components/common/dialog';
-// import Loading from '@/components/common/loading';
-// import ConfirmDialog from '@/components/common/confirm-dialog';
-// import Tooltip from '@/components/common/tooltip';
 import { useTranslation } from 'react-i18next';
-// import ImportCoins from './ImportCoins';
 
 import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 import { getDataSource } from '@/utils/local';
-// import { exportCryptoData } from '../utils/exportData';
+
 import { useAssetType } from '@/popup/hooks/useAssetType';
-// import { selectAndImportFile } from '../utils/importData';
 
 const LANGUAGE_LABELS: Record<string, string> = {
   en: 'English',
@@ -55,20 +49,6 @@ const MenuCenter = () => {
     handleClose(); // 关闭主菜单
   };
 
-  // 导出币种功能
-  // const [showExportLoading, setShowExportLoading] = useState(false);
-  // const handleExport = async () => {
-  //   setShowExportLoading(true);
-  //   handleClose(); // 关闭主菜单
-  //   try {
-  //     await exportCryptoData();
-  //   } catch (error) {
-  //     console.error('[MenuCenter] 导出失败:', error);
-  //   } finally {
-  //     setShowExportLoading(false);
-  //   }
-  // };
-
   return (
     <>
       <div className="cursor-pointer w-6 h-6 flex items-center justify-center rounded-md transition-all duration-200" onClick={handleOpen}>
@@ -97,7 +77,14 @@ const MenuCenter = () => {
         >
           {t('language', { language: languageLabel })}
         </ActionMenuItem>
-        {/* <ActionMenuItem onClick={handleImportClick}>Import coins</ActionMenuItem> */}
+        <ActionMenuItem
+          onClick={() => {
+            navigate('/theme');
+            handleClose();
+          }}
+        >
+          {t('theme')}
+        </ActionMenuItem>
         <ActionMenuItem
           onClick={() => {
             navigate('/connect-us');

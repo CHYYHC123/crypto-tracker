@@ -9,12 +9,25 @@
 
 export const THEME_ATTR = 'data-theme';
 
-export type ThemeId = 'ct-default' | 'ct-ocean' | 'ct-light';
+export type ThemeId = 'ct-default' | 'ct-dark' | 'ct-light';
 
 /** 'ct-default' 在 CSS 中无对应选择器，会落到基础 `:root, :host` 的变量上 */
-export const DEFAULT_THEME: ThemeId = 'ct-light';
+export const DEFAULT_THEME: ThemeId = 'ct-dark';
 
-export const THEME_IDS: ThemeId[] = ['ct-default', 'ct-ocean', 'ct-light'];
+export const THEME_IDS: ThemeId[] = ['ct-dark', 'ct-default', 'ct-light'];
+
+/**
+ * 解析存储值到实际应用的 ThemeId。
+ * ct-ocean 代表"跟随系统"，运行时根据 OS prefers-color-scheme 返回
+ * ct-default（深色）或 ct-light（浅色）。
+ *
+ * ⚠️ 仅在 popup / content script 等有 DOM 的上下文中调用，
+ * background service worker 中不可调用（无 window 对象）。
+ */
+export function resolveTheme(theme: ThemeId): ThemeId {
+  if (theme !== 'ct-default') return theme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'ct-dark' : 'ct-light';
+}
 
 /** 把主题写到目标根元素：popup 传 documentElement，content 传 shadow host */
 export function applyTheme(theme: ThemeId, el: Element): void {
