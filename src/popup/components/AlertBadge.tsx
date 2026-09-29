@@ -1,5 +1,5 @@
 // 携带铃铛 🔔
-import { formatNumWithCommas } from '@/utils/index';
+import { formatNumWithCommas } from '@/utils/num';
 import { cn } from '@/lib/utils';
 import Tooltip from '@/components/common/tooltip';
 import { PriceAlert } from '@/types/index';

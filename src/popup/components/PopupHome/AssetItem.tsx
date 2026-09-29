@@ -4,7 +4,8 @@ import type { PriceAlert } from '@/types/index';
 import { Ellipsis } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { formatNumWithCommas, formatChange, getChangeColorClass } from '@/utils/index';
+import { getChangeColorClass } from '@/utils/index';
+import { formatNumWithCommas, formatChange } from '@/utils/num';
 
 import Logo from '@/components/common/logo';
 import AssetSubInfo from '@/components/common/AssetSubInfo';

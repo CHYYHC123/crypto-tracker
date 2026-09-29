@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { DataStatus } from '@/types/index';
 import NetworkState from '@/content/components/networkState';
-import { formatNumWithCommas } from '@/utils/index';
+import { formatNumWithCommas } from '@/utils/num';
 import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
 import Logo from '@/components/common/logo';

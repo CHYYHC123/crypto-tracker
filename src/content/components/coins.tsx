@@ -7,7 +7,8 @@ import { GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { formatNumWithCommas, formatChange, getChangeColorClass } from '@/utils/index';
+import { getChangeColorClass } from '@/utils/index';
+import { formatNumWithCommas, formatChange } from '@/utils/num';
 import { PriceAlert } from '@/types/index';
 import type { AssetItem } from '@/types/asset';
 import AssetSubInfo from '@/components/common/AssetSubInfo';
@@ -27,7 +28,7 @@ function arePropsEqual(prevProps: SortableCoinItemProps, nextProps: SortableCoin
   const prevCoin = prevProps.coin;
   const nextCoin = nextProps.coin;
 
-  // 比较价格（使用 price_show 格式化后的值进行比较，避免浮点数精度问题）
+  // 比较价格
   if (prevCoin.price !== nextCoin.price) return false;
 
   // 比较涨跌幅

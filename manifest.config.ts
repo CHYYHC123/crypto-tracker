@@ -22,7 +22,10 @@ export default defineManifest({
     default_title: 'Crypto Tracker',
     default_popup: 'src/popup/index.html'
   },
-  permissions: ['storage', 'activeTab', 'idle', 'notifications', 'alarms', 'windows'],
+  permissions: ['storage', 'activeTab', 'idle', 'notifications', 'alarms', 'windows', 'sidePanel'],
+  side_panel: {
+    default_path: 'src/sidepanel/index.html'
+  },
   content_scripts: [
     {
       js: ['src/content/main.tsx'],

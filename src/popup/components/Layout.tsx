@@ -4,7 +4,7 @@ import { CustomToaster } from '@/components/CustomToaster/index';
 
 export const Layout: FC = () => {
   return (
-    <div className="w-[360px] h-[480px] overflow-hidden relative">
+    <div className="w-90 h-120 overflow-hidden relative">
       <CustomToaster />
       <Outlet />
     </div>

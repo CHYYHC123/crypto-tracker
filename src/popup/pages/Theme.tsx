@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Sun, Moon, MonitorCog, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -51,12 +50,8 @@ const Theme = () => {
   }, []);
 
   const handleSelect = async (id: ThemeId) => {
-    // if (id === currentTheme) return;
     await setTheme(id);
     applyTheme(resolveTheme(id), document.documentElement);
-    // setCurrentTheme(id);
-    // const label = t(id === 'ct-light' ? 'options.ctLight' : id === 'ct-dark' ? 'options.ctDefault' : 'options.ctOcean');
-    // toast.success(t('switched', { theme: label }), { duration: 2000 });
     navigate('/');
   };
 
