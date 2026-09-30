@@ -1,0 +1,1 @@
+export { fetchKlineHistory } from './fetchHistory';

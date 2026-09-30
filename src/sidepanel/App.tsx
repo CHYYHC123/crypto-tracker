@@ -4,6 +4,17 @@ import { TriangleIcon, AlignJustify, TrendingDown, BarChart2, SlidersHorizontal,
 import KLineChart from '@/sidepanel/components/KLineChart';
 import AssetInfo from '@/sidepanel/components/assetInfo';
 import Header from '@/sidepanel/components/header';
+import Loading from '@/components/common/loading';
+import { useKlineHistory } from '@/sidepanel/hook/useKlineHistory';
+import type { KlineInterval } from '@/types/kline';
+
+const INTERVALS: { label: string; value: KlineInterval }[] = [
+  { label: '1分\n钟', value: '1m' },
+  { label: '30分\n钟', value: '30m' },
+  { label: '1小\n时', value: '1h' },
+  { label: '1\n天', value: '1d' },
+  { label: '1\n周', value: '1w' }
+];
 
 export default function App() {
   // ── 备注状态 ──
@@ -39,12 +50,20 @@ export default function App() {
   // 从备注内容中提取 #tag（第一个 #xxx）
   const tag = note.match(/#[\w-]+/)?.[0] ?? null;
 
+  // 这里开始是获取数据的
+  const [klineInterval, setKlineInterval] = useState<KlineInterval>('1d');
+  const { chartData, volumeMap, loading, loadingMore, error, loadOlder } = useKlineHistory({
+    exchange: 'BN',
+    symbol: 'BTC',
+    interval: klineInterval
+  });
+
   return (
     <>
       <div className="bg-background w-full h-screen">
         <Header onBack={() => {}} />
 
-        <div className="m-3 rounded-xl border border-border bg-foreground/5 ">
+        <div className="m-3 rounded-xl border border-border bg-background ">
           {/* ── 时间周期工具栏 ── */}
           <div className="flex items-center justify-between border-b border-border p-1">
             {/* 左：列表/详情切换 */}
@@ -54,11 +73,13 @@ export default function App() {
 
             {/* 中：时间周期 Tabs */}
             <div className="flex items-center gap-0.5">
-              {(['1分\n钟', '30分\n钟', '1小\n时', '1\n天', '1\n周'] as const).map((label, i) => {
-                const active = i === 3; // 默认选中"1天"
+              {INTERVALS.map(({ label, value }) => {
+                const active = value === klineInterval;
                 return (
                   <button
-                    key={i}
+                    key={value}
+                    type="button"
+                    onClick={() => setKlineInterval(value)}
                     className={`px-2 py-0.5 rounded text-center text-[11px] leading-tight whitespace-pre cursor-pointer transition-colors
                     ${active ? 'text-foreground font-bold' : 'text-foreground/50 hover:text-foreground/80'}`}
                   >
@@ -98,11 +119,21 @@ export default function App() {
             }}
           />
 
-          <KLineChart className="m-2 rounded-xl border border-border flex-1 min-h-80" />
+          <div className="relative">
+            {loading && chartData.length === 0 && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center min-h-80">
+                <Loading />
+              </div>
+            )}
+            {error && <p className="px-3 pt-2 text-[11px] text-red-400">{error}</p>}
+            <div className="m-2 border border-border rounded-xl px-2">
+              <KLineChart className="rounded-xl" theme="dark" data={chartData} volumeMap={volumeMap} onNeedOlder={loadOlder} loadingMore={loadingMore} />
+            </div>
+          </div>
         </div>
 
         {/* ── MY NOTE 备注卡片 ── */}
-        <div className="mx-3 mb-3 rounded-xl border border-border bg-foreground/5 overflow-hidden">
+        <div className="mx-3 mb-3 rounded-xl border border-border bg-background overflow-hidden">
           {/* 头部：标题 + 保存状态 */}
           <div className="flex items-center justify-between px-3 pt-3 pb-2">
             <div className="flex items-center gap-2">
