@@ -84,3 +84,13 @@ export function formatChange(change?: number | null): string {
   const prefix = change >= 0 ? '+' : '';
   return `${prefix}${change}%`;
 }
+
+
+/**
+ * (part / base) * 100，保留小数并带 %。base 为 0 时返回 0.00%
+ * @example formatRatioPercent(high - low, open) → '2.24%'
+ */
+export function formatRatioPercent(part: number, base: number, digits = 2): string {
+  if (!Number.isFinite(part) || !Number.isFinite(base) || base === 0) return `${(0).toFixed(digits)}%`;
+  return `${((part / base) * 100).toFixed(digits)}%`;
+}
