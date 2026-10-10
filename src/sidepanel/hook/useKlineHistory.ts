@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
-import type { ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 import { fetchKlineHistory } from '@/sidepanel/api/kline';
 import type { KlineBar, KlineInterval, VolumeInfo } from '@/types/kline';
 
@@ -30,7 +30,7 @@ function toChartData(bars: KlineBar[]): CandlestickData<UTCTimestamp>[] {
 }
 
 /** 首屏拉最近一页，左滑时用最旧 openTime - 1 再拉一页。切交易所 / 币种 / 周期会取消进行中的请求并重拉 */
-export function useKlineHistory({ exchange = 'BN', symbol, interval }: UseKlineHistoryOptions) {
+export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: UseKlineHistoryOptions) {
   const [candles, setCandles] = useState<KlineBar[]>([]);
   const [volumeMap, setVolumeMap] = useState<Map<number, VolumeInfo>>(() => new Map());
   const [loading, setLoading] = useState(true);

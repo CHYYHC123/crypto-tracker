@@ -1,5 +1,5 @@
 import type { AssetItem } from '@/types/asset';
-import type { ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 import { getAssetType } from '@/utils/local';
 
 const CACHE_TTL = 30_000;
@@ -136,13 +136,13 @@ export async function getCryptoBatchPrice(exchange: ExchangeType, tokenList: str
 
   let data: AssetItem[] = [];
   try {
-    if (exchange === 'OKX') {
+    if (exchange === Exchange.OKX) {
       data = await fetchOKXSnapshot(tokenList);
-    } else if (exchange === 'BN') {
+    } else if (exchange === Exchange.BN) {
       data = await fetchBNSnapshot(tokenList);
-    } else if (exchange === 'BNFutures') {
+    } else if (exchange === Exchange.BNFutures) {
       data = await fetchBNFuturesSnapshot(tokenList);
-    } else if (exchange === 'Gate') {
+    } else if (exchange === Exchange.Gate) {
       data = await fetchGateSnapshot(tokenList);
     } else {
       // HL / 未知交易所：暂不支持快照，直接返回空

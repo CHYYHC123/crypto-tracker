@@ -1,5 +1,4 @@
-import type { ExchangeType } from '@/config/exchangeConfig';
-import { defaultDataSource } from '@/config/exchangeConfig';
+import { Exchange, defaultDataSource, type ExchangeType } from '@/config/exchangeConfig';
 import { queryTokenLocal } from '@/utils/index';
 
 /**
@@ -55,15 +54,15 @@ export async function validateToken(symbol: string, dataSource: ExchangeType = d
   // 如果 IP 不是 CN，根据不同数据源选择不同的验证方式
   // 预留字段：可以根据数据源扩展不同的 queryToken 实现
   switch (dataSource) {
-    case 'OKX':
+    case Exchange.OKX:
       return await queryToken(symbol);
-    case 'Gate':
+    case Exchange.Gate:
       // TODO: 实现 Gate 的验证逻辑
       return await queryToken(symbol); // 暂时使用 OKX 的方式
-    case 'BN':
+    case Exchange.BN:
       // TODO: 实现 Binance 的验证逻辑
       return await queryToken(symbol); // 暂时使用 OKX 的方式
-    case 'HL':
+    case Exchange.HL:
       // TODO: 实现 Hyperliquid 的验证逻辑
       return await queryToken(symbol); // 暂时使用 OKX 的方式
     default:

@@ -1,5 +1,5 @@
 // import { Ticker } from './parseTicker';
-import { ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 import type { CryptoTicker } from '@/types/messages';
 // 开盘价缓存：key = "交易所_币种-USDT"，value = 开盘价
 const cache = new Map<string, number>();
@@ -53,7 +53,7 @@ export async function prefetchOpenPrices(exchange: ExchangeType, tokenList: stri
   checkAndClearExpiredCache();
 
   // OKX 和 HL 不需要预取，WebSocket 会返回开盘价
-  if (exchange === 'OKX' || exchange === 'HL') {
+  if (exchange === Exchange.OKX || exchange === Exchange.HL) {
     console.log(`[sodUtc8] ${exchange} 不需要预取开盘价（WebSocket 数据已包含）`);
     return;
   }
@@ -85,7 +85,7 @@ async function fetchOpenPrice(exchange: ExchangeType, token: string): Promise<vo
   try {
     let openPrice: number | null = null;
 
-    if (exchange === 'Gate') {
+    if (exchange === Exchange.Gate) {
       // Gate K线 API
       const url = `https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${token}_USDT&interval=1d&limit=1`;
       const res = await fetch(url);
@@ -95,7 +95,7 @@ async function fetchOpenPrice(exchange: ExchangeType, token: string): Promise<vo
       if (Array.isArray(data) && data[0] && data[0][5]) {
         openPrice = Number(data[0][5]);
       }
-    } else if (exchange === 'BN') {
+    } else if (exchange === Exchange.BN) {
       // Binance K线 API
       const url = `https://api.binance.com/api/v3/klines?symbol=${token}USDT&interval=1d&limit=1`;
       const res = await fetch(url);

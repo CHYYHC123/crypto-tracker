@@ -1,4 +1,4 @@
-export type ExchangeType = 'OKX' | 'Gate' | 'BN';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 
 // OKX订阅方法
 function getOKXSubscribeMessage(tokenList: string[]) {
@@ -30,16 +30,14 @@ function getBNSubscribeMessage(tokenList: string[]) {
   };
 }
 
-// 
+//
 export function buildSubscribeMessage(exchange: ExchangeType, tokenList: string[]) {
   switch (exchange) {
-    case 'OKX':
+    case Exchange.OKX:
       return getOKXSubscribeMessage(tokenList);
-    case 'Gate':
+    case Exchange.Gate:
       return getGateSubscribeMessage(tokenList);
-    case 'BN':
+    case Exchange.BN:
       return getBNSubscribeMessage(tokenList);
   }
 }
-
-

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 
 import type { AssetTypes } from '@/types/index';
-import { type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType, defaultDataSource } from '@/config/exchangeConfig';
 import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { EQUITY_SYMBOLS } from '@/config/stocks_symbols';
 import { PLATFORM } from '@/utils/index';
@@ -9,9 +9,9 @@ import { getDataSource } from '@/utils/local';
 import { fetchEquitySymbols, type EquitySymbol } from '@/popup/utils/getSockets';
 
 const EXCHANGE_BIT: Partial<Record<ExchangeType, number>> = {
-  BN: PLATFORM.BN,
-  OKX: PLATFORM.OKX,
-  Gate: PLATFORM.GATE
+  [Exchange.BN]: PLATFORM.BN,
+  [Exchange.OKX]: PLATFORM.OKX,
+  [Exchange.Gate]: PLATFORM.GATE
 };
 
 interface UseSymbolListOptions {

@@ -1,4 +1,6 @@
-export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL' | 'BNStock';
+import type { ExchangeType } from '@/config/exchangeConfig';
+
+export type { ExchangeType };
 
 export type CryptoTicker = {
   symbol: string; // BTC-USDT

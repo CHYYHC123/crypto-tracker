@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 
 import type { AssetTypes } from '@/types/index';
-import { type ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 import { SUPPORTED_TOKENS } from '@/utils/tokens';
 import { EQUITY_SYMBOLS } from '@/config/stocks_symbols';
 import { PLATFORM } from '@/utils/index';
@@ -11,21 +11,21 @@ import { fetchBinanceSpotSymbols, fetchBinanceFuturesSymbols, fetchOkxSymbols, f
 
 // 各交易所对应的本地位运算过滤掩码（fallback 用）
 const EXCHANGE_BIT: Partial<Record<ExchangeType, number>> = {
-  BN: PLATFORM.BN,
-  OKX: PLATFORM.OKX,
-  Gate: PLATFORM.GATE
+  [Exchange.BN]: PLATFORM.BN,
+  [Exchange.OKX]: PLATFORM.OKX,
+  [Exchange.Gate]: PLATFORM.GATE
 };
 
 /** 根据 dataSource 选择对应的远端拉取函数 */
 function fetchCryptoSymbols(dataSource: ExchangeType): Promise<ExchangeSymbol[] | null> {
   switch (dataSource) {
-    case 'BN':
+    case Exchange.BN:
       return fetchBinanceSpotSymbols();
-    case 'BNFutures':
+    case Exchange.BNFutures:
       return fetchBinanceFuturesSymbols();
-    case 'OKX':
+    case Exchange.OKX:
       return fetchOkxSymbols();
-    case 'Gate':
+    case Exchange.Gate:
       return fetchGateSymbols();
     default:
       return Promise.resolve(null);

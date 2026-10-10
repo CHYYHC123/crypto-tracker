@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { SidepanelAssetPayload } from '@/types/asset';
-import {
-  getAssetType,
-  getCoinsFromStorage,
-  getSidepanelAsset,
-  getStocksList,
-  clearSidepanelAsset
-} from '@/utils/local';
+import { getAssetType, getCoinsFromStorage, getSidepanelAsset, getStocksList, clearSidepanelAsset } from '@/utils/local';
 
 const FALLBACK: SidepanelAssetPayload = { id: 'btc', symbol: 'BTC', category: 'crypto' };
 

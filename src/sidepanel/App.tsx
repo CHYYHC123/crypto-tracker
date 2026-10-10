@@ -9,13 +9,11 @@ import Loading from '@/components/common/loading';
 import NoteCard from '@/sidepanel/components/NoteCard';
 import { useKlineHistory } from '@/sidepanel/hook/useKlineHistory';
 import { useKLineWS } from '@/sidepanel/hook/useKLineWS';
-import { useTicker24h } from '@/sidepanel/hook/useTicker24h';
 import { useSidepanelAsset } from '@/sidepanel/hook/useSidepanelAsset';
 import type { KlineInterval } from '@/types/kline';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 import { price_show, formatRatioPercent } from '@/utils/num';
-import { ExchangeListMap } from '@/config/exchangeConfig';
-import type { ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, ExchangeListMap } from '@/config/exchangeConfig';
 
 const INTERVALS: { label: string; value: KlineInterval }[] = [
   { label: '1分\n钟', value: '1m' },
@@ -40,15 +38,14 @@ const SYMBOL_NAME_MAP: Record<string, string> = {
 };
 
 // ── 纯函数：对 mergedChartData 中 displayCandle.time 之前（含自身）的 close 求 SMA
-function calcSMA(
-  data: CandlestickData<UTCTimestamp>[],
-  atTime: number,
-  period: number
-): string {
+function calcSMA(data: CandlestickData<UTCTimestamp>[], atTime: number, period: number): string {
   // 从尾部向前找最后一个 time <= atTime（兼容 ES2021，不用 findLastIndex）
   let idx = -1;
   for (let i = data.length - 1; i >= 0; i--) {
-    if ((data[i].time as number) <= atTime) { idx = i; break; }
+    if ((data[i].time as number) <= atTime) {
+      idx = i;
+      break;
+    }
   }
   if (idx < 0) return '--';
   const startIdx = idx - period + 1;
@@ -71,13 +68,17 @@ interface AssetInfoData {
 }
 
 // ── 纯函数：由 displayCandle + 完整 chartData 计算 AssetInfoData
-function calcAssetInfo(
-  candle: CandleHoverData | null,
-  data: CandlestickData<UTCTimestamp>[]
-): AssetInfoData {
+function calcAssetInfo(candle: CandleHoverData | null, data: CandlestickData<UTCTimestamp>[]): AssetInfoData {
   const empty: AssetInfoData = {
-    open: '--', high: '--', low: '--', close: '--',
-    change: '--', amplitude: '--', ma7: '--', ma25: '--', ma99: '--'
+    open: '--',
+    high: '--',
+    low: '--',
+    close: '--',
+    change: '--',
+    amplitude: '--',
+    ma7: '--',
+    ma25: '--',
+    ma99: '--'
   };
   if (!candle) return empty;
 
@@ -99,7 +100,7 @@ function calcAssetInfo(
 }
 
 export default function App() {
-  const EXCHANGE: ExchangeType = 'BN';
+  const EXCHANGE = Exchange.BN;
   const sidepanelAsset = useSidepanelAsset();
   const SYMBOL = sidepanelAsset.symbol;
 
@@ -117,11 +118,8 @@ export default function App() {
     interval: klineInterval
   });
 
-  // ── 实时 K 线增量（WS）
-  const { wsBar } = useKLineWS({ symbol: SYMBOL, interval: klineInterval });
-
-  // ── 24h 涨跌幅（交易所 ticker 字段，不本地用 K 线推算）
-  const { changePercent: headerChange } = useTicker24h({ symbol: SYMBOL, exchange: EXCHANGE });
+  // ── 实时 K 线 + 24hr ticker（combined WS）
+  const { wsBar, lastPrice, changePercent: headerChange } = useKLineWS({ symbol: SYMBOL, interval: klineInterval });
 
   // ── 合并 WS 增量到历史数据
   const mergedChartData = useMemo(() => {
@@ -164,27 +162,18 @@ export default function App() {
 
   const displayCandle = hoverCandle ?? liveBar;
 
-  // ── Header 数据（价格用 liveBar；涨跌幅用 ticker 24h，不受 hover / 当前周期影响）
-  const headerPrice = liveBar ? price_show(liveBar.close) : undefined;
+  // ── Header 数据（价格与涨跌幅均来自 ticker，与 hover / K 线周期无关）
+  const headerPrice = lastPrice != null ? price_show(lastPrice) : undefined;
   const headerName = SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL;
   const headerExchange = ExchangeListMap[EXCHANGE]?.name ?? EXCHANGE;
 
   // ── AssetInfo 数据（依赖 displayCandle + mergedChartData）
-  const assetInfoData = useMemo(
-    () => calcAssetInfo(displayCandle, mergedChartData),
-    [displayCandle, mergedChartData]
-  );
+  const assetInfoData = useMemo(() => calcAssetInfo(displayCandle, mergedChartData), [displayCandle, mergedChartData]);
 
   return (
     <>
       <div className="bg-background w-full h-screen">
-        <Header
-          symbol={SYMBOL}
-          name={headerName}
-          exchange={headerExchange}
-          price={headerPrice}
-          change={headerChange}
-        />
+        <Header symbol={SYMBOL} name={headerName} exchange={headerExchange} price={headerPrice} change={headerChange} />
 
         <div className="m-3 rounded-xl border border-border bg-background ">
           {/* ── 时间周期工具栏 ── */}
@@ -241,16 +230,7 @@ export default function App() {
             )}
             {error && <p className="px-3 pt-2 text-[11px] text-red-400">{error}</p>}
             <div className="m-2 border border-border rounded-xl px-2">
-              <KLineChart
-                className="rounded-xl"
-                theme="dark"
-                interval={klineInterval}
-                data={mergedChartData}
-                volumeMap={mergedVolumeMap}
-                onCrosshairMove={setHoverCandle}
-                onNeedOlder={loadOlder}
-                loadingMore={loadingMore}
-              />
+              <KLineChart className="rounded-xl" theme="dark" interval={klineInterval} data={mergedChartData} volumeMap={mergedVolumeMap} onCrosshairMove={setHoverCandle} onNeedOlder={loadOlder} loadingMore={loadingMore} />
             </div>
           </div>
         </div>

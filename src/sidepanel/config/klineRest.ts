@@ -1,4 +1,4 @@
-import type { ExchangeType } from '@/config/exchangeConfig';
+import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
 import type { KlineRestEndpoint } from '@/types/kline';
 
 /**
@@ -7,31 +7,31 @@ import type { KlineRestEndpoint } from '@/types/kline';
  * 未实现请求的交易所只占位，path 为空表示还不能发请求。
  */
 export const KlineRestConfig: Partial<Record<ExchangeType, KlineRestEndpoint>> = {
-  BN: {
+  [Exchange.BN]: {
     baseUrl: 'https://api.binance.com',
     path: '/api/v3/klines',
     maxLimit: 1000,
     intervals: { '1m': '1m', '30m': '30m', '1h': '1h', '1d': '1d', '1w': '1w' }
   },
-  OKX: {
+  [Exchange.OKX]: {
     baseUrl: 'https://www.okx.com',
     path: '/api/v5/market/candles',
     maxLimit: 300,
     intervals: { '1m': '1m', '30m': '30m', '1h': '1H', '1d': '1D', '1w': '1W' }
   },
-  Gate: {
+  [Exchange.Gate]: {
     baseUrl: 'https://api.gateio.ws',
     path: '/api/v4/spot/candlesticks',
     maxLimit: 1000,
     intervals: { '1m': '1m', '30m': '30m', '1h': '1h', '1d': '1d', '1w': '7d' }
   },
-  BNFutures: {
+  [Exchange.BNFutures]: {
     baseUrl: 'https://fapi.binance.com',
     path: '/fapi/v1/klines',
     maxLimit: 1500,
     intervals: { '1m': '1m', '30m': '30m', '1h': '1h', '1d': '1d', '1w': '1w' }
   },
-  BNStock: {
+  [Exchange.BNStock]: {
     baseUrl: 'https://www.binance.com',
     path: '',
     maxLimit: 1000,

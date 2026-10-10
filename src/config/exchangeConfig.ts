@@ -10,14 +10,24 @@ export const POPULAR_TOKENS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'TRX'] as cons
 /** 默认 全局预警配置 */
 export const defaultGlobalAlert: GlobalAlerts = { bull: '10', bear: '10', step: '1', enabled: true };
 
+/** 交易所常量（单一真相源） */
+export const Exchange = {
+  OKX: 'OKX',
+  Gate: 'Gate',
+  BN: 'BN',
+  HL: 'HL',
+  BNStock: 'BNStock',
+  BNFutures: 'BNFutures'
+} as const;
+
 /** 交易所类型 */
-export type ExchangeType = 'OKX' | 'Gate' | 'BN' | 'HL' | 'BNStock' | 'BNFutures';
+export type ExchangeType = (typeof Exchange)[keyof typeof Exchange];
 
 /** 交易市场类型：现货 or 合约 */
 export type MarketType = 'spot' | 'futures';
 
 /** 默认数据源 */
-export const defaultDataSource: ExchangeType = 'OKX';
+export const defaultDataSource: ExchangeType = Exchange.OKX;
 
 /** 交易所 UI 信息接口 */
 export interface ExchangeInfo {
@@ -30,32 +40,32 @@ export interface ExchangeInfo {
 }
 
 /** 用户可在 UI 中切换的加密货币交易所（不含 BNStock 等内部专用类型） */
-export type SelectableExchangeType = Exclude<ExchangeType, 'BNStock'>;
+export type SelectableExchangeType = Exclude<ExchangeType, typeof Exchange.BNStock>;
 
 /** 交易所 UI 信息配置 */
 export const ExchangeListMap: Record<SelectableExchangeType, Omit<ExchangeInfo, 'type'>> = {
-  BN: {
+  [Exchange.BN]: {
     name: 'Binance',
     logo: BNLOGO,
     needsVPN: true,
     disabled: false,
     market: 'spot'
   },
-  BNFutures: {
+  [Exchange.BNFutures]: {
     name: 'Binance',
     logo: BNLOGO,
     needsVPN: true,
     disabled: false,
     market: 'futures'
   },
-  OKX: {
+  [Exchange.OKX]: {
     name: 'OKX',
     logo: OKXLOGO,
     needsVPN: true,
     disabled: false,
     market: 'spot'
   },
-  Gate: {
+  [Exchange.Gate]: {
     name: 'Gate.io',
     logo: GATELOGO,
     needsVPN: false,
@@ -63,7 +73,7 @@ export const ExchangeListMap: Record<SelectableExchangeType, Omit<ExchangeInfo, 
     market: 'spot'
   },
 
-  HL: {
+  [Exchange.HL]: {
     name: 'Hyperliquid',
     logo: OKXLOGO, // 暂时使用 OKX logo
     needsVPN: true,
@@ -146,7 +156,7 @@ const HLConfig: ExchangeConfig = {
   }
 };
 
-// 交易所配置映射
+// 币安现货 交易所配置映射
 const BNStockConfig: ExchangeConfig = {
   wsUrl: 'wss://nbstream.binance.com/equity/stream',
   alwaysSubscribe: true,
@@ -156,10 +166,10 @@ const BNStockConfig: ExchangeConfig = {
 };
 
 export const ExchangeConfigMap: Record<ExchangeType, ExchangeConfig> = {
-  OKX: OKXConfig,
-  BN: BNConfig,
-  BNFutures: BNFuturesConfig,
-  Gate: GateConfig,
-  HL: HLConfig,
-  BNStock: BNStockConfig
+  [Exchange.OKX]: OKXConfig,
+  [Exchange.BN]: BNConfig,
+  [Exchange.BNFutures]: BNFuturesConfig,
+  [Exchange.Gate]: GateConfig,
+  [Exchange.HL]: HLConfig,
+  [Exchange.BNStock]: BNStockConfig
 };

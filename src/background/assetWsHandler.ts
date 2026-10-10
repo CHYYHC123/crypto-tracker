@@ -8,6 +8,7 @@ import { filterForGate } from '@/background/tokens/gateFilter';
 import { getStocks } from '@/background/stocks/stocksManager';
 import { getBatchPrice } from '@/background/stocks/batchPrice';
 import { getCryptoBatchPrice } from '@/background/tokens/cryptoBatchPrice';
+import { Exchange } from '@/config/exchangeConfig';
 import type { AssetItem } from '@/types/asset';
 
 // 广播 WS 链接状态
@@ -71,10 +72,10 @@ async function connectCryptoWS(): Promise<void> {
 
   // Gate 整批订阅策略：一个无效代币会导致所有代币订阅失败
   // 必须在连接前主动过滤不支持的代币，并写入黑名单
-  if (exchange === 'Gate') {
+  if (exchange === Exchange.Gate) {
     const { supported, unsupported } = await filterForGate(tokenList);
     if (unsupported.length) {
-      await markUnsupported(unsupported, 'Gate');
+      await markUnsupported(unsupported, Exchange.Gate);
     }
     tokenList = supported;
   }
@@ -134,7 +135,7 @@ async function connectStockWS(): Promise<void> {
   }
 
   // 3. 无论快照是否成功，都建立 WS 连接
-  await wsManager.connect('BNStock', []);
+  await wsManager.connect(Exchange.BNStock, []);
 }
 
 export function disconnectWS(): void {
