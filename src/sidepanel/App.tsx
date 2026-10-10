@@ -1,5 +1,5 @@
 // import { RouterProvider } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { TriangleIcon, AlignJustify, TrendingDown, BarChart2, SlidersHorizontal } from 'lucide-react';
 import KLineChart from '@/sidepanel/components/KLineChart';
 import type { CandleHoverData } from '@/sidepanel/components/KLineChart';
@@ -10,6 +10,7 @@ import NoteCard from '@/sidepanel/components/NoteCard';
 import { useKlineHistory } from '@/sidepanel/hook/useKlineHistory';
 import { useKLineWS } from '@/sidepanel/hook/useKLineWS';
 import { useTicker24h } from '@/sidepanel/hook/useTicker24h';
+import { useSidepanelAsset } from '@/sidepanel/hook/useSidepanelAsset';
 import type { KlineInterval } from '@/types/kline';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 import { price_show, formatRatioPercent } from '@/utils/num';
@@ -98,11 +99,16 @@ function calcAssetInfo(
 }
 
 export default function App() {
-  const SYMBOL = 'BTC';
   const EXCHANGE: ExchangeType = 'BN';
+  const sidepanelAsset = useSidepanelAsset();
+  const SYMBOL = sidepanelAsset.symbol;
 
   const [klineInterval, setKlineInterval] = useState<KlineInterval>('1d');
   const [hoverCandle, setHoverCandle] = useState<CandleHoverData | null>(null);
+
+  useEffect(() => {
+    setHoverCandle(null);
+  }, [sidepanelAsset.id, sidepanelAsset.symbol]);
 
   // ── 历史 K 线（REST）
   const { chartData, volumeMap, loading, loadingMore, error, loadOlder } = useKlineHistory({
@@ -178,7 +184,6 @@ export default function App() {
           exchange={headerExchange}
           price={headerPrice}
           change={headerChange}
-          onBack={() => {}}
         />
 
         <div className="m-3 rounded-xl border border-border bg-background ">

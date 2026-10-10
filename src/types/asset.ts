@@ -29,6 +29,13 @@ export interface AssetItem {
   prevClose?: number; // 昨日收盘价
 }
 
+/** 侧边栏打开时携带的资产标识（openAssetSidePanel 写入） */
+export interface SidepanelAssetPayload {
+  id: string;
+  symbol: string;
+  category: AssetTypes;
+}
+
 /** 预警规则模型 */
 export interface AlertRule {
   id: string;

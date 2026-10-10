@@ -9,7 +9,7 @@
  */
 
 import type { PriceAlert, GlobalAlerts, GlobalAlertsTrigger, AssetTypes } from '@/types/index';
-import type { CoinRecord } from '@/types/asset';
+import type { CoinRecord, SidepanelAssetPayload } from '@/types/asset';
 import { defaultDataSource, ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
 import { DEFAULT_THEME, type ThemeId } from '@/utils/theme';
 
@@ -28,6 +28,7 @@ interface LocalSchema {
   ga_client_id: string;
   global_alerts: GlobalAlerts;
   global_alerts_trigger: GlobalAlertsTrigger;
+  sidepanel_asset: SidepanelAssetPayload;
 }
 
 // ─── 泛型底层（不对外导出
@@ -39,6 +40,10 @@ async function getLocal<K extends keyof LocalSchema>(key: K): Promise<LocalSchem
 
 async function setLocal<K extends keyof LocalSchema>(key: K, value: LocalSchema[K]): Promise<void> {
   await chrome.storage.local.set({ [key]: value });
+}
+
+async function removeLocal<K extends keyof LocalSchema>(key: K): Promise<void> {
+  await chrome.storage.local.remove(key);
 }
 
 // ─── data_source
@@ -118,6 +123,14 @@ export const setCoinsToStorage = (v: CoinRecord[]): Promise<void> => setLocal('c
 export const getStocksList = (): Promise<string[] | undefined> => getLocal('stocks_list');
 
 export const setStocksList = (v: string[]): Promise<void> => setLocal('stocks_list', v);
+
+// ─── sidepanel_asset
+
+export const getSidepanelAsset = (): Promise<SidepanelAssetPayload | undefined> => getLocal('sidepanel_asset');
+
+export const setSidepanelAsset = (v: SidepanelAssetPayload): Promise<void> => setLocal('sidepanel_asset', v);
+
+export const clearSidepanelAsset = (): Promise<void> => removeLocal('sidepanel_asset');
 
 // ─── token_string
 
