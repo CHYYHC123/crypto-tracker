@@ -50,3 +50,38 @@ export interface KlineHistoryRequest extends KlineHistoryQuery {
 export interface KlineHistorySource {
   fetch(query: KlineHistoryRequest, signal?: AbortSignal): Promise<KlineBar[]>;
 }
+
+/** 实时 K 线 WS 上下文（交易对格式由各所 source 自行拼接） */
+export interface KlineWsContext {
+  symbol: string;
+  interval: KlineInterval;
+}
+
+export type KlineWsEvent =
+  | { type: 'kline'; bar: KlineBar }
+  | { type: 'ticker'; lastPrice: number; changePercent: number }
+  | { type: 'pong' };
+
+export interface KlineWsEndpoint {
+  wsUrl: string;
+  /** 内部周期 → 该所 WS 的 interval / channel 片段。缺省表示暂不支持 */
+  intervals: Partial<Record<KlineInterval, string>>;
+}
+
+/** 单条 WS 连接的协议片段（主连接或 companion） */
+export interface KlineWsConnectionSpec {
+  buildUrl(ctx: KlineWsContext): string;
+  /** 连上后要发的订阅帧；URL 已带 streams 时可省略 */
+  buildSubscribe?(ctx: KlineWsContext): unknown[];
+  parseMessage(raw: unknown): KlineWsEvent | null;
+  buildPing?(): unknown;
+  pingIntervalMs?: number;
+}
+
+/**
+ * 单个交易所的实时 K 线适配。只负责 URL / 订阅帧 / 解析，不负责连接生命周期。
+ * companion：第二路连接（如 OKX business candle + public ticker）。
+ */
+export interface KlineWsSource extends KlineWsConnectionSpec {
+  companion?: KlineWsConnectionSpec;
+}

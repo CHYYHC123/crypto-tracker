@@ -8,12 +8,13 @@ import Header from '@/sidepanel/components/header';
 import Loading from '@/components/common/loading';
 import NoteCard from '@/sidepanel/components/NoteCard';
 import { useKlineHistory } from '@/sidepanel/hook/useKlineHistory';
+import { useKlineExchange } from '@/sidepanel/hook/useKlineExchange';
 import { useKLineWS } from '@/sidepanel/hook/useKLineWS';
 import { useSidepanelAsset } from '@/sidepanel/hook/useSidepanelAsset';
 import type { KlineInterval } from '@/types/kline';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 import { price_show, formatRatioPercent } from '@/utils/num';
-import { Exchange, ExchangeListMap } from '@/config/exchangeConfig';
+import { Exchange, ExchangeListMap, type SelectableExchangeType } from '@/config/exchangeConfig';
 
 const INTERVALS: { label: string; value: KlineInterval }[] = [
   { label: '1分\n钟', value: '1m' },
@@ -100,7 +101,7 @@ function calcAssetInfo(candle: CandleHoverData | null, data: CandlestickData<UTC
 }
 
 export default function App() {
-  const EXCHANGE = Exchange.BN;
+  const exchange = useKlineExchange();
   const sidepanelAsset = useSidepanelAsset();
   const SYMBOL = sidepanelAsset.symbol;
 
@@ -113,13 +114,17 @@ export default function App() {
 
   // ── 历史 K 线（REST）
   const { chartData, volumeMap, loading, loadingMore, error, loadOlder } = useKlineHistory({
-    exchange: EXCHANGE,
+    exchange,
     symbol: SYMBOL,
     interval: klineInterval
   });
 
-  // ── 实时 K 线 + 24hr ticker（combined WS）
-  const { wsBar, lastPrice, changePercent: headerChange } = useKLineWS({ symbol: SYMBOL, interval: klineInterval });
+  // ── 实时 K 线 + ticker（按 exchange 走 KlineWsRegistry）
+  const { wsBar, lastPrice, changePercent: headerChange } = useKLineWS({
+    exchange,
+    symbol: SYMBOL,
+    interval: klineInterval
+  });
 
   // ── 合并 WS 增量到历史数据
   const mergedChartData = useMemo(() => {
@@ -165,7 +170,10 @@ export default function App() {
   // ── Header 数据（价格与涨跌幅均来自 ticker，与 hover / K 线周期无关）
   const headerPrice = lastPrice != null ? price_show(lastPrice) : undefined;
   const headerName = SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL;
-  const headerExchange = ExchangeListMap[EXCHANGE]?.name ?? EXCHANGE;
+  const headerExchange =
+    exchange === Exchange.BNStock
+      ? 'Binance Stock'
+      : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
 
   // ── AssetInfo 数据（依赖 displayCandle + mergedChartData）
   const assetInfoData = useMemo(() => calcAssetInfo(displayCandle, mergedChartData), [displayCandle, mergedChartData]);

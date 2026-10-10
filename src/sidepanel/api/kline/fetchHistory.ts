@@ -1,8 +1,16 @@
 import { KlineRestConfig } from '@/sidepanel/config/klineRest';
+import type { ExchangeType } from '@/config/exchangeConfig';
 import type { KlineBar, KlineHistoryQuery } from '@/types/kline';
 import { KlineHistoryRegistry } from './registry';
 
 const DEFAULT_LIMIT = 500;
+
+/** 按交易所 maxLimit 裁剪后的实际请求 limit，供 hasMore 判断 */
+export function getKlinePageLimit(exchange: ExchangeType, requested = DEFAULT_LIMIT): number {
+  const endpoint = KlineRestConfig[exchange];
+  if (!endpoint) return Math.max(requested, 1);
+  return Math.min(Math.max(requested, 1), endpoint.maxLimit);
+}
 
 /**
  * 拉取一页历史 K 线。
@@ -22,8 +30,7 @@ export async function fetchKlineHistory(query: KlineHistoryQuery, signal?: Abort
     throw new Error(`[kline] 交易所 ${query.exchange} 尚未实现历史 K 线请求`);
   }
 
-  const requested = query.limit ?? DEFAULT_LIMIT;
-  const limit = Math.min(Math.max(requested, 1), endpoint.maxLimit);
+  const limit = getKlinePageLimit(query.exchange, query.limit ?? DEFAULT_LIMIT);
 
   return source.fetch({ ...query, limit }, signal);
 }

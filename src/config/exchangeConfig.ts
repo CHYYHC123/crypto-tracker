@@ -15,7 +15,7 @@ export const Exchange = {
   OKX: 'OKX',
   Gate: 'Gate',
   BN: 'BN',
-  HL: 'HL',
+  HL: 'HL',  // 不做这个交易所了
   BNStock: 'BNStock',
   BNFutures: 'BNFutures'
 } as const;

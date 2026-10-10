@@ -1,1 +1,1 @@
-export { fetchKlineHistory } from './fetchHistory';
+export { fetchKlineHistory, getKlinePageLimit } from './fetchHistory';

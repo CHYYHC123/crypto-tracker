@@ -1,0 +1,1 @@
+export { KlineWsRegistry } from './registry';

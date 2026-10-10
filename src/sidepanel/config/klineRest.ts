@@ -4,7 +4,6 @@ import type { KlineRestEndpoint } from '@/types/kline';
 /**
  * 各交易所历史 K 线 HTTPS 入口。
  * 域名和路径集中在这里；交易对格式、查询参数名、响应解析放在各自的 source 里。
- * 未实现请求的交易所只占位，path 为空表示还不能发请求。
  */
 export const KlineRestConfig: Partial<Record<ExchangeType, KlineRestEndpoint>> = {
   [Exchange.BN]: {
@@ -33,8 +32,8 @@ export const KlineRestConfig: Partial<Record<ExchangeType, KlineRestEndpoint>> =
   },
   [Exchange.BNStock]: {
     baseUrl: 'https://www.binance.com',
-    path: '',
+    path: '/bapi/equity/v1/public/equity/kline/query',
     maxLimit: 1000,
-    intervals: {}
+    intervals: { '1m': '1m', '30m': '30m', '1h': '1h', '1d': '1d', '1w': '1w' }
   }
 };

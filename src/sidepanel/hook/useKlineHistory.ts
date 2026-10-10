@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 import { Exchange, type ExchangeType } from '@/config/exchangeConfig';
-import { fetchKlineHistory } from '@/sidepanel/api/kline';
+import { fetchKlineHistory, getKlinePageLimit } from '@/sidepanel/api/kline';
 import type { KlineBar, KlineInterval, VolumeInfo } from '@/types/kline';
 
-// 每页拉取历史数据数量
+/** 请求页大小；实际 limit 由 getKlinePageLimit 按所裁剪 */
 const PAGE_LIMIT = 500;
 
 interface UseKlineHistoryOptions {
@@ -59,12 +59,14 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
     setCandles([]);
     setVolumeMap(new Map());
 
+    const effectiveLimit = getKlinePageLimit(exchange, PAGE_LIMIT);
+
     fetchKlineHistory({ exchange, symbol, interval, limit: PAGE_LIMIT }, ac.signal)
       .then(bars => {
         if (gen !== genRef.current) return;
         setCandles(bars);
         setVolumeMap(toVolumeMap(bars));
-        const more = bars.length >= PAGE_LIMIT;
+        const more = bars.length >= effectiveLimit;
         hasMoreRef.current = more;
         setHasMore(more);
       })
@@ -88,6 +90,7 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
 
     const gen = genRef.current;
     const signal = abortRef.current?.signal;
+    const effectiveLimit = getKlinePageLimit(exchange, PAGE_LIMIT);
     loadingMoreRef.current = true;
     setLoadingMore(true);
 
@@ -106,7 +109,7 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
 
       const exist = new Set(current.map(bar => bar.openTime));
       const fresh = older.filter(bar => !exist.has(bar.openTime));
-      if (older.length < PAGE_LIMIT || fresh.length === 0) {
+      if (older.length < effectiveLimit || fresh.length === 0) {
         hasMoreRef.current = false;
         setHasMore(false);
       }
@@ -126,7 +129,6 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
     }
   }, [exchange, symbol, interval]);
 
-  // 转换为图表数据
   const chartData = useMemo(() => toChartData(candles), [candles]);
 
   return { candles, chartData, volumeMap, loading, loadingMore, hasMore, error, loadOlder };
