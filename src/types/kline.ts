@@ -73,7 +73,7 @@ export interface KlineWsConnectionSpec {
   buildUrl(ctx: KlineWsContext): string;
   /** 连上后要发的订阅帧；URL 已带 streams 时可省略 */
   buildSubscribe?(ctx: KlineWsContext): unknown[];
-  parseMessage(raw: unknown): KlineWsEvent | null;
+  parseMessage(raw: unknown, ctx: KlineWsContext): KlineWsEvent | null;
   buildPing?(): unknown;
   pingIntervalMs?: number;
 }

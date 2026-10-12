@@ -9,13 +9,15 @@ interface AssetSubInfoProps {
   coin: AssetItem;
   alert?: PriceAlert | null;
   onAlertClick?: () => void;
+  /** content 无 sidePanel API，需经 background 打开 */
+  fromContent?: boolean;
 }
 
-const AssetSubInfo = memo(({ coin, alert, onAlertClick }: AssetSubInfoProps) => {
+const AssetSubInfo = memo(({ coin, alert, onAlertClick, fromContent }: AssetSubInfoProps) => {
   const handleOpenChart = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    void openAssetSidePanel(coin);
+    void openAssetSidePanel(coin, { viaBackground: fromContent });
   };
 
   return (

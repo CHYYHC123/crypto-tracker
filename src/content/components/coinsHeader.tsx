@@ -52,7 +52,7 @@ export const CoinsHeader = memo(({ status, collapsed, displayToken, priceAlerts,
             <Logo symbol={displayToken.symbol} category={displayToken.category} />
             <div className="ml-2">
               <div className="text-xs font-medium">{displayToken.symbol}</div>
-              <AssetSubInfo coin={displayToken} alert={currentAlert} />
+              <AssetSubInfo coin={displayToken} alert={currentAlert} fromContent />
             </div>
           </div>
 

@@ -3,12 +3,27 @@ import { setStocks } from '@/background/stocks/stocksManager';
 import { setBadge } from '@/background/badge';
 import { wsManager, connectWS } from '@/background/assetWsHandler';
 import { getAssetList, publishAssets, initAssetStore } from '@/background/assetStore';
-import type { AssetItem } from '@/types/asset';
+import type { AssetItem, SidepanelAssetPayload } from '@/types/asset';
+import { setSidepanelAsset } from '@/utils/local';
 
 // ─── 类型
 
 type SendResponse = (response: any) => void;
-type Handler = (message: any, sendResponse: SendResponse) => boolean | void;
+type Handler = (
+  message: any,
+  sendResponse: SendResponse,
+  sender: chrome.runtime.MessageSender
+) => boolean | void;
+
+function isSidepanelAssetPayload(v: unknown): v is SidepanelAssetPayload {
+  if (!v || typeof v !== 'object') return false;
+  const o = v as SidepanelAssetPayload;
+  return (
+    typeof o.id === 'string' &&
+    typeof o.symbol === 'string' &&
+    (o.category === 'crypto' || o.category === 'stocks')
+  );
+}
 
 // ─── 各消息 Handler
 
@@ -96,6 +111,38 @@ function handleShowNotification(msg: any, _sendResponse: SendResponse): void {
   });
 }
 
+/** content 无法调 sidePanel.open，由 background 写 storage 并打开侧栏 */
+async function handleOpenAssetSidepanel(
+  msg: any,
+  sendResponse: SendResponse,
+  sender: chrome.runtime.MessageSender
+): Promise<void> {
+  const payload = msg.payload;
+  if (!isSidepanelAssetPayload(payload)) {
+    sendResponse({ success: false, msg: 'Invalid payload' });
+    return;
+  }
+
+  try {
+    await setSidepanelAsset(payload);
+
+    let windowId = sender.tab?.windowId;
+    if (windowId == null) {
+      const win = await chrome.windows.getCurrent();
+      windowId = win.id;
+    }
+    if (windowId != null) {
+      await chrome.sidePanel.open({ windowId });
+    }
+
+    chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
+    sendResponse({ success: true });
+  } catch (err) {
+    console.error('[Background] OPEN_ASSET_SIDEPANEL failed:', err);
+    sendResponse({ success: false, msg: 'Open sidepanel failed' });
+  }
+}
+
 // ─── 路由表
 const router = new Map<string, Handler>([
   [
@@ -116,12 +163,23 @@ const router = new Map<string, Handler>([
   ['REORDER_TOKENS', handleReorderTokens],
   ['ALERT_TRIGGERED', () => setBadge('critical')],
   ['ALERT_CLEAR', () => setBadge('none')],
-  ['SHOW_NOTIFICATION', handleShowNotification]
+  ['SHOW_NOTIFICATION', handleShowNotification],
+  [
+    'OPEN_ASSET_SIDEPANEL',
+    (msg, res, sender) => {
+      handleOpenAssetSidepanel(msg, res, sender);
+      return true; // 异步 sendResponse
+    }
+  ]
 ]);
 
 // ─── 主入口
-export function onMessage(message: any, _sender: chrome.runtime.MessageSender, sendResponse: SendResponse): boolean | void {
+export function onMessage(
+  message: any,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: SendResponse
+): boolean | void {
   const handler = router.get(message.type);
   if (!handler) return;
-  return handler(message, sendResponse);
+  return handler(message, sendResponse, sender);
 }

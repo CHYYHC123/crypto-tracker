@@ -32,8 +32,9 @@ export const KlineRestConfig: Partial<Record<ExchangeType, KlineRestEndpoint>> =
   },
   [Exchange.BNStock]: {
     baseUrl: 'https://www.binance.com',
-    path: '/bapi/equity/v1/public/equity/kline/query',
+    path: '/bapi/equity/v1/public/equity/kline/chart',
     maxLimit: 1000,
-    intervals: { '1m': '1m', '30m': '30m', '1h': '1h', '1d': '1d', '1w': '1w' }
+    // chart 接口 timeframe：分钟用 T（1T/5T/10T/30T），小时/天/周用大写（1H/1D/1W）
+    intervals: { '1m': '1T', '30m': '30T', '1h': '1H', '1d': '1D', '1w': '1W' }
   }
 };

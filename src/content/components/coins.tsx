@@ -86,7 +86,7 @@ export const SortableCoinItem = memo(function SortableCoinItem({ coin, priceAler
         <Logo symbol={coin.symbol} category={coin.category} />
         <div>
           <div className="text-xs font-medium">{coin.symbol}</div>
-          <AssetSubInfo coin={coin} alert={alert} />
+          <AssetSubInfo coin={coin} alert={alert} fromContent />
         </div>
       </div>
       <div className="text-right mr-1">

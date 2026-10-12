@@ -3,7 +3,10 @@ import { createChart, ColorType, CandlestickSeries, HistogramSeries, CrosshairMo
 import { cn } from '@/lib/utils';
 import { formatTimestamp } from '@/utils/time';
 import { formatRatioPercent, price_show } from '@/utils/num';
+import { getTheme } from '@/utils/local';
+import { DEFAULT_THEME, type ThemeId } from '@/utils/theme';
 import type { KlineInterval, VolumeInfo } from '@/types/kline';
+import type { AssetTypes } from '@/types/asset';
 
 const EMPTY_VOLUME_MAP: Map<number, VolumeInfo> = new Map();
 /** 可视范围左缘小于该值时触发加载更早数据 */
@@ -16,8 +19,19 @@ const RIGHT_PAD = 20;
 const CHART_HEIGHT = 320;
 /** 主图 + 成交量窗格总高度 */
 const CHART_HEIGHT_WITH_VOLUME = 420;
-const VOL_UP = 'rgba(38, 166, 154, 0.7)';
-const VOL_DOWN = 'rgba(239, 83, 80, 0.7)';
+
+interface ChartColors {
+  bg: string;
+  text: string;
+  border: string;
+  success: string;
+  danger: string;
+  successVol: string;
+  dangerVol: string;
+  crosshair: string;
+  priceLine: string;
+  separatorHover: string;
+}
 
 const INTERVAL_MS: Record<KlineInterval, number> = {
   '1m': 60_000,
@@ -27,13 +41,57 @@ const INTERVAL_MS: Record<KlineInterval, number> = {
   '1w': 7 * 86400_000
 };
 
-function toVolumeData(data: CandlestickData<UTCTimestamp>[], volumeMap: Map<number, VolumeInfo>): HistogramData<UTCTimestamp>[] {
+function cssVar(el: Element, name: string): string {
+  return getComputedStyle(el).getPropertyValue(name).trim();
+}
+
+/** hex / rgb(a) → rgba(..., alpha)，供 lightweight-charts 使用 */
+function withAlpha(color: string, alpha: number): string {
+  const c = color.trim();
+  if (c.startsWith('#')) {
+    let hex = c.slice(1);
+    if (hex.length === 3) hex = [...hex].map(ch => ch + ch).join('');
+    if (hex.length === 8) hex = hex.slice(0, 6);
+    const n = parseInt(hex, 16);
+    if (Number.isNaN(n)) return c;
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+  }
+  const parts = c.match(/[\d.]+/g);
+  if (parts && parts.length >= 3) {
+    return `rgba(${parts[0]},${parts[1]},${parts[2]},${alpha})`;
+  }
+  return c;
+}
+
+/** 从 document / 容器上读取 tailwindcss.css 中的 --app-* 主题色 */
+function readChartColors(el: Element): ChartColors {
+  const bg = cssVar(el, '--app-bg');
+  const muted = cssVar(el, '--app-muted');
+  const border = cssVar(el, '--app-border');
+  const success = cssVar(el, '--app-success');
+  const danger = cssVar(el, '--app-danger');
+  const fg = cssVar(el, '--app-fg');
+  return {
+    bg,
+    text: muted,
+    border,
+    success,
+    danger,
+    successVol: withAlpha(success, 0.7),
+    dangerVol: withAlpha(danger, 0.7),
+    crosshair: withAlpha(fg, 0.22),
+    priceLine: withAlpha(fg, 0.45),
+    separatorHover: withAlpha(fg, 0.08)
+  };
+}
+
+function toVolumeData(data: CandlestickData<UTCTimestamp>[], volumeMap: Map<number, VolumeInfo>, upColor: string, downColor: string): HistogramData<UTCTimestamp>[] {
   return data.map(bar => {
     const up = bar.close >= bar.open;
     return {
       time: bar.time,
       value: volumeMap.get(bar.time as number)?.volume ?? 0,
-      color: up ? VOL_UP : VOL_DOWN
+      color: up ? upColor : downColor
     };
   });
 }
@@ -99,10 +157,11 @@ interface LastPriceState {
 interface KLineChartProps {
   data?: CandlestickData<UTCTimestamp>[]; // 蜡烛图数据
   volumeMap?: Map<number, VolumeInfo>; // 成交量数据
-  theme?: 'light' | 'dark';
   className?: string;
   /** 当前 K 线周期，用于收盘倒计时 */
   interval?: KlineInterval;
+  /** crypto | stocks；股票不展示本根剩余时间 */
+  category?: AssetTypes;
   /** 鼠标移动时触发 */
   onCrosshairMove?: (data: CandleHoverData | null) => void;
   /** 用户滑到左边缘时拉取更早的一页 */
@@ -112,7 +171,17 @@ interface KLineChartProps {
   showVolume?: boolean; // 是否显示成交量
 }
 
-const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VOLUME_MAP, theme = 'dark', className, interval = '1d', onCrosshairMove, onNeedOlder, loadingMore = false, showVolume = false }) => {
+const KLineChart: React.FC<KLineChartProps> = ({
+  data = [],
+  volumeMap = EMPTY_VOLUME_MAP,
+  className,
+  interval = '1d',
+  category = 'crypto',
+  onCrosshairMove,
+  onNeedOlder,
+  loadingMore = false,
+  showVolume = false
+}) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick', Time> | null>(null);
@@ -127,6 +196,20 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
   const prevDataRef = useRef<CandlestickData<UTCTimestamp>[]>([]);
   /** setData / 平移可视范围期间忽略左缘回调，避免连发请求 */
   const adjustingRangeRef = useRef(false);
+  const colorsRef = useRef<ChartColors | null>(null);
+  const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
+
+  useEffect(() => {
+    getTheme().then(setTheme);
+    const onStorage = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+      if (areaName !== 'local' || !changes.theme) return;
+      const next = changes.theme.newValue as ThemeId | undefined;
+      if (next) setTheme(next);
+    };
+    chrome.storage.onChanged.addListener(onStorage);
+    return () => chrome.storage.onChanged.removeListener(onStorage);
+  }, []);
+
   const syncLastPriceRef = useRef<() => void>(() => {});
 
   onCrosshairMoveRef.current = onCrosshairMove;
@@ -153,10 +236,11 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
     }
 
     const price = last.close;
+    const priceLineColor = colorsRef.current?.priceLine ?? 'rgba(255,255,255,0.45)';
     if (!priceLineRef.current) {
       priceLineRef.current = series.createPriceLine({
         price,
-        color: 'rgba(255,255,255,0.45)',
+        color: priceLineColor,
         lineWidth: 1,
         lineStyle: LineStyle.Dashed,
         axisLabelVisible: false,
@@ -183,7 +267,8 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const isDark = theme === 'dark';
+    const colors = readChartColors(document.documentElement);
+    colorsRef.current = colors;
     const chartHeight = showVolume ? CHART_HEIGHT_WITH_VOLUME : CHART_HEIGHT;
 
     // 创建图表(图表配置项)
@@ -191,18 +276,18 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
       width: chartContainerRef.current.clientWidth,
       height: chartHeight,
       layout: {
-        background: { type: ColorType.Solid, color: isDark ? '#111827' : '#eff2f7' },
-        textColor: isDark ? '#A0A0A0' : '#333333',
+        background: { type: ColorType.Solid, color: colors.bg },
+        textColor: colors.text,
         attributionLogo: false,
         panes: {
-          separatorColor: isDark ? '#2A2E37' : '#E5E7EB',
-          separatorHoverColor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.08)',
+          separatorColor: colors.border,
+          separatorHoverColor: colors.separatorHover,
           enableResize: true
         }
       },
       grid: {
-        vertLines: { color: isDark ? '#1F2329' : '#F0F0F0', style: 1 },
-        horzLines: { color: isDark ? '#1F2329' : '#F0F0F0', style: 1 }
+        vertLines: { color: colors.border, style: 1 },
+        horzLines: { color: colors.border, style: 1 }
       },
       timeScale: {
         timeVisible: true,
@@ -212,19 +297,19 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { color: 'rgba(255,255,255,0.22)', width: 1, style: LineStyle.Dashed, labelVisible: false },
-        horzLine: { color: 'rgba(255,255,255,0.22)', width: 1, style: LineStyle.Dashed, labelVisible: false }
+        vertLine: { color: colors.crosshair, width: 1, style: LineStyle.Dashed, labelVisible: false },
+        horzLine: { color: colors.crosshair, width: 1, style: LineStyle.Dashed, labelVisible: false }
       },
       rightPriceScale: { visible: false }
     });
 
     // 添加蜡烛图系列
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
+      upColor: colors.success,
+      downColor: colors.danger,
       borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
+      wickUpColor: colors.success,
+      wickDownColor: colors.danger,
       lastValueVisible: false,
       priceLineVisible: false
     });
@@ -250,7 +335,7 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
         borderVisible: false,
         scaleMargins: { top: 0.15, bottom: 0 }
       });
-      volumeSeries.setData(toVolumeData(dataRef.current, volumeMapRef.current));
+      volumeSeries.setData(toVolumeData(dataRef.current, volumeMapRef.current, colors.successVol, colors.dangerVol));
     }
 
     // 设置蜡烛图数据
@@ -364,17 +449,14 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
 
     const prev = prevDataRef.current;
     const range = chart.timeScale().getVisibleLogicalRange();
-    const isPrepend =
-      prev.length > 0 &&
-      data.length > prev.length &&
-      data[0]?.time !== prev[0]?.time &&
-      data[data.length - 1]?.time === prev[prev.length - 1]?.time;
+    const isPrepend = prev.length > 0 && data.length > prev.length && data[0]?.time !== prev[0]?.time && data[data.length - 1]?.time === prev[prev.length - 1]?.time;
     // 仅首屏或切周期清空后重新有数据时居中；用户缩放/平移后不再抢焦点
     const shouldFocusLatest = prev.length === 0 && data.length > 0;
 
     adjustingRangeRef.current = true;
     series.setData(data);
-    volumeSeries?.setData(toVolumeData(data, volumeMap));
+    const colors = colorsRef.current;
+    volumeSeries?.setData(toVolumeData(data, volumeMap, colors?.successVol ?? 'rgba(52,211,153,0.7)', colors?.dangerVol ?? 'rgba(251,113,133,0.7)'));
     if (isPrepend && range) {
       // 左滑翻页：平移可视范围，保持用户当前看到的位置
       const added = data.length - prev.length;
@@ -410,34 +492,32 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
     <div className="relative w-full">
       {tooltip && (
         <div
-          className="absolute z-20 pointer-events-none rounded-lg px-3 py-2 text-[11px] space-y-0.5 min-w-10"
+          className="absolute z-20 pointer-events-none rounded-lg border border-border bg-surface/90 px-3 py-2 text-[11px] space-y-0.5 min-w-10 backdrop-blur-sm"
           style={{
-            background: 'rgba(18,19,24,0.88)',
-            border: '1px solid rgba(255,255,255,0.08)',
             left: tooltip.x + TOOLTIP_W + 20 > containerW ? tooltip.x - TOOLTIP_W - 8 : tooltip.x + 16,
             top: Math.max(4, tooltip.y - 60)
           }}
         >
-          <div className="flex justify-between gap-2 pb-1 border-b border-white/10 mb-1">
-            <span className="text-white/40">时间</span>
-            <span className="text-white/80">{formatTimestamp(tooltip.time, 'MM-DD HH:mm')}</span>
+          <div className="flex justify-between gap-2 pb-1 border-b border-border mb-1">
+            <span className="text-muted">时间</span>
+            <span className="text-foreground">{formatTimestamp(tooltip.time, 'MM-DD HH:mm')}</span>
           </div>
           {(
             [
-              { label: '开', value: price_show(tooltip.open), color: 'text-white/80' },
-              { label: '高', value: price_show(tooltip.high), color: 'text-emerald-400' },
-              { label: '低', value: price_show(tooltip.low), color: 'text-red-400' },
-              { label: '收', value: price_show(tooltip.close), color: 'text-white/80' }
+              { label: '开', value: price_show(tooltip.open), color: 'text-foreground' },
+              { label: '高', value: price_show(tooltip.high), color: 'text-success' },
+              { label: '低', value: price_show(tooltip.low), color: 'text-danger' },
+              { label: '收', value: price_show(tooltip.close), color: 'text-foreground' }
             ] as const
           ).map(({ label, value, color }) => (
             <div key={label} className="flex justify-between gap-2">
-              <span className="text-white/40">{label}</span>
+              <span className="text-muted">{label}</span>
               <span className={color}>{value}</span>
             </div>
           ))}
-          <div className="flex justify-between gap-2 pt-1 border-t border-white/10 mt-1">
-            <span className="text-white/40">振幅</span>
-            <span className="text-white/80">{formatRatioPercent(tooltip.high - tooltip.low, tooltip.open)}</span>
+          <div className="flex justify-between gap-2 pt-1 border-t border-border mt-1">
+            <span className="text-muted">振幅</span>
+            <span className="text-foreground">{formatRatioPercent(tooltip.high - tooltip.low, tooltip.open)}</span>
           </div>
         </div>
       )}
@@ -445,15 +525,15 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
       {/* 鼠标悬停：横向价格 + 相对最新收盘涨跌幅 */}
       {hoverPrice && (
         <div
-          className="absolute z-30 pointer-events-none rounded-md bg-white px-2 py-1 text-[10px] leading-tight shadow-md min-w-10"
+          className="absolute z-30 pointer-events-none rounded-md border border-border bg-surface px-2 py-1 text-[10px] leading-tight shadow-md min-w-10"
           style={{
             right: -30,
             top: Math.max(12, Math.min(hoverPrice.y, chartHeight - 12)),
             transform: 'translateY(-50%)'
           }}
         >
-          <div className="text-black font-medium tabular-nums">{price_show(hoverPrice.price)}</div>
-          <div className={`tabular-nums ${hoverPrice.pct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+          <div className="text-foreground-bold font-medium tabular-nums">{price_show(hoverPrice.price)}</div>
+          <div className={`tabular-nums ${hoverPrice.pct >= 0 ? 'text-success' : 'text-danger'}`}>
             {hoverPrice.pct >= 0 ? '+' : ''}
             {hoverPrice.pct.toFixed(2)}%
           </div>
@@ -463,17 +543,15 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
       {/* 最新价虚线末端：现价 + 本根剩余时间（始终显示） */}
       {lastPrice && (
         <div
-          className="absolute z-20 pointer-events-none rounded-md px-2 py-1 text-[10px] leading-tight min-w-10"
+          className="absolute z-20 pointer-events-none rounded-md border border-border bg-surface px-2 py-1 text-[10px] leading-tight min-w-10"
           style={{
             right: -20,
             top: Math.max(12, Math.min(lastPrice.y, chartHeight - 12)),
-            transform: 'translateY(-50%)',
-            background: 'rgba(18,19,24,0.92)',
-            border: '1px solid rgba(255,255,255,0.22)'
+            transform: 'translateY(-50%)'
           }}
         >
-          <div className="text-white font-medium tabular-nums">{price_show(lastPrice.price)}</div>
-          <div className="text-white/70 tabular-nums">{lastPrice.remainText}</div>
+          <div className="text-foreground-bold font-medium tabular-nums">{price_show(lastPrice.price)}</div>
+          {category !== 'stocks' && <div className="text-muted tabular-nums">{lastPrice.remainText}</div>}
         </div>
       )}
 

@@ -64,7 +64,7 @@ function createBnStyleWsSource(exchange: BnStyleExchange): KlineWsSource {
       return `${endpoint.wsUrl}?streams=${s}usdt@kline_${interval}/${s}usdt@ticker`;
     },
 
-    parseMessage(raw: unknown): KlineWsEvent | null {
+    parseMessage(raw: unknown, _ctx: KlineWsContext): KlineWsEvent | null {
       const msg = unwrapStreamPayload(raw);
       if (!msg || typeof msg !== 'object') return null;
 

@@ -1,11 +1,14 @@
 import { TriangleIcon, ChevronLeft } from 'lucide-react';
 import Logo from '@/components/common/logo';
 import { cn } from '@/lib/utils';
+import type { AssetTypes } from '@/types/asset';
 
 interface HeaderProps {
   symbol: string;
-  /** 币种全名，如 "Bitcoin" */
+  /** 币种全名，如 "Bitcoin" / 股票公司名 */
   name?: string;
+  /** crypto | stocks，影响 Logo */
+  category?: AssetTypes;
   /** 交易所展示名，如 "Binance" */
   exchange?: string;
   /** 已格式化的价格字符串，如 "96,234.56" */
@@ -15,7 +18,7 @@ interface HeaderProps {
   className?: string;
 }
 
-const Header = ({ symbol, name, exchange, price, change, className }: HeaderProps) => {
+const Header = ({ symbol, name, category = 'crypto', exchange, price, change, className }: HeaderProps) => {
   const isUp = (change ?? 0) >= 0;
 
   return (
@@ -27,15 +30,15 @@ const Header = ({ symbol, name, exchange, price, change, className }: HeaderProp
 
       {/* 中：Logo + 名称 + 交易所标签  */}
       <div className="flex items-center gap-2 flex-1 min-w-0 mx-2">
-        <div className="w-9 h-9 rounded-xl bg-foreground/20 flex items-center justify-center shrink-0 overflow-hidden">
-          <Logo symbol={symbol} category="crypto" size="md" />
-        </div>
+        {/* <div className="w-9 h-9 rounded-xl bg-foreground/20 flex items-center justify-center shrink-0 overflow-hidden"> */}
+        <Logo symbol={symbol} category={category} size="md" />
+        {/* </div> */}
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-foreground font-bold text-sm leading-none">{symbol}</span>
             {exchange && <span className="text-[10px] font-medium text-foreground/60 bg-foreground/10 rounded px-1.5 py-0.5 leading-none">{exchange}</span>}
           </div>
-          {name && <span className="text-foreground/50 text-xs mt-0.5 truncate">{name}</span>}
+          <span className="text-foreground/50 text-xs mt-0.5 truncate">{name || '--'}</span>
         </div>
       </div>
 

@@ -145,11 +145,11 @@ export function useKLineWS({ exchange, symbol, interval }: UseKLineWSParams): Us
           const text = event.data as string;
           // OKX 明文 pong
           if (text === 'pong') {
-            spec.parseMessage('pong');
+            spec.parseMessage('pong', ctx);
             return;
           }
           const raw: unknown = JSON.parse(text);
-          const parsed = spec.parseMessage(raw);
+          const parsed = spec.parseMessage(raw, ctx);
           if (parsed) applyEvent(parsed);
         } catch {
           // 忽略解析失败

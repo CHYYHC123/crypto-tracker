@@ -96,7 +96,11 @@ function fromPricePrevClose(p: unknown, pc: unknown): { lastPrice: number; chang
   return { lastPrice, changePercent };
 }
 
-/** 币安股票：SUBSCRIBE 单标的 kline + quote */
+/**
+ * 币安股票 equity stream。
+ * 对齐官方页订阅形态，例如：
+ * {"method":"SUBSCRIBE","params":["price","CRCL@tradingStatus","CRCL@tradability","CRCL@kline_1m","calendar","CRCL@quote","CRCL@kline_1d"],"id":1}
+ */
 export const bnStockKlineWsSource: KlineWsSource = {
   buildUrl(_ctx: KlineWsContext): string {
     const endpoint = KlineWsConfig.BNStock;
@@ -110,35 +114,60 @@ export const bnStockKlineWsSource: KlineWsSource = {
     if (!interval) throw new Error(`[klineWs] BNStock 不支持周期 ${ctx.interval}`);
 
     const s = streamSymbol(ctx.symbol);
-    return [
-      {
-        method: 'SUBSCRIBE',
-        params: [`${s}@kline_${interval}`, `${s}@quote`],
-        id: Date.now()
-      }
+    const params = [
+      'price',
+      `${s}@tradingStatus`,
+      `${s}@tradability`,
+      `${s}@kline_${interval}`,
+      'calendar',
+      `${s}@quote`
     ];
+    // 官方页在非日线周期时额外订 1d（头部日涨跌等）
+    if (interval !== '1d') {
+      params.push(`${s}@kline_1d`);
+    }
+
+    return [{ method: 'SUBSCRIBE', params, id: 1 }];
   },
 
-  parseMessage(raw: unknown): KlineWsEvent | null {
+  parseMessage(raw: unknown, ctx: KlineWsContext): KlineWsEvent | null {
     const { stream, data } = unwrap(raw);
     const streamLower = (stream ?? '').toLowerCase();
+    const expectSym = streamSymbol(ctx.symbol);
+    const expectInterval = KlineWsConfig.BNStock?.intervals[ctx.interval];
 
-    if (streamLower.includes('@kline_') || (data && typeof data === 'object' && (data as { e?: string }).e === 'kline')) {
+    // tradingStatus / tradability / calendar 等侧栏不用，直接忽略
+    if (
+      streamLower === 'calendar' ||
+      streamLower.endsWith('@tradingstatus') ||
+      streamLower.endsWith('@tradability')
+    ) {
+      return null;
+    }
+
+    if (streamLower.includes('@kline_')) {
+      // 同时订了当前周期 + 1d 时，只吃当前周期，避免日线污染分钟图
+      if (expectInterval && !streamLower.endsWith(`@kline_${expectInterval}`)) {
+        return null;
+      }
       const bar = parseKline(data);
       return bar ? { type: 'kline', bar } : null;
     }
 
-    if (streamLower.includes('@quote') || streamLower === 'quote') {
-      // expectSym 从 stream 前缀取不到时用空串，parseQuote 在无 s 时仍可读价格字段
-      const symFromStream = streamLower.split('@')[0]?.toUpperCase() ?? '';
-      const ticker = parseQuote(data, symFromStream);
+    if (data && typeof data === 'object' && (data as { e?: string }).e === 'kline') {
+      const bar = parseKline(data);
+      return bar ? { type: 'kline', bar } : null;
+    }
+
+    if (streamLower.includes('@quote') || streamLower === 'quote' || streamLower === 'price') {
+      const ticker = parseQuote(data, expectSym);
       return ticker ? { type: 'ticker', ...ticker } : null;
     }
 
     // 无 stream 包装时尝试两种
     const bar = parseKline(data);
     if (bar) return { type: 'kline', bar };
-    const ticker = parseQuote(data, '');
+    const ticker = parseQuote(data, expectSym);
     return ticker ? { type: 'ticker', ...ticker } : null;
   }
 };

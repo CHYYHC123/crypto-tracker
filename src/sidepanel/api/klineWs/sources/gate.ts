@@ -90,7 +90,7 @@ export const gateKlineWsSource: KlineWsSource = {
     ];
   },
 
-  parseMessage(raw: unknown): KlineWsEvent | null {
+  parseMessage(raw: unknown, _ctx: KlineWsContext): KlineWsEvent | null {
     return parseCandlestick(raw) ?? parseTicker(raw);
   }
 };

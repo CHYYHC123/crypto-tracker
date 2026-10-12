@@ -11,12 +11,14 @@ import { useKlineHistory } from '@/sidepanel/hook/useKlineHistory';
 import { useKlineExchange } from '@/sidepanel/hook/useKlineExchange';
 import { useKLineWS } from '@/sidepanel/hook/useKLineWS';
 import { useSidepanelAsset } from '@/sidepanel/hook/useSidepanelAsset';
+import { useEquitySymbol } from '@/sidepanel/hook/useEquitySymbol';
 import type { KlineInterval } from '@/types/kline';
 import type { CandlestickData, UTCTimestamp } from 'lightweight-charts';
 import { price_show, formatRatioPercent } from '@/utils/num';
 import { Exchange, ExchangeListMap, type SelectableExchangeType } from '@/config/exchangeConfig';
+import { KlineRestConfig } from '@/sidepanel/config/klineRest';
 
-const INTERVALS: { label: string; value: KlineInterval }[] = [
+const ALL_INTERVALS: { label: string; value: KlineInterval }[] = [
   { label: '1分\n钟', value: '1m' },
   { label: '30分\n钟', value: '30m' },
   { label: '1小\n时', value: '1h' },
@@ -108,9 +110,21 @@ export default function App() {
   const [klineInterval, setKlineInterval] = useState<KlineInterval>('1d');
   const [hoverCandle, setHoverCandle] = useState<CandleHoverData | null>(null);
 
+  const intervals = useMemo(() => {
+    const supported = KlineRestConfig[exchange]?.intervals;
+    if (!supported) return ALL_INTERVALS;
+    return ALL_INTERVALS.filter(item => supported[item.value] != null);
+  }, [exchange]);
+
   useEffect(() => {
     setHoverCandle(null);
   }, [sidepanelAsset.id, sidepanelAsset.symbol]);
+
+  // 切到股票等只支持部分周期的交易所时，纠正当前选中周期
+  useEffect(() => {
+    if (intervals.some(item => item.value === klineInterval)) return;
+    setKlineInterval(intervals[0]?.value ?? '1d');
+  }, [intervals, klineInterval]);
 
   // ── 历史 K 线（REST）
   const { chartData, volumeMap, loading, loadingMore, error, loadOlder } = useKlineHistory({
@@ -120,11 +134,15 @@ export default function App() {
   });
 
   // ── 实时 K 线 + ticker（按 exchange 走 KlineWsRegistry）
-  const { wsBar, lastPrice, changePercent: headerChange } = useKLineWS({
+  const { wsBar, lastPrice, changePercent: wsChange } = useKLineWS({
     exchange,
     symbol: SYMBOL,
     interval: klineInterval
   });
+
+  // ── 股票首屏：全名 + 价格/涨跌 seed（WS ticker 到达后覆盖）
+  const isStock = exchange === Exchange.BNStock;
+  const equity = useEquitySymbol(SYMBOL, isStock);
 
   // ── 合并 WS 增量到历史数据
   const mergedChartData = useMemo(() => {
@@ -167,13 +185,14 @@ export default function App() {
 
   const displayCandle = hoverCandle ?? liveBar;
 
-  // ── Header 数据（价格与涨跌幅均来自 ticker，与 hover / K 线周期无关）
-  const headerPrice = lastPrice != null ? price_show(lastPrice) : undefined;
-  const headerName = SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL;
-  const headerExchange =
-    exchange === Exchange.BNStock
-      ? 'Binance Stock'
-      : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
+  // ── Header：WS ticker 优先，股票 get-symbol 作 seed；名称股票用接口 n
+  const headerPrice =
+    lastPrice != null ? price_show(lastPrice) : equity?.price != null ? price_show(equity.price) : undefined;
+  const headerChange = wsChange ?? equity?.changePercent;
+  const headerName = isStock ? equity?.name || undefined : (SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL);
+  const headerExchange = isStock
+    ? 'Binance Stock'
+    : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
 
   // ── AssetInfo 数据（依赖 displayCandle + mergedChartData）
   const assetInfoData = useMemo(() => calcAssetInfo(displayCandle, mergedChartData), [displayCandle, mergedChartData]);
@@ -181,7 +200,14 @@ export default function App() {
   return (
     <>
       <div className="bg-background w-full h-screen">
-        <Header symbol={SYMBOL} name={headerName} exchange={headerExchange} price={headerPrice} change={headerChange} />
+        <Header
+          symbol={SYMBOL}
+          name={headerName}
+          category={isStock ? 'stocks' : 'crypto'}
+          exchange={headerExchange}
+          price={headerPrice}
+          change={headerChange}
+        />
 
         <div className="m-3 rounded-xl border border-border bg-background ">
           {/* ── 时间周期工具栏 ── */}
@@ -193,7 +219,7 @@ export default function App() {
 
             {/* 中：时间周期 Tabs */}
             <div className="flex items-center gap-0.5">
-              {INTERVALS.map(({ label, value }) => {
+              {intervals.map(({ label, value }) => {
                 const active = value === klineInterval;
                 return (
                   <button
@@ -238,7 +264,16 @@ export default function App() {
             )}
             {error && <p className="px-3 pt-2 text-[11px] text-red-400">{error}</p>}
             <div className="m-2 border border-border rounded-xl px-2">
-              <KLineChart className="rounded-xl" theme="dark" interval={klineInterval} data={mergedChartData} volumeMap={mergedVolumeMap} onCrosshairMove={setHoverCandle} onNeedOlder={loadOlder} loadingMore={loadingMore} />
+              <KLineChart
+                className="rounded-xl"
+                interval={klineInterval}
+                category={isStock ? 'stocks' : 'crypto'}
+                data={mergedChartData}
+                volumeMap={mergedVolumeMap}
+                onCrosshairMove={setHoverCandle}
+                onNeedOlder={loadOlder}
+                loadingMore={loadingMore}
+              />
             </div>
           </div>
         </div>
