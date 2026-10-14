@@ -28,6 +28,8 @@ interface UseKLineWSParams {
   exchange: ExchangeType;
   symbol: string;
   interval: KlineInterval;
+  /** false 时不建连（等待 storage resolve） */
+  enabled?: boolean;
 }
 
 interface UseKLineWSResult {
@@ -45,7 +47,7 @@ type ApplyEvent = (event: KlineWsEvent) => void;
  * 按交易所 registry 连接实时 K 线 + ticker。
  * 只负责 WS 生命周期；协议细节在 KlineWsSource。
  */
-export function useKLineWS({ exchange, symbol, interval }: UseKLineWSParams): UseKLineWSResult {
+export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKLineWSParams): UseKLineWSResult {
   const [wsBar, setWsBar] = useState<KlineBar | null>(null);
   const [lastPrice, setLastPrice] = useState<number | undefined>();
   const [changePercent, setChangePercent] = useState<number | undefined>();
@@ -58,6 +60,14 @@ export function useKLineWS({ exchange, symbol, interval }: UseKLineWSParams): Us
   const destroyedRef = useRef(false);
 
   useEffect(() => {
+    if (!enabled || !symbol) {
+      setWsBar(null);
+      setLastPrice(undefined);
+      setChangePercent(undefined);
+      setStatus('idle');
+      return;
+    }
+
     destroyedRef.current = false;
     retryCountRef.current = 0;
 
@@ -210,7 +220,7 @@ export function useKLineWS({ exchange, symbol, interval }: UseKLineWSParams): Us
       setChangePercent(undefined);
       setStatus('idle');
     };
-  }, [exchange, symbol, interval]);
+  }, [exchange, symbol, interval, enabled]);
 
   return { wsBar, lastPrice, changePercent, status };
 }

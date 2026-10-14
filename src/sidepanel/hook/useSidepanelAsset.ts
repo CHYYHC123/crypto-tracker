@@ -35,9 +35,10 @@ export async function resolveSidepanelAsset(): Promise<SidepanelAssetPayload> {
 /**
  * 侧边栏当前资产：首屏 resolve；运行时 SIDEPANEL_ASSET / storage 变化时替换；
  * 关闭页时清除 storage，下次无参打开走「列表第一项」。
+ * null 表示尚未从 storage 读完，避免用 FALLBACK(BTC) 触发错误的首次请求。
  */
-export function useSidepanelAsset(): SidepanelAssetPayload {
-  const [asset, setAsset] = useState<SidepanelAssetPayload>(FALLBACK);
+export function useSidepanelAsset(): SidepanelAssetPayload | null {
+  const [asset, setAsset] = useState<SidepanelAssetPayload | null>(null);
 
   useEffect(() => {
     let cancelled = false;

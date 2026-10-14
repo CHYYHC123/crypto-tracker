@@ -20,6 +20,7 @@ interface GetSymbolResponse {
     c?: string;
     pc?: string;
     mp?: string;
+    lrc?: string;
   } | null;
 }
 
@@ -42,7 +43,7 @@ export async function fetchEquitySymbol(
     if (!res.ok || body.code !== '000000' || !body.data) return null;
 
     const d = body.data;
-    const price = Number(d.c);
+    const price = Number(d.lrc);
     const prevClose = Number(d.pc);
     if (!Number.isFinite(price) || price <= 0) return null;
 

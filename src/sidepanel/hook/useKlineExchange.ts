@@ -12,9 +12,10 @@ function resolveExchange(assetType: AssetTypes, dataSource: ExchangeType): Excha
  * - stocks → BNStock
  * - crypto → local data_source
  * 监听 asset_type / data_source 变化。
+ * null 表示尚未从 storage 读完，避免用 defaultDataSource 触发错误的首次请求。
  */
-export function useKlineExchange(): ExchangeType {
-  const [exchange, setExchange] = useState<ExchangeType>(defaultDataSource);
+export function useKlineExchange(): ExchangeType | null {
+  const [exchange, setExchange] = useState<ExchangeType | null>(null);
 
   useEffect(() => {
     let cancelled = false;

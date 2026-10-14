@@ -11,6 +11,8 @@ interface UseKlineHistoryOptions {
   exchange?: ExchangeType;
   symbol: string;
   interval: KlineInterval;
+  /** false 时不发请求（等待 storage resolve） */
+  enabled?: boolean;
 }
 
 function isAbortError(err: unknown): boolean {
@@ -30,7 +32,7 @@ function toChartData(bars: KlineBar[]): CandlestickData<UTCTimestamp>[] {
 }
 
 /** 首屏拉最近一页，左滑时用最旧 openTime - 1 再拉一页。切交易所 / 币种 / 周期会取消进行中的请求并重拉 */
-export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: UseKlineHistoryOptions) {
+export function useKlineHistory({ exchange = Exchange.BN, symbol, interval, enabled = true }: UseKlineHistoryOptions) {
   const [candles, setCandles] = useState<KlineBar[]>([]);
   const [volumeMap, setVolumeMap] = useState<Map<number, VolumeInfo>>(() => new Map());
   const [loading, setLoading] = useState(true);
@@ -48,6 +50,17 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
   useEffect(() => {
     const gen = ++genRef.current;
     abortRef.current?.abort();
+
+    if (!enabled || !symbol) {
+      setLoading(true);
+      setLoadingMore(false);
+      setHasMore(true);
+      setError(null);
+      setCandles([]);
+      setVolumeMap(new Map());
+      return;
+    }
+
     const ac = new AbortController();
     abortRef.current = ac;
     loadingMoreRef.current = false;
@@ -81,10 +94,10 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
       });
 
     return () => ac.abort();
-  }, [exchange, symbol, interval]);
+  }, [exchange, symbol, interval, enabled]);
 
   const loadOlder = useCallback(async () => {
-    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    if (!enabled || loadingMoreRef.current || !hasMoreRef.current) return;
     const current = candlesRef.current;
     if (current.length === 0) return;
 
@@ -127,7 +140,7 @@ export function useKlineHistory({ exchange = Exchange.BN, symbol, interval }: Us
         setLoadingMore(false);
       }
     }
-  }, [exchange, symbol, interval]);
+  }, [exchange, symbol, interval, enabled]);
 
   const chartData = useMemo(() => toChartData(candles), [candles]);
 

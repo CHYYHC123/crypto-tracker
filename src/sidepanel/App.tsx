@@ -105,12 +105,15 @@ function calcAssetInfo(candle: CandleHoverData | null, data: CandlestickData<UTC
 export default function App() {
   const exchange = useKlineExchange();
   const sidepanelAsset = useSidepanelAsset();
-  const SYMBOL = sidepanelAsset.symbol;
+  // 等 storage resolve 后再发请求，避免首帧用 BTC/OKX 占位误请求
+  const ready = exchange != null && sidepanelAsset != null;
+  const SYMBOL = sidepanelAsset?.symbol ?? '';
 
   const [klineInterval, setKlineInterval] = useState<KlineInterval>('1d');
   const [hoverCandle, setHoverCandle] = useState<CandleHoverData | null>(null);
 
   const intervals = useMemo(() => {
+    if (!exchange) return ALL_INTERVALS;
     const supported = KlineRestConfig[exchange]?.intervals;
     if (!supported) return ALL_INTERVALS;
     return ALL_INTERVALS.filter(item => supported[item.value] != null);
@@ -118,19 +121,21 @@ export default function App() {
 
   useEffect(() => {
     setHoverCandle(null);
-  }, [sidepanelAsset.id, sidepanelAsset.symbol]);
+  }, [sidepanelAsset?.id, sidepanelAsset?.symbol]);
 
   // 切到股票等只支持部分周期的交易所时，纠正当前选中周期
   useEffect(() => {
+    if (!ready) return;
     if (intervals.some(item => item.value === klineInterval)) return;
     setKlineInterval(intervals[0]?.value ?? '1d');
-  }, [intervals, klineInterval]);
+  }, [intervals, klineInterval, ready]);
 
   // ── 历史 K 线（REST）
   const { chartData, volumeMap, loading, loadingMore, error, loadOlder } = useKlineHistory({
-    exchange,
+    exchange: exchange ?? Exchange.OKX,
     symbol: SYMBOL,
-    interval: klineInterval
+    interval: klineInterval,
+    enabled: ready
   });
 
   // ── 实时 K 线 + ticker（按 exchange 走 KlineWsRegistry）
@@ -139,14 +144,15 @@ export default function App() {
     lastPrice,
     changePercent: wsChange
   } = useKLineWS({
-    exchange,
+    exchange: exchange ?? Exchange.OKX,
     symbol: SYMBOL,
-    interval: klineInterval
+    interval: klineInterval,
+    enabled: ready
   });
 
   // ── 股票首屏：全名 + 价格/涨跌 seed（WS ticker 到达后覆盖）
   const isStock = exchange === Exchange.BNStock;
-  const equity = useEquitySymbol(SYMBOL, isStock);
+  const equity = useEquitySymbol(SYMBOL, ready && isStock);
 
   // ── 合并 WS 增量到历史数据
   const mergedChartData = useMemo(() => {
@@ -189,14 +195,23 @@ export default function App() {
 
   const displayCandle = hoverCandle ?? liveBar;
 
-  // ── Header：WS ticker 优先，股票 get-symbol 作 seed；名称股票用接口 n
+  // ── Header：WS ticker 优先，股票 get-symbol 作 seed；名称股票用接口
   const headerPrice = lastPrice != null ? price_show(lastPrice) : equity?.price != null ? price_show(equity.price) : undefined;
+
   const headerChange = wsChange ?? equity?.changePercent;
   const headerName = isStock ? equity?.name || undefined : (SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL);
   const headerExchange = isStock ? 'Binance Stock' : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
 
   // ── AssetInfo 数据（依赖 displayCandle + mergedChartData）
   const assetInfoData = useMemo(() => calcAssetInfo(displayCandle, mergedChartData), [displayCandle, mergedChartData]);
+
+  if (!ready || !sidepanelAsset || !exchange) {
+    return (
+      <div className="bg-background w-full h-screen flex items-center justify-center">
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -263,7 +278,7 @@ export default function App() {
           </div>
         </div>
 
-        <NoteCard />
+        <NoteCard symbol={SYMBOL} category={sidepanelAsset.category} />
       </div>
     </>
   );
