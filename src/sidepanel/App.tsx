@@ -134,7 +134,11 @@ export default function App() {
   });
 
   // ── 实时 K 线 + ticker（按 exchange 走 KlineWsRegistry）
-  const { wsBar, lastPrice, changePercent: wsChange } = useKLineWS({
+  const {
+    wsBar,
+    lastPrice,
+    changePercent: wsChange
+  } = useKLineWS({
     exchange,
     symbol: SYMBOL,
     interval: klineInterval
@@ -186,13 +190,10 @@ export default function App() {
   const displayCandle = hoverCandle ?? liveBar;
 
   // ── Header：WS ticker 优先，股票 get-symbol 作 seed；名称股票用接口 n
-  const headerPrice =
-    lastPrice != null ? price_show(lastPrice) : equity?.price != null ? price_show(equity.price) : undefined;
+  const headerPrice = lastPrice != null ? price_show(lastPrice) : equity?.price != null ? price_show(equity.price) : undefined;
   const headerChange = wsChange ?? equity?.changePercent;
   const headerName = isStock ? equity?.name || undefined : (SYMBOL_NAME_MAP[SYMBOL] ?? SYMBOL);
-  const headerExchange = isStock
-    ? 'Binance Stock'
-    : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
+  const headerExchange = isStock ? 'Binance Stock' : (ExchangeListMap[exchange as SelectableExchangeType]?.name ?? exchange);
 
   // ── AssetInfo 数据（依赖 displayCandle + mergedChartData）
   const assetInfoData = useMemo(() => calcAssetInfo(displayCandle, mergedChartData), [displayCandle, mergedChartData]);
@@ -200,14 +201,7 @@ export default function App() {
   return (
     <>
       <div className="bg-background w-full h-screen">
-        <Header
-          symbol={SYMBOL}
-          name={headerName}
-          category={isStock ? 'stocks' : 'crypto'}
-          exchange={headerExchange}
-          price={headerPrice}
-          change={headerChange}
-        />
+        <Header symbol={SYMBOL} name={headerName} category={isStock ? 'stocks' : 'crypto'} exchange={headerExchange} price={headerPrice} change={headerChange} />
 
         <div className="m-3 rounded-xl border border-border bg-background ">
           {/* ── 时间周期工具栏 ── */}
@@ -264,16 +258,7 @@ export default function App() {
             )}
             {error && <p className="px-3 pt-2 text-[11px] text-red-400">{error}</p>}
             <div className="m-2 border border-border rounded-xl px-2">
-              <KLineChart
-                className="rounded-xl"
-                interval={klineInterval}
-                category={isStock ? 'stocks' : 'crypto'}
-                data={mergedChartData}
-                volumeMap={mergedVolumeMap}
-                onCrosshairMove={setHoverCandle}
-                onNeedOlder={loadOlder}
-                loadingMore={loadingMore}
-              />
+              <KLineChart className="rounded-xl" interval={klineInterval} category={isStock ? 'stocks' : 'crypto'} data={mergedChartData} volumeMap={mergedVolumeMap} onCrosshairMove={setHoverCandle} onNeedOlder={loadOlder} loadingMore={loadingMore} />
             </div>
           </div>
         </div>

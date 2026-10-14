@@ -111,36 +111,40 @@ function handleShowNotification(msg: any, _sendResponse: SendResponse): void {
   });
 }
 
-/** content 无法调 sidePanel.open，由 background 写 storage 并打开侧栏 */
-async function handleOpenAssetSidepanel(
+/**
+ * content 无法调 sidePanel.open，由 background 打开侧栏并写 storage。
+ * 注意：sidePanel.open 必须在用户手势同步链路内调用，
+ * 任何 await（如写 storage）都会丢失 gesture，导致 open 失败。
+ */
+function handleOpenAssetSidepanel(
   msg: any,
   sendResponse: SendResponse,
   sender: chrome.runtime.MessageSender
-): Promise<void> {
+): void {
   const payload = msg.payload;
   if (!isSidepanelAssetPayload(payload)) {
     sendResponse({ success: false, msg: 'Invalid payload' });
     return;
   }
 
-  try {
-    await setSidepanelAsset(payload);
-
-    let windowId = sender.tab?.windowId;
-    if (windowId == null) {
-      const win = await chrome.windows.getCurrent();
-      windowId = win.id;
-    }
-    if (windowId != null) {
-      await chrome.sidePanel.open({ windowId });
-    }
-
-    chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
-    sendResponse({ success: true });
-  } catch (err) {
-    console.error('[Background] OPEN_ASSET_SIDEPANEL failed:', err);
-    sendResponse({ success: false, msg: 'Open sidepanel failed' });
+  const windowId = sender.tab?.windowId;
+  if (windowId == null) {
+    sendResponse({ success: false, msg: 'No windowId from sender tab' });
+    return;
   }
+
+  // 必须在任何 await 之前调用 open；手势只保证到本次同步调用栈
+  void chrome.sidePanel
+    .open({ windowId })
+    .then(() => setSidepanelAsset(payload))
+    .then(() => {
+      chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
+      sendResponse({ success: true });
+    })
+    .catch(err => {
+      console.error('[Background] OPEN_ASSET_SIDEPANEL failed:', err);
+      sendResponse({ success: false, msg: 'Open sidepanel failed' });
+    });
 }
 
 // ─── 路由表

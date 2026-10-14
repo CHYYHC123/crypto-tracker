@@ -28,18 +28,25 @@ export async function openAssetSidePanel(
 ): Promise<void> {
   const payload = toSidepanelAssetPayload(coin);
 
+  console.log('payload', payload);
+
   if (options?.viaBackground) {
+    // 同步发消息，让 background 在用户手势链路内立刻 sidePanel.open
     chrome.runtime.sendMessage({ type: 'OPEN_ASSET_SIDEPANEL', payload }).catch(() => {});
     return;
   }
 
-  await setSidepanelAsset(payload);
-
-  const win = await chrome.windows.getCurrent();
-  if (win.id != null) {
-    await chrome.sidePanel.open({ windowId: win.id });
-  }
-
-  // 侧边栏已打开时靠消息即时切换；未打开时靠 storage 首屏读取
-  chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
+  // 用回调拿 windowId，避免先 await 其它 Promise 导致手势丢失
+  chrome.windows.getCurrent(win => {
+    if (win.id == null) return;
+    void chrome.sidePanel
+      .open({ windowId: win.id })
+      .then(() => setSidepanelAsset(payload))
+      .then(() => {
+        chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
+      })
+      .catch(err => {
+        console.error('[openAssetSidePanel] failed:', err);
+      });
+  });
 }

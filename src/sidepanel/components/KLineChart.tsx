@@ -19,6 +19,12 @@ const RIGHT_PAD = 20;
 const CHART_HEIGHT = 320;
 /** 主图 + 成交量窗格总高度 */
 const CHART_HEIGHT_WITH_VOLUME = 420;
+/** 可视区高低点：横线长度 */
+const EXTREMUM_LINE = 16;
+/** 可视区高低点：价格文字预估宽度（用于贴边时改朝左） */
+const EXTREMUM_LABEL_W = 72;
+/** 横线起点相对影线中心的额外空隙（再加半根 K 线宽） */
+const EXTREMUM_GAP_EXTRA = 4;
 
 interface ChartColors {
   bg: string;
@@ -106,17 +112,38 @@ function focusLatestWithRightPad(chart: IChartApi, barCount: number) {
   });
 }
 
-/** 当前 K 线收盘倒计时文案 */
+/** 可视逻辑区间内最高 / 最低那根 K */
+function findVisibleExtremumBars(
+  data: CandlestickData<UTCTimestamp>[],
+  range: LogicalRange
+): { highBar: CandlestickData<UTCTimestamp>; lowBar: CandlestickData<UTCTimestamp> } | null {
+  if (data.length === 0) return null;
+  const from = Math.max(0, Math.ceil(range.from));
+  const to = Math.min(data.length - 1, Math.floor(range.to));
+  if (from > to) return null;
+
+  let highBar = data[from];
+  let lowBar = data[from];
+  for (let i = from + 1; i <= to; i++) {
+    const bar = data[i];
+    if (bar.high > highBar.high) highBar = bar;
+    if (bar.low < lowBar.low) lowBar = bar;
+  }
+  return { highBar, lowBar };
+}
+
+/** 当前 K 线收盘倒计时：≥1h → 12:15:49；<1h → 15:26 / 00:39（周线等用累计小时） */
 function formatCandleRemain(lastOpenSec: number, interval: KlineInterval): string {
   const end = lastOpenSec * 1000 + INTERVAL_MS[interval];
   const ms = Math.max(0, end - Date.now());
-  const d = Math.floor(ms / 86400000);
-  const h = Math.floor((ms % 86400000) / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  const s = Math.floor((ms % 60000) / 1000);
-  if (d > 0) return `${d}D:${String(h).padStart(2, '0')}H`;
-  if (h > 0) return `${h}H:${String(m).padStart(2, '0')}M`;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  if (h > 0) return `${h}:${mm}:${ss}`;
+  return `${mm}:${ss}`;
 }
 
 // 格式化底部时间
@@ -154,6 +181,22 @@ interface LastPriceState {
   remainText: string;
 }
 
+/** 可视区内最高 / 最低价标签（影线尖 + 短横线 + 价格） */
+interface ExtremumLabelState {
+  x: number;
+  y: number;
+  price: number;
+  /** 横线与文字朝向：贴右缘时改 left */
+  side: 'left' | 'right';
+  /** 影线中心到横线起点的距离（半根 K 宽 + 空隙） */
+  gap: number;
+}
+
+interface VisibleExtremumsState {
+  high: ExtremumLabelState;
+  low: ExtremumLabelState;
+}
+
 interface KLineChartProps {
   data?: CandlestickData<UTCTimestamp>[]; // 蜡烛图数据
   volumeMap?: Map<number, VolumeInfo>; // 成交量数据
@@ -171,17 +214,7 @@ interface KLineChartProps {
   showVolume?: boolean; // 是否显示成交量
 }
 
-const KLineChart: React.FC<KLineChartProps> = ({
-  data = [],
-  volumeMap = EMPTY_VOLUME_MAP,
-  className,
-  interval = '1d',
-  category = 'crypto',
-  onCrosshairMove,
-  onNeedOlder,
-  loadingMore = false,
-  showVolume = false
-}) => {
+const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VOLUME_MAP, className, interval = '1d', category = 'crypto', onCrosshairMove, onNeedOlder, loadingMore = false, showVolume = false }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick', Time> | null>(null);
@@ -211,6 +244,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
   }, []);
 
   const syncLastPriceRef = useRef<() => void>(() => {});
+  const syncVisibleExtremumsRef = useRef<() => void>(() => {});
 
   onCrosshairMoveRef.current = onCrosshairMove;
   onNeedOlderRef.current = onNeedOlder;
@@ -222,6 +256,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [hoverPrice, setHoverPrice] = useState<HoverPriceState | null>(null);
   const [lastPrice, setLastPrice] = useState<LastPriceState | null>(null);
+  const [visibleExtremums, setVisibleExtremums] = useState<VisibleExtremumsState | null>(null);
 
   const syncLastPrice = () => {
     const series = seriesRef.current;
@@ -263,6 +298,51 @@ const KLineChart: React.FC<KLineChartProps> = ({
     });
   };
   syncLastPriceRef.current = syncLastPrice;
+
+  const syncVisibleExtremums = () => {
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    const container = chartContainerRef.current;
+    if (!chart || !series || !container) {
+      setVisibleExtremums(null);
+      return;
+    }
+
+    const range = chart.timeScale().getVisibleLogicalRange();
+    if (!range) {
+      setVisibleExtremums(null);
+      return;
+    }
+
+    const found = findVisibleExtremumBars(dataRef.current, range);
+    if (!found) {
+      setVisibleExtremums(null);
+      return;
+    }
+
+    const containerW = container.clientWidth;
+    const span = Math.max(range.to - range.from, 1);
+    const halfBar = containerW / span / 2;
+    const gap = halfBar + EXTREMUM_GAP_EXTRA;
+
+    const toLabel = (bar: CandlestickData<UTCTimestamp>, price: number): ExtremumLabelState | null => {
+      const x = chart.timeScale().timeToCoordinate(bar.time);
+      const y = series.priceToCoordinate(price);
+      if (x == null || y == null) return null;
+      const needLeft = x + gap + EXTREMUM_LINE + EXTREMUM_LABEL_W > containerW - 8;
+      return { x, y, price, side: needLeft ? 'left' : 'right', gap };
+    };
+
+    const high = toLabel(found.highBar, found.highBar.high);
+    const low = toLabel(found.lowBar, found.lowBar.low);
+    if (!high || !low) {
+      setVisibleExtremums(null);
+      return;
+    }
+
+    setVisibleExtremums({ high, low });
+  };
+  syncVisibleExtremumsRef.current = syncVisibleExtremums;
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -351,6 +431,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
       adjustingRangeRef.current = false;
     }
     syncLastPriceRef.current();
+    syncVisibleExtremumsRef.current();
 
     // 监听窗口大小变化
     const handleResize = () => {
@@ -358,7 +439,10 @@ const KLineChart: React.FC<KLineChartProps> = ({
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth
         });
-        requestAnimationFrame(() => syncLastPriceRef.current());
+        requestAnimationFrame(() => {
+          syncLastPriceRef.current();
+          syncVisibleExtremumsRef.current();
+        });
       }
     };
     const resizeObserver = new ResizeObserver(handleResize);
@@ -418,6 +502,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
     // 监听可视范围变化
     const handleVisibleRange = (range: LogicalRange | null) => {
       syncLastPriceRef.current();
+      syncVisibleExtremumsRef.current();
       if (adjustingRangeRef.current || !range || loadingMoreRef.current) return;
       if (dataRef.current.length === 0) return;
       if (range.from < LEFT_EDGE) onNeedOlderRef.current?.();
@@ -438,6 +523,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
       setTooltip(null);
       setHoverPrice(null);
       setLastPrice(null);
+      setVisibleExtremums(null);
     };
   }, [theme, showVolume]);
 
@@ -474,6 +560,7 @@ const KLineChart: React.FC<KLineChartProps> = ({
     prevDataRef.current = data;
     // setData 后 priceLine 仍挂在 series 上，只需更新价格与标签位置
     syncLastPriceRef.current();
+    syncVisibleExtremumsRef.current();
   }, [data, volumeMap]);
 
   // 倒计时每秒刷新；切周期时立即重算
@@ -554,6 +641,39 @@ const KLineChart: React.FC<KLineChartProps> = ({
           {category !== 'stocks' && <div className="text-muted tabular-nums">{lastPrice.remainText}</div>}
         </div>
       )}
+
+      {/* 可视区最高 / 最低：影线尖短横线 + 价格 */}
+      {visibleExtremums &&
+        ([
+          { key: 'high' as const, item: visibleExtremums.high },
+          { key: 'low' as const, item: visibleExtremums.low }
+        ]).map(({ key, item }) => {
+          const lineLeft = item.side === 'right' ? item.x + item.gap : item.x - item.gap - EXTREMUM_LINE;
+          const textLeft = item.side === 'right' ? item.x + item.gap + EXTREMUM_LINE + 4 : item.x - item.gap - EXTREMUM_LINE - 4;
+          return (
+            <div key={key} className="absolute z-10 pointer-events-none inset-0 overflow-hidden">
+              <div
+                className="absolute h-px bg-foreground/35"
+                style={{
+                  left: lineLeft,
+                  top: item.y,
+                  width: EXTREMUM_LINE,
+                  transform: 'translateY(-50%)'
+                }}
+              />
+              <div
+                className="absolute text-[10px] leading-none tabular-nums text-foreground-bold whitespace-nowrap"
+                style={{
+                  left: textLeft,
+                  top: item.y,
+                  transform: item.side === 'right' ? 'translateY(-50%)' : 'translate(-100%, -50%)'
+                }}
+              >
+                {price_show(item.price)}
+              </div>
+            </div>
+          );
+        })}
 
       <div ref={chartContainerRef} className={cn('w-full overflow-hidden', className)} />
     </div>

@@ -23,11 +23,7 @@ const AssetSubInfo = memo(({ coin, alert, onAlertClick, fromContent }: AssetSubI
   return (
     <div className="flex items-center gap-1">
       {alert ? <AlertBadge AlertInfo={alert} onClick={onAlertClick} /> : null}
-      <ChartCandlestick
-        size={12}
-        className="cursor-pointer hover:opacity-70 opacity-90 shrink-0"
-        onClick={handleOpenChart}
-      />
+      <ChartCandlestick size={12} className="cursor-pointer hover:opacity-70 opacity-90 shrink-0" onClick={handleOpenChart} />
     </div>
   );
 });
