@@ -137,5 +137,35 @@ export default {
   },
   content: {
     home: {}
+  },
+  sidepanel: {
+    interval: {
+      '1m': '1分\n钟',
+      '30m': '30分\n钟',
+      '1h': '1小\n时',
+      '1d': '1\n天',
+      '1w': '1\n周'
+    },
+    ws: {
+      disconnected: '连接已断开 · 点击重试',
+      reconnecting: '重连中…'
+    },
+    assetInfo: {
+      open: '开',
+      high: '高',
+      low: '低',
+      close: '收',
+      change: '涨跌幅',
+      amplitude: '振幅'
+    },
+    note: {
+      title: '我的备注',
+      titleHint: '（个人备注）',
+      saved: '已保存 · {{time}}',
+      saving: '保存中…',
+      unsaved: '未保存',
+      placeholder: '在此记录交易想法…',
+      characters: '{{count}} 字'
+    }
   }
 } as const;

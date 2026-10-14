@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ExchangeType } from '@/config/exchangeConfig';
 import { KlineWsRegistry } from '@/sidepanel/api/klineWs';
 import type {
@@ -14,6 +14,8 @@ export type KLineWSStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'e
 const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 30_000;
+/** 快重试用尽后的冷却重连间隔 */
+const COOLDOWN_INTERVAL_MS = 60_000;
 
 function getRetryDelay(attempt: number): number {
   return Math.min(BASE_DELAY_MS * Math.pow(2, attempt), MAX_DELAY_MS);
@@ -39,6 +41,8 @@ interface UseKLineWSResult {
   /** ticker 涨跌幅 % */
   changePercent: number | undefined;
   status: KLineWSStatus;
+  /** 重置重试计数并立即重连 */
+  reconnect: () => void;
 }
 
 type ApplyEvent = (event: KlineWsEvent) => void;
@@ -58,6 +62,14 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const destroyedRef = useRef(false);
+  const reconnectRef = useRef<(() => void) | null>(null);
+
+  const clearRetryTimer = () => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!enabled || !symbol) {
@@ -65,6 +77,7 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
       setLastPrice(undefined);
       setChangePercent(undefined);
       setStatus('idle');
+      reconnectRef.current = null;
       return;
     }
 
@@ -77,6 +90,7 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
       setWsBar(null);
       setLastPrice(undefined);
       setChangePercent(undefined);
+      reconnectRef.current = null;
       return;
     }
     const source = registered;
@@ -179,7 +193,7 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
     function connect(): void {
       if (destroyedRef.current) return;
       clearSockets();
-      setStatus('connecting');
+      setStatus(retryCountRef.current > 0 ? 'reconnecting' : 'connecting');
 
       attachConnection(source, true);
       if (source.companion) {
@@ -189,10 +203,19 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
 
     function scheduleRetry(): void {
       if (destroyedRef.current) return;
+      clearRetryTimer();
 
       retryCountRef.current += 1;
+
+      // 快重试用尽：进入冷却，低频慢重试，同时允许用户手动重连
       if (retryCountRef.current > MAX_RETRIES) {
         setStatus('error');
+        retryTimerRef.current = setTimeout(() => {
+          if (destroyedRef.current) return;
+          // 冷却后开启新一轮快重试
+          retryCountRef.current = 0;
+          connect();
+        }, COOLDOWN_INTERVAL_MS);
         return;
       }
 
@@ -203,16 +226,19 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
       }, delay);
     }
 
+    reconnectRef.current = () => {
+      if (destroyedRef.current) return;
+      clearRetryTimer();
+      retryCountRef.current = 0;
+      connect();
+    };
+
     connect();
 
     return () => {
       destroyedRef.current = true;
-
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-
+      reconnectRef.current = null;
+      clearRetryTimer();
       clearSockets();
 
       setWsBar(null);
@@ -222,5 +248,9 @@ export function useKLineWS({ exchange, symbol, interval, enabled = true }: UseKL
     };
   }, [exchange, symbol, interval, enabled]);
 
-  return { wsBar, lastPrice, changePercent, status };
+  const reconnect = useCallback(() => {
+    reconnectRef.current?.();
+  }, []);
+
+  return { wsBar, lastPrice, changePercent, status, reconnect };
 }

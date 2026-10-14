@@ -1,6 +1,7 @@
 // import { RouterProvider } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
-import { TriangleIcon, AlignJustify, TrendingDown, BarChart2, SlidersHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { TriangleIcon, AlignJustify, TrendingDown, BarChart2, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import KLineChart from '@/sidepanel/components/KLineChart';
 import type { CandleHoverData } from '@/sidepanel/components/KLineChart';
 import AssetInfo from '@/sidepanel/components/assetInfo';
@@ -18,13 +19,7 @@ import { price_show, formatRatioPercent } from '@/utils/num';
 import { Exchange, ExchangeListMap, type SelectableExchangeType } from '@/config/exchangeConfig';
 import { KlineRestConfig } from '@/sidepanel/config/klineRest';
 
-const ALL_INTERVALS: { label: string; value: KlineInterval }[] = [
-  { label: '1分\n钟', value: '1m' },
-  { label: '30分\n钟', value: '30m' },
-  { label: '1小\n时', value: '1h' },
-  { label: '1\n天', value: '1d' },
-  { label: '1\n周', value: '1w' }
-];
+const ALL_INTERVALS: KlineInterval[] = ['1m', '30m', '1h', '1d', '1w'];
 
 // 币种全名映射（首版仅列常见币种，未命中时显示 symbol 本身）
 const SYMBOL_NAME_MAP: Record<string, string> = {
@@ -103,6 +98,7 @@ function calcAssetInfo(candle: CandleHoverData | null, data: CandlestickData<UTC
 }
 
 export default function App() {
+  const { t } = useTranslation('translation', { keyPrefix: 'sidepanel' });
   const exchange = useKlineExchange();
   const sidepanelAsset = useSidepanelAsset();
   // 等 storage resolve 后再发请求，避免首帧用 BTC/OKX 占位误请求
@@ -113,11 +109,15 @@ export default function App() {
   const [hoverCandle, setHoverCandle] = useState<CandleHoverData | null>(null);
 
   const intervals = useMemo(() => {
-    if (!exchange) return ALL_INTERVALS;
+    const list = ALL_INTERVALS.map(value => ({
+      value,
+      label: t(`interval.${value}`)
+    }));
+    if (!exchange) return list;
     const supported = KlineRestConfig[exchange]?.intervals;
-    if (!supported) return ALL_INTERVALS;
-    return ALL_INTERVALS.filter(item => supported[item.value] != null);
-  }, [exchange]);
+    if (!supported) return list;
+    return list.filter(item => supported[item.value] != null);
+  }, [exchange, t]);
 
   useEffect(() => {
     setHoverCandle(null);
@@ -142,7 +142,9 @@ export default function App() {
   const {
     wsBar,
     lastPrice,
-    changePercent: wsChange
+    changePercent: wsChange,
+    status: wsStatus,
+    reconnect: reconnectWs
   } = useKLineWS({
     exchange: exchange ?? Exchange.OKX,
     symbol: SYMBOL,
@@ -264,6 +266,21 @@ export default function App() {
 
           {/* ── 价格统计 + MA 信息 ── */}
           <AssetInfo data={assetInfoData} />
+
+          {/* ── WS 连接状态条：仅断线 / 重连中时出现 ── */}
+          {wsStatus === 'error' && (
+            <button
+              type="button"
+              onClick={reconnectWs}
+              className="mx-2 mt-1 flex w-[calc(100%-1rem)] items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11px] text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer"
+            >
+              <RefreshCw size={12} />
+              {t('ws.disconnected')}
+            </button>
+          )}
+          {wsStatus === 'reconnecting' && (
+            <p className="mx-2 mt-1 px-3 py-1 text-center text-[11px] text-foreground/45">{t('ws.reconnecting')}</p>
+          )}
 
           <div className="relative">
             {loading && chartData.length === 0 && (

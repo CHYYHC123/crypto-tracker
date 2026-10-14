@@ -8,9 +8,10 @@ import CustomCard from '@/popup/components/CustomCard';
 
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
+import { setLanguage, type AppLanguage } from '@/utils/local';
 
 type LangOption = {
-  code: string;
+  code: AppLanguage;
   nativeLabel: string;
   flag: string;
 };
@@ -23,11 +24,12 @@ const LANG_OPTIONS: LangOption[] = [
 const Language = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'language' });
   const navigate = useNavigate();
-  const currentLang = i18n.language;
+  const currentLang = (i18n.language ?? 'en').split('-')[0];
 
-  const handleSelect = (code: string) => {
+  const handleSelect = async (code: AppLanguage) => {
     if (code === currentLang) return;
-    i18n.changeLanguage(code);
+    await i18n.changeLanguage(code);
+    await setLanguage(code); // 写入 chrome.storage，供 sidepanel 等跨上下文同步
     const label = t(`options.${code}`);
     toast.success(t('switched', { language: label }), { duration: 2000 });
     navigate('/');

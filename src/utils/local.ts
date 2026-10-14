@@ -15,10 +15,17 @@ import { DEFAULT_THEME, type ThemeId } from '@/utils/theme';
 
 // ─── Schema：所有 key 与其值类型的唯一映射
 
+export type AppLanguage = 'en' | 'zh';
+
+export const APP_LANGUAGES: AppLanguage[] = ['en', 'zh'];
+
+export const DEFAULT_LANGUAGE: AppLanguage = 'en';
+
 interface LocalSchema {
   data_source: ExchangeType;
   asset_type: AssetTypes;
   theme: ThemeId;
+  language: AppLanguage;
   asset_type_switched: boolean;
   price_alerts: PriceAlert[];
   stocks_price_alerts: PriceAlert[];
@@ -83,6 +90,34 @@ export async function getTheme(): Promise<ThemeId> {
 }
 
 export const setTheme = (v: ThemeId): Promise<void> => setLocal('theme', v);
+
+// ─── language
+
+function isAppLanguage(v: unknown): v is AppLanguage {
+  return v === 'en' || v === 'zh';
+}
+
+/**
+ * 读取语言：优先 chrome.storage；若无则从 i18next localStorage 缓存迁移。
+ */
+export async function getLanguage(): Promise<AppLanguage> {
+  const stored = await getLocal('language');
+  if (isAppLanguage(stored)) return stored;
+
+  try {
+    const ls = localStorage.getItem('app_user_lang');
+    if (isAppLanguage(ls)) {
+      await setLocal('language', ls);
+      return ls;
+    }
+  } catch {
+    // ignore
+  }
+
+  return DEFAULT_LANGUAGE;
+}
+
+export const setLanguage = (v: AppLanguage): Promise<void> => setLocal('language', v);
 
 // ─── asset_type_switched
 

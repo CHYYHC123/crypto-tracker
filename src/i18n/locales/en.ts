@@ -136,5 +136,35 @@ export default {
     save: 'Save Settings'
   },
   content: {
+  },
+  sidepanel: {
+    interval: {
+      '1m': '1m',
+      '30m': '30m',
+      '1h': '1h',
+      '1d': '1D',
+      '1w': '1W'
+    },
+    ws: {
+      disconnected: 'Disconnected · Tap to retry',
+      reconnecting: 'Reconnecting…'
+    },
+    assetInfo: {
+      open: 'O',
+      high: 'H',
+      low: 'L',
+      close: 'C',
+      change: 'Chg',
+      amplitude: 'Amp'
+    },
+    note: {
+      title: 'My Note',
+      titleHint: '(Personal notes)',
+      saved: 'Saved · {{time}}',
+      saving: 'Saving…',
+      unsaved: 'Unsaved',
+      placeholder: 'Write your trading notes here…',
+      characters: '{{count}} characters'
+    }
   }
 } as const;
