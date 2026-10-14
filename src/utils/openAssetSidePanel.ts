@@ -17,6 +17,16 @@ export function toSidepanelAssetPayload(coin: Pick<AssetItem, 'id' | 'symbol' | 
   };
 }
 
+/** 通知侧栏 window.close；未打开时忽略错误。切换资产类型/数据源前先调用。 */
+export function closeSidePanel(): Promise<void> {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage({ type: 'CLOSE_SIDEPANEL' }, () => {
+      void chrome.runtime.lastError;
+      resolve();
+    });
+  });
+}
+
 /**
  * 打开侧边栏并携带资产参数。
  * 须在用户手势（如点击）回调里调用，否则 chrome.sidePanel.open 会失败。

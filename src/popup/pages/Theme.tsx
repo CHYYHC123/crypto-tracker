@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import SubHeader from '@/popup/components/SubHeader';
 import CustomCard from '@/popup/components/CustomCard';
 
-import { applyTheme, resolveTheme, type ThemeId } from '@/utils/theme';
+import { applyTheme, type ThemeId } from '@/utils/theme';
 import { getTheme, setTheme } from '@/utils/local';
 
 interface ThemeOptionItem {
@@ -41,7 +41,7 @@ const Theme = () => {
   const { t } = useTranslation('translation', { keyPrefix: 'theme' });
   const navigate = useNavigate();
 
-  // 初始值用 DEFAULT_THEME（ct-default / 深色），storage 加载后纠正
+  // storage 加载前不标选中，避免闪错项
   const [currentTheme, setCurrentTheme] = useState<ThemeId | null>(null);
 
   // 从 storage 读取已保存的主题
@@ -51,7 +51,7 @@ const Theme = () => {
 
   const handleSelect = async (id: ThemeId) => {
     await setTheme(id);
-    applyTheme(resolveTheme(id), document.documentElement);
+    applyTheme(id, document.documentElement);
     navigate('/');
   };
 

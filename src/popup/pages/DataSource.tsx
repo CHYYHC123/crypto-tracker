@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import SubHeader from '@/popup/components/SubHeader';
 import { ExchangeListMap, type ExchangeType, type SelectableExchangeType } from '@/config/exchangeConfig';
 import { setDataSource } from '@/utils/local';
+import { closeSidePanel } from '@/utils/openAssetSidePanel';
 
 function DataSource() {
   const { t } = useTranslation('translation', { keyPrefix: 'dataSource' });
@@ -22,11 +23,16 @@ function DataSource() {
     if (dataSource) setCurrentSource(dataSource as ExchangeType);
   }, []);
 
-  // 处理选择数据源
+  // 处理选择数据源：先关侧栏，再切换
   const handleSelect = async (source: ExchangeType) => {
     const info = ExchangeListMap[source as SelectableExchangeType];
-    if (info.disabled) return; // 跳过禁用的数据源
+    if (info.disabled) return;
+    if (source === currentSource) {
+      navigate('/');
+      return;
+    }
 
+    await closeSidePanel();
     await setDataSource(source);
 
     toast.success(t('switched', { name: info.name }), { duration: 2000 });

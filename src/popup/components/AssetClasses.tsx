@@ -12,6 +12,7 @@ import NewFlag from '@/popup/components/header/new';
 import { useAssetType } from '@/popup/hooks/useAssetType';
 import type { AssetTypes } from '@/types/index';
 import { getAssetTypeSwitched, setAssetTypeSwitched } from '@/utils/local';
+import { closeSidePanel } from '@/utils/openAssetSidePanel';
 
 // 资产类型切换弹出
 const AssetClasses = () => {
@@ -37,9 +38,11 @@ const AssetClasses = () => {
     });
   }, []);
 
-  const handleDataSource = (type: AssetTypes) => {
-    setAssetType(type);
+  const handleSelectType = async (type: AssetTypes) => {
     setAnchorEl(null);
+    if (type === assetType) return;
+    await closeSidePanel();
+    setAssetType(type);
     if (!hasSwitched) {
       setHasSwitched(true);
       setAssetTypeSwitched();
@@ -57,7 +60,7 @@ const AssetClasses = () => {
       </button>
 
       <ActionMenu anchorEl={anchorEl} open={open} onClose={handleClose} className="mt-2 min-w-35 rounded-xl border border-border bg-background/95 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] p-1">
-        <ActionMenuItem onClick={() => handleDataSource('crypto')}>
+        <ActionMenuItem onClick={() => handleSelectType('crypto')}>
           <div className="flex items-center justify-between">
             <div className={cn('flex items-center gap-1.5', assetType === 'crypto' ? 'text-foreground-bold' : 'text-muted')}>
               <Coins className="w-4 h-4" />
@@ -67,7 +70,7 @@ const AssetClasses = () => {
           </div>
         </ActionMenuItem>
 
-        <ActionMenuItem onClick={() => handleDataSource('stocks')}>
+        <ActionMenuItem onClick={() => handleSelectType('stocks')}>
           <div className="flex items-center justify-between">
             <div className={cn('flex items-center gap-1.5', assetType === 'stocks' ? 'text-foreground-bold' : 'text-muted')}>
               <ChartLineIcon className="w-4 h-4" />

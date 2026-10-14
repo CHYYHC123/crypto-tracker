@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { formatTimestamp } from '@/utils/time';
 import { formatRatioPercent, price_show } from '@/utils/num';
 import { getTheme } from '@/utils/local';
-import { DEFAULT_THEME, type ThemeId } from '@/utils/theme';
+import { DEFAULT_THEME, resolveTheme, type ThemeId } from '@/utils/theme';
 import type { KlineInterval, VolumeInfo } from '@/types/kline';
 import type { AssetTypes } from '@/types/asset';
 
@@ -230,17 +230,31 @@ const KLineChart: React.FC<KLineChartProps> = ({ data = [], volumeMap = EMPTY_VO
   /** setData / 平移可视范围期间忽略左缘回调，避免连发请求 */
   const adjustingRangeRef = useRef(false);
   const colorsRef = useRef<ChartColors | null>(null);
+  /** 实际应用到图表的主题（ct-default 已 resolve） */
   const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
+  const storedThemeRef = useRef<ThemeId>(DEFAULT_THEME);
 
   useEffect(() => {
-    getTheme().then(setTheme);
+    const sync = (stored: ThemeId) => {
+      storedThemeRef.current = stored;
+      setTheme(resolveTheme(stored));
+    };
+    getTheme().then(sync);
     const onStorage = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
       if (areaName !== 'local' || !changes.theme) return;
       const next = changes.theme.newValue as ThemeId | undefined;
-      if (next) setTheme(next);
+      if (next) sync(next);
+    };
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSchemeChange = () => {
+      if (storedThemeRef.current === 'ct-default') setTheme(resolveTheme('ct-default'));
     };
     chrome.storage.onChanged.addListener(onStorage);
-    return () => chrome.storage.onChanged.removeListener(onStorage);
+    mql.addEventListener('change', onSchemeChange);
+    return () => {
+      chrome.storage.onChanged.removeListener(onStorage);
+      mql.removeEventListener('change', onSchemeChange);
+    };
   }, []);
 
   const syncLastPriceRef = useRef<() => void>(() => {});
