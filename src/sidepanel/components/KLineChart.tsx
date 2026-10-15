@@ -69,14 +69,14 @@ function withAlpha(color: string, alpha: number): string {
   return c;
 }
 
-/** 从 document / 容器上读取 tailwindcss.css 中的 --app-* 主题色 */
+/** 从 document / 容器上读取 tailwindcss.css 中的 --ct-* 主题色 */
 function readChartColors(el: Element): ChartColors {
-  const bg = cssVar(el, '--app-bg');
-  const muted = cssVar(el, '--app-muted');
-  const border = cssVar(el, '--app-border');
-  const success = cssVar(el, '--app-success');
-  const danger = cssVar(el, '--app-danger');
-  const fg = cssVar(el, '--app-fg');
+  const bg = cssVar(el, '--ct-bg');
+  const muted = cssVar(el, '--ct-muted');
+  const border = cssVar(el, '--ct-border');
+  const success = cssVar(el, '--ct-success');
+  const danger = cssVar(el, '--ct-danger');
+  const fg = cssVar(el, '--ct-fg');
   return {
     bg,
     text: muted,
