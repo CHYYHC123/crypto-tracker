@@ -269,18 +269,12 @@ export default function App() {
 
           {/* ── WS 连接状态条：仅断线 / 重连中时出现 ── */}
           {wsStatus === 'error' && (
-            <button
-              type="button"
-              onClick={reconnectWs}
-              className="mx-2 mt-1 flex w-[calc(100%-1rem)] items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11px] text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer"
-            >
+            <button type="button" onClick={reconnectWs} className="mx-2 mt-1 flex w-[calc(100%-1rem)] items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11px] text-red-400 hover:bg-red-500/15 transition-colors cursor-pointer">
               <RefreshCw size={12} />
               {t('ws.disconnected')}
             </button>
           )}
-          {wsStatus === 'reconnecting' && (
-            <p className="mx-2 mt-1 px-3 py-1 text-center text-[11px] text-foreground/45">{t('ws.reconnecting')}</p>
-          )}
+          {wsStatus === 'reconnecting' && <p className="mx-2 mt-1 px-3 py-1 text-center text-[11px] text-foreground/45">{t('ws.reconnecting')}</p>}
 
           <div className="relative">
             {loading && chartData.length === 0 && (
