@@ -46,12 +46,13 @@ export async function openAssetSidePanel(
     return;
   }
 
-  // 用回调拿 windowId，避免先 await 其它 Promise 导致手势丢失
+  // 用回调拿 windowId，避免先 await 其它 Promise 导致手势丢失。
+  // 写入不 await，但要在 open 之前发起，让侧栏首屏尽量读到这次的标的。
   chrome.windows.getCurrent(win => {
     if (win.id == null) return;
+    void setSidepanelAsset(payload);
     void chrome.sidePanel
       .open({ windowId: win.id })
-      .then(() => setSidepanelAsset(payload))
       .then(() => {
         chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
       })

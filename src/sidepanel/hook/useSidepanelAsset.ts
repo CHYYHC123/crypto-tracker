@@ -11,14 +11,14 @@ function isPayload(v: unknown): v is SidepanelAssetPayload {
 }
 
 /**
- * 有 openAssetSidePanel 携带参数 → 用该币种；
- * 无参数 → 取当前资产类型列表第一项；列表为空回退 BTC。
+ * 有 openAssetSidePanel 携带参数，且类别与当前资产类型一致 → 用该标的；
+ * 类别不一致（例如从加密货币切到股票后残留的 HYPE）或无参数 → 取当前列表第一项；
+ * 列表为空回退 BTC。
  */
 export async function resolveSidepanelAsset(): Promise<SidepanelAssetPayload> {
-  const carried = await getSidepanelAsset();
-  if (carried?.symbol) return carried;
+  const [carried, assetType] = await Promise.all([getSidepanelAsset(), getAssetType()]);
+  if (carried?.symbol && carried.category === assetType) return carried;
 
-  const assetType = await getAssetType();
   if (assetType === 'stocks') {
     const list = await getStocksList();
     const symbol = list?.[0];
@@ -42,21 +42,44 @@ export function useSidepanelAsset(): SidepanelAssetPayload | null {
 
   useEffect(() => {
     let cancelled = false;
+    // 后到的打开参数 / storage 写入使更早的 resolve 失效，避免旧标的盖回新标的
+    let seq = 0;
 
-    resolveSidepanelAsset().then(next => {
-      if (!cancelled) setAsset(next);
-    });
+    const apply = (next: SidepanelAssetPayload, token: number) => {
+      if (cancelled || token !== seq) return;
+      setAsset(next);
+    };
+
+    const load = () => {
+      const token = ++seq;
+      resolveSidepanelAsset().then(next => apply(next, token));
+    };
+
+    load();
 
     const onMessage = (message: { type?: string; payload?: unknown }) => {
       if (message?.type === 'SIDEPANEL_ASSET' && isPayload(message.payload)) {
-        setAsset(message.payload);
+        const token = ++seq;
+        apply(message.payload, token);
       }
     };
 
     const onStorage = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
-      if (area !== 'local' || !changes.sidepanel_asset) return;
-      const next = changes.sidepanel_asset.newValue;
-      if (isPayload(next)) setAsset(next);
+      if (area !== 'local') return;
+
+      if (changes.sidepanel_asset) {
+        const next = changes.sidepanel_asset.newValue;
+        if (isPayload(next)) {
+          const token = ++seq;
+          apply(next, token);
+          return;
+        }
+        // 切换资产类型时会清掉残留标的，按当前列表重新解析
+        load();
+        return;
+      }
+
+      if (changes.asset_type) load();
     };
 
     const onPageHide = () => {

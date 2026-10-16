@@ -133,10 +133,11 @@ function handleOpenAssetSidepanel(
     return;
   }
 
-  // 必须在任何 await 之前调用 open；手势只保证到本次同步调用栈
+  // 必须在任何 await 之前调用 open；手势只保证到本次同步调用栈。
+  // 写入同样不 await，但先发起，避免侧栏挂载时仍读到上一类资产。
+  void setSidepanelAsset(payload);
   void chrome.sidePanel
     .open({ windowId })
-    .then(() => setSidepanelAsset(payload))
     .then(() => {
       chrome.runtime.sendMessage({ type: 'SIDEPANEL_ASSET', payload }).catch(() => {});
       sendResponse({ success: true });

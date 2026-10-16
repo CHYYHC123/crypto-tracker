@@ -1,5 +1,5 @@
 // 此文件由 scripts/getToken.js 自动生成，请勿手动修改
-// 更新时间: 2026/9/14 15:46:08
+// 更新时间: 2026/10/16 11:05:00
 // platform 位运算: BN=1, OKX=2, Gate=4  （示例: 7 = 全部支持, 6 = OKX+Gate）
 export const SUPPORTED_TOKENS = [
   {
@@ -67,6 +67,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "ADBEB",
+    "platform": 1
+  },
+  {
     "symbol": "ADX",
     "platform": 5
   },
@@ -85,6 +89,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "AGLD",
     "platform": 7
+  },
+  {
+    "symbol": "AGPUB",
+    "platform": 1
   },
   {
     "symbol": "AI",
@@ -124,6 +132,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "AMATB",
+    "platform": 1
+  },
+  {
+    "symbol": "AMCB",
     "platform": 1
   },
   {
@@ -323,6 +335,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "BBB",
+    "platform": 1
+  },
+  {
     "symbol": "BCH",
     "platform": 7
   },
@@ -379,6 +395,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "BNCB",
+    "platform": 1
+  },
+  {
     "symbol": "BNSOL",
     "platform": 1
   },
@@ -428,7 +448,7 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "CARDS",
-    "platform": 2
+    "platform": 6
   },
   {
     "symbol": "CAT",
@@ -555,6 +575,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
+    "symbol": "CT",
+    "platform": 6
+  },
+  {
     "symbol": "CTC",
     "platform": 6
   },
@@ -577,6 +601,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "CYBER",
     "platform": 5
+  },
+  {
+    "symbol": "CYPHB",
+    "platform": 1
   },
   {
     "symbol": "DASH",
@@ -635,10 +663,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
-    "symbol": "DORA",
-    "platform": 6
-  },
-  {
     "symbol": "DOS",
     "platform": 6
   },
@@ -681,10 +705,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "EIGEN",
     "platform": 7
-  },
-  {
-    "symbol": "ELF",
-    "platform": 6
   },
   {
     "symbol": "ENA",
@@ -811,6 +831,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "FWDIB",
+    "platform": 1
+  },
+  {
     "symbol": "G",
     "platform": 7
   },
@@ -872,6 +896,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "GOOGLB",
+    "platform": 1
+  },
+  {
+    "symbol": "GPROB",
     "platform": 1
   },
   {
@@ -951,12 +979,16 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "HPEB",
+    "platform": 1
+  },
+  {
     "symbol": "HUMA",
     "platform": 7
   },
   {
     "symbol": "HYPE",
-    "platform": 6
+    "platform": 7
   },
   {
     "symbol": "HYPER",
@@ -969,10 +1001,6 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "ICP",
     "platform": 7
-  },
-  {
-    "symbol": "ICX",
-    "platform": 6
   },
   {
     "symbol": "ID",
@@ -1041,6 +1069,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "JOE",
     "platform": 7
+  },
+  {
+    "symbol": "JPMB",
+    "platform": 1
   },
   {
     "symbol": "JST",
@@ -1147,6 +1179,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 1
   },
   {
+    "symbol": "LLYB",
+    "platform": 1
+  },
+  {
     "symbol": "LPT",
     "platform": 7
   },
@@ -1209,6 +1245,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "MBL",
     "platform": 5
+  },
+  {
+    "symbol": "MDBB",
+    "platform": 1
   },
   {
     "symbol": "ME",
@@ -1479,8 +1519,16 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "PDDB",
+    "platform": 1
+  },
+  {
     "symbol": "PENDLE",
     "platform": 7
+  },
+  {
+    "symbol": "PENGB",
+    "platform": 1
   },
   {
     "symbol": "PENGU",
@@ -1525,6 +1573,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "POLYX",
     "platform": 5
+  },
+  {
+    "symbol": "PONS",
+    "platform": 6
   },
   {
     "symbol": "POR",
@@ -1627,6 +1679,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "RDDTB",
+    "platform": 1
+  },
+  {
     "symbol": "RE",
     "platform": 7
   },
@@ -1699,6 +1755,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 7
   },
   {
+    "symbol": "RWUSD",
+    "platform": 1
+  },
+  {
     "symbol": "S",
     "platform": 7
   },
@@ -1743,6 +1803,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
+    "symbol": "SECZB",
+    "platform": 1
+  },
+  {
     "symbol": "SEI",
     "platform": 7
   },
@@ -1753,6 +1817,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "SFP",
     "platform": 5
+  },
+  {
+    "symbol": "SHAZB",
+    "platform": 1
   },
   {
     "symbol": "SHELL",
@@ -1879,16 +1947,8 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
-    "symbol": "STG",
-    "platform": 5
-  },
-  {
     "symbol": "STO",
     "platform": 5
-  },
-  {
-    "symbol": "STORJ",
-    "platform": 6
   },
   {
     "symbol": "STRAX",
@@ -2071,12 +2131,12 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
-    "symbol": "USDG",
-    "platform": 6
+    "symbol": "USDEB",
+    "platform": 1
   },
   {
-    "symbol": "USDP",
-    "platform": 5
+    "symbol": "USDG",
+    "platform": 6
   },
   {
     "symbol": "USDS",
@@ -2089,6 +2149,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "USUAL",
     "platform": 5
+  },
+  {
+    "symbol": "UVXYB",
+    "platform": 1
   },
   {
     "symbol": "VANA",
@@ -2119,6 +2183,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "VVV",
+    "platform": 6
+  },
+  {
     "symbol": "W",
     "platform": 7
   },
@@ -2144,6 +2212,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "WDCB",
+    "platform": 1
+  },
+  {
+    "symbol": "WENB",
     "platform": 1
   },
   {
@@ -2183,6 +2255,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XAEHR",
+    "platform": 2
+  },
+  {
     "symbol": "XAI",
     "platform": 5
   },
@@ -2192,6 +2268,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XAMAT",
+    "platform": 2
+  },
+  {
+    "symbol": "XAMC",
     "platform": 2
   },
   {
@@ -2231,6 +2311,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XBB",
+    "platform": 2
+  },
+  {
     "symbol": "XBE",
     "platform": 2
   },
@@ -2243,6 +2327,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XBRKB",
+    "platform": 2
+  },
+  {
     "symbol": "XBSP",
     "platform": 2
   },
@@ -2252,6 +2340,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XCBRS",
+    "platform": 2
+  },
+  {
+    "symbol": "XCGNX",
     "platform": 2
   },
   {
@@ -2272,6 +2364,10 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XCRCL",
+    "platform": 2
+  },
+  {
+    "symbol": "XCRDO",
     "platform": 2
   },
   {
@@ -2299,6 +2395,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XDP",
+    "platform": 2
+  },
+  {
     "symbol": "XDRAM",
     "platform": 2
   },
@@ -2307,7 +2407,31 @@ export const SUPPORTED_TOKENS = [
     "platform": 5
   },
   {
+    "symbol": "XEWJ",
+    "platform": 2
+  },
+  {
+    "symbol": "XEWT",
+    "platform": 2
+  },
+  {
     "symbol": "XEWY",
+    "platform": 2
+  },
+  {
+    "symbol": "XEWZ",
+    "platform": 2
+  },
+  {
+    "symbol": "XFLNC",
+    "platform": 2
+  },
+  {
+    "symbol": "XFLY",
+    "platform": 2
+  },
+  {
+    "symbol": "XFWDI",
     "platform": 2
   },
   {
@@ -2327,6 +2451,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XGPRO",
+    "platform": 2
+  },
+  {
     "symbol": "XHIMS",
     "platform": 2
   },
@@ -2343,11 +2471,19 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XINFQ",
+    "platform": 2
+  },
+  {
     "symbol": "XINTC",
     "platform": 2
   },
   {
     "symbol": "XINTW",
+    "platform": 2
+  },
+  {
+    "symbol": "XIONQ",
     "platform": 2
   },
   {
@@ -2392,6 +2528,14 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XLRCX",
+    "platform": 2
+  },
+  {
+    "symbol": "XLUNR",
+    "platform": 2
+  },
+  {
+    "symbol": "XLYTE",
     "platform": 2
   },
   {
@@ -2459,6 +2603,18 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XOSCR",
+    "platform": 2
+  },
+  {
+    "symbol": "XOUST",
+    "platform": 2
+  },
+  {
+    "symbol": "XPENG",
+    "platform": 2
+  },
+  {
     "symbol": "XPL",
     "platform": 7
   },
@@ -2467,7 +2623,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XPOET",
+    "platform": 2
+  },
+  {
     "symbol": "XPOPMART",
+    "platform": 2
+  },
+  {
+    "symbol": "XPURR",
     "platform": 2
   },
   {
@@ -2475,11 +2639,23 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XQNT",
+    "platform": 2
+  },
+  {
     "symbol": "XQQQ",
     "platform": 2
   },
   {
+    "symbol": "XRAM",
+    "platform": 2
+  },
+  {
     "symbol": "XRDDT",
+    "platform": 2
+  },
+  {
+    "symbol": "XRDW",
     "platform": 2
   },
   {
@@ -2507,6 +2683,18 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSHLD",
+    "platform": 2
+  },
+  {
+    "symbol": "XSHOP",
+    "platform": 2
+  },
+  {
+    "symbol": "XSIMO",
+    "platform": 2
+  },
+  {
     "symbol": "XSKHY",
     "platform": 2
   },
@@ -2531,6 +2719,10 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSONY",
+    "platform": 2
+  },
+  {
     "symbol": "XSOXL",
     "platform": 2
   },
@@ -2539,11 +2731,19 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XSPCH",
+    "platform": 2
+  },
+  {
     "symbol": "XSPCX",
     "platform": 2
   },
   {
     "symbol": "XSPY",
+    "platform": 2
+  },
+  {
+    "symbol": "XSQQQ",
     "platform": 2
   },
   {
@@ -2559,7 +2759,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XTMF",
+    "platform": 2
+  },
+  {
     "symbol": "XTQQQ",
+    "platform": 2
+  },
+  {
+    "symbol": "XTSEM",
     "platform": 2
   },
   {
@@ -2567,7 +2775,15 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XTSLL",
+    "platform": 2
+  },
+  {
     "symbol": "XTSM",
+    "platform": 2
+  },
+  {
+    "symbol": "XTTMI",
     "platform": 2
   },
   {
@@ -2587,12 +2803,24 @@ export const SUPPORTED_TOKENS = [
     "platform": 2
   },
   {
+    "symbol": "XURNM",
+    "platform": 2
+  },
+  {
     "symbol": "XUSAR",
     "platform": 2
   },
   {
     "symbol": "XUSD",
     "platform": 1
+  },
+  {
+    "symbol": "XUSO",
+    "platform": 2
+  },
+  {
+    "symbol": "XUVXY",
+    "platform": 2
   },
   {
     "symbol": "XVG",
@@ -2608,6 +2836,14 @@ export const SUPPORTED_TOKENS = [
   },
   {
     "symbol": "XWDC",
+    "platform": 2
+  },
+  {
+    "symbol": "XWEN",
+    "platform": 2
+  },
+  {
+    "symbol": "XXBI",
     "platform": 2
   },
   {
@@ -2663,10 +2899,6 @@ export const SUPPORTED_TOKENS = [
     "platform": 6
   },
   {
-    "symbol": "ZEUS",
-    "platform": 6
-  },
-  {
     "symbol": "ZIL",
     "platform": 7
   },
@@ -2685,6 +2917,10 @@ export const SUPPORTED_TOKENS = [
   {
     "symbol": "ZKP",
     "platform": 5
+  },
+  {
+    "symbol": "ZMB",
+    "platform": 1
   },
   {
     "symbol": "ZORA",

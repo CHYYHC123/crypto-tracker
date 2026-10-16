@@ -27,8 +27,8 @@ export function openDb(name: string, version: number, onUpgrade: UpgradeCallback
       reject(req.error ?? new Error(`IndexedDB open failed: ${name}`));
     };
 
-    req.onupgradeneeded = () => {
-      onUpgrade(req.result, req.oldVersion, req.newVersion);
+    req.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      onUpgrade(req.result, event.oldVersion, event.newVersion);
     };
 
     req.onsuccess = () => {

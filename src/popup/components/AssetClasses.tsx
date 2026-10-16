@@ -11,7 +11,7 @@ import NewFlag from '@/popup/components/header/new';
 
 import { useAssetType } from '@/popup/hooks/useAssetType';
 import type { AssetTypes } from '@/types/index';
-import { getAssetTypeSwitched, setAssetTypeSwitched } from '@/utils/local';
+import { clearSidepanelAsset, getAssetTypeSwitched, setAssetTypeSwitched } from '@/utils/local';
 import { closeSidePanel } from '@/utils/openAssetSidePanel';
 
 // 资产类型切换弹出
@@ -42,6 +42,8 @@ const AssetClasses = () => {
     setAnchorEl(null);
     if (type === assetType) return;
     await closeSidePanel();
+    // 侧栏 pagehide 不一定能清掉 storage，这里同步丢掉上一类资产，避免下次打开仍请求它
+    await clearSidepanelAsset();
     setAssetType(type);
     if (!hasSwitched) {
       setHasSwitched(true);
